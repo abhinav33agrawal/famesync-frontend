@@ -83,7 +83,7 @@ const StatCard = ({
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
   >
-    <Card className="glass border-border/50 hover:border-primary/30 transition-all duration-300 group">
+    <Card className="bg-card border border-border border-border/50 hover:border-primary/30 transition-all duration-300 group">
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <motion.div
@@ -392,7 +392,7 @@ const InfluencerCampaigns = () => {
     <div className="min-h-[calc(100vh-4rem)] relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-      <div className="absolute inset-0 dotted-pattern opacity-30" />
+      <div className="absolute inset-0 opacity-30" />
       <FloatingOrb
         className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl"
         delay={0}
@@ -425,7 +425,7 @@ const InfluencerCampaigns = () => {
                     <Compass className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                    Discover <span className="gradient-text">Campaigns</span>
+                    Discover <span className="text-foreground">Campaigns</span>
                   </h1>
                 </motion.div>
                 <p className="text-sm sm:text-base text-muted-foreground">
@@ -438,7 +438,7 @@ const InfluencerCampaigns = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <Card className="glass border-primary/20 bg-primary/5">
+                  <Card className="bg-card border border-border border-primary/20 bg-primary/5">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
@@ -492,7 +492,7 @@ const InfluencerCampaigns = () => {
             transition={{ delay: 0.3 }}
             className="mb-6"
           >
-            <Card className="glass border-border/50">
+            <Card className="bg-card border border-border border-border/50">
               <CardContent className="p-3 sm:p-4 md:p-6">
                 <div className="flex flex-col md:flex-row gap-3">
                   <div className="flex-1 relative">
@@ -618,13 +618,13 @@ const InfluencerCampaigns = () => {
                 transition={{ delay: 0.4 + index * 0.05 }}
                 whileHover={{ y: -5 }}
               >
-                <Card className="h-full glass border-border/50 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col group">
+                <Card className="h-full bg-card border border-border border-border/50 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col group">
                   <CardContent className="p-4 sm:p-5 md:p-6 flex-1 flex flex-col">
                     <div className="flex items-start justify-between mb-3 sm:mb-4">
                       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                         {/* Brand Initial Avatar */}
                         <motion.div
-                          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 border-border/50 group-hover:scale-110 transition-transform relative flex items-center justify-center gradient-instagram flex-shrink-0"
+                          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 border-border/50 group-hover:scale-110 transition-transform relative flex items-center justify-center bg-primary flex-shrink-0"
                           whileHover={{ rotate: 5 }}
                         >
                           <span className={`text-xl sm:text-2xl font-bold text-white ${!isPremium ? 'blur-sm' : ''}`}>
@@ -796,7 +796,7 @@ const InfluencerCampaigns = () => {
                       size="sm"
                       onClick={() => handlePageChange(page as number)}
                       className={`min-w-[2.5rem] transition-all ${currentPage === page
-                        ? 'gradient-instagram text-white shadow-lg scale-105'
+                        ? 'bg-primary text-white shadow-lg scale-105'
                         : 'hover:bg-primary/10 hover:border-primary/50'
                         }`}
                     >
@@ -826,7 +826,7 @@ const InfluencerCampaigns = () => {
               animate={{ opacity: 1, scale: 1 }}
               className="text-center py-16"
             >
-              <Card className="glass border-border/50 max-w-md mx-auto p-8">
+              <Card className="bg-card border border-border border-border/50 max-w-md mx-auto p-8">
                 <motion.div
                   animate={{
                     y: [0, -10, 0],
@@ -847,7 +847,7 @@ const InfluencerCampaigns = () => {
 
           {/* Campaign Detail Modal */}
           <Dialog open={!!selectedCampaign} onOpenChange={() => setSelectedCampaign(null)}>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto glass border-border/50">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-card border border-border border-border/50">
               {selectedCampaign && (
                 <>
                   <DialogHeader>
@@ -868,7 +868,7 @@ const InfluencerCampaigns = () => {
                           </motion.div>
                         ) : (
                           <motion.div
-                            className="w-16 h-16 rounded-xl gradient-instagram flex items-center justify-center text-4xl font-bold text-white"
+                            className="w-16 h-16 rounded-xl bg-primary flex items-center justify-center text-4xl font-bold text-white"
                             whileHover={{ scale: 1.05, rotate: 5 }}
                           >
                             {selectedCampaign.brand_profile?.company_name
@@ -932,10 +932,10 @@ const InfluencerCampaigns = () => {
 
                     {/* Key Details */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Card className="glass border-border/50">
+                      <Card className="bg-card border border-border border-border/50">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg gradient-instagram flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
                               <span className="text-white font-bold">₹</span>
                             </div>
                             <div>
@@ -957,10 +957,10 @@ const InfluencerCampaigns = () => {
                       </Card>
 
 
-                      <Card className="glass border-border/50">
+                      <Card className="bg-card border border-border border-border/50">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg gradient-instagram flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
                               <Target className="h-5 w-5 text-white" />
                             </div>
                             <div className="flex-1">
@@ -971,10 +971,10 @@ const InfluencerCampaigns = () => {
                         </CardContent>
                       </Card>
 
-                      <Card className="glass border-border/50">
+                      <Card className="bg-card border border-border border-border/50">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg gradient-instagram flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
                               <span className="text-white text-lg">🎯</span>
                             </div>
                             <div>
@@ -1011,7 +1011,7 @@ const InfluencerCampaigns = () => {
                     )}
 
                     {!isPremium && (
-                      <Card className="glass border-primary/20 bg-primary/5">
+                      <Card className="bg-card border border-border border-primary/20 bg-primary/5">
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3">
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
@@ -1024,7 +1024,7 @@ const InfluencerCampaigns = () => {
                               </p>
                               <Button
                                 size="sm"
-                                className="gradient-instagram"
+                                className="bg-primary"
                                 onClick={() => setShowUpgradePrompt(true)}
                               >
                                 View Plans
@@ -1062,7 +1062,7 @@ const InfluencerCampaigns = () => {
                         Close
                       </Button>
                       <Button
-                        className="flex-1 gradient-instagram"
+                        className="flex-1 bg-primary"
                         onClick={handleApply}
                         disabled={isApplying || selectedCampaign.has_applied || !applicationMessage.trim()}
                       >

@@ -98,7 +98,7 @@ export function ProfileViewModal({
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-2">
-              <div className="w-12 h-12 rounded-lg gradient-instagram flex items-center justify-center text-xl font-bold">
+              <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center text-xl font-bold">
                 {brandProfile.company_name.charAt(0).toUpperCase()}
               </div>
               {brandProfile.company_name}
@@ -193,7 +193,7 @@ export function ProfileViewModal({
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-2">
-              <div className="w-12 h-12 rounded-lg gradient-instagram flex items-center justify-center text-xl font-bold">
+              <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center text-xl font-bold">
                 {username.charAt(0).toUpperCase()}
               </div>
               @{username}
@@ -269,18 +269,18 @@ export function ProfileViewModal({
             {influencerProfile.instagram_data && influencerProfile.instagram_data.accountInsights && (
               <div className="space-y-4">
                 <h3 className="font-semibold flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg gradient-instagram flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                     <Instagram className="h-4 w-4 text-white" />
                   </div>
                   Instagram Insights
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {buildInstagramInsightCards(influencerProfile.instagram_data).map((insight) => (
-                    <Card key={insight.key} className="glass">
+                    <Card key={insight.key} className="bg-card border border-border">
                       <CardContent className="p-4">
                         <div className="flex flex-col gap-1">
                           <span className="text-sm font-medium text-muted-foreground">{insight.label}</span>
-                          <span className="text-2xl font-bold gradient-text">{toInstagramDisplayCount(insight.value)}</span>
+                          <span className="text-2xl font-bold text-foreground">{toInstagramDisplayCount(insight.value)}</span>
                           <span className="text-xs text-muted-foreground truncate" title={insight.hint}>
                             {insight.hint}
                           </span>

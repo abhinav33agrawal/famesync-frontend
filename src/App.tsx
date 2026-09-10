@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import Sidebar from "@/components/layout/Sidebar";
 import ApprovalBanner from "@/components/layout/ApprovalBanner";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PublicRoute from "@/components/PublicRoute";
@@ -31,6 +30,7 @@ import InfluencerDashboard from "./pages/influencer/Dashboard";
 import InfluencerCampaigns from "./pages/influencer/Campaigns";
 import InfluencerCampaignDetail from "./pages/influencer/CampaignDetail";
 import InfluencerApplications from "./pages/influencer/Applications";
+import InfluencerDeliverables from "./pages/influencer/Deliverables";
 import InfluencerProfile from "./pages/influencer/Profile";
 
 // Brand pages
@@ -71,321 +71,196 @@ const App = () => (
   </QueryClientProvider>
 );
 
+/* Single navigation model: the Navbar carries the role nav, so there is no
+   sidebar and no second copy of the route table. The marketing footer is
+   kept off the signed-in app surfaces. */
+const APP_PATHS = [
+  "/dashboard",
+  "/campaigns",
+  "/applications",
+  "/deliverables",
+  "/profile",
+  "/subscription",
+  "/settings",
+  "/create-campaign",
+  "/discover",
+];
+
 const AppContent = () => {
   const { user, isAuthenticated } = useAuth();
-  const location = useLocation();
-  const isDashboard = (
-    location.pathname.includes('/dashboard') ||
-    location.pathname.includes('/campaigns') ||
-    location.pathname.includes('/applications') ||
-    location.pathname.includes('/profile') ||
-    location.pathname.includes('/subscription') ||
-    location.pathname.includes('/settings') ||
-    location.pathname.includes('/create-campaign') ||
-    location.pathname.includes('/discover')
-  );
+  const { pathname } = useLocation();
 
-  const hideNavFooter = location.pathname === '/auth' ||
-    location.pathname === '/auth/callback' ||
-    location.pathname.includes('/setup') ||
-    location.pathname === '/waiting-for-approval';
+  const isAppSurface = APP_PATHS.some((p) => pathname.includes(p));
 
-  const showApprovalBanner = isAuthenticated && user && user.is_approved === false &&
-    location.pathname !== '/waiting-for-approval' &&
-    location.pathname !== '/auth';
+  const hideChrome =
+    pathname === "/auth" ||
+    pathname === "/auth/callback" ||
+    pathname.includes("/setup") ||
+    pathname === "/waiting-for-approval";
+
+  const showApprovalBanner =
+    isAuthenticated && user && user.is_approved === false && pathname !== "/waiting-for-approval" && pathname !== "/auth";
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {showApprovalBanner && <ApprovalBanner isSetup={location.pathname.includes('/setup')} />}
-      {!hideNavFooter && <Navbar />}
-      {isDashboard ? (
-        <div className="flex flex-1">
-          <Sidebar />
-          <main className="flex-1">
-            <Routes>
-              <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
-              <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
-              <Route path="/auth/callback" element={<InstagramAuthCallback />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/pricing" element={<PublicRoute><Pricing /></PublicRoute>} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
+    <div className="flex min-h-screen flex-col">
+      {showApprovalBanner && <ApprovalBanner isSetup={pathname.includes("/setup")} />}
+      {!hideChrome && <Navbar />}
 
-              {/* Influencer Routes */}
-              <Route
-                path="/influencer/setup"
-                element={
-                  <ProtectedRoute allowedRoles={['influencer']}>
-                    <InfluencerSetup />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/influencer/dashboard"
-                element={
-                  <ProtectedRoute allowedRoles={['influencer']}>
-                    <InfluencerDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/influencer/campaigns"
-                element={
-                  <ProtectedRoute allowedRoles={['influencer']}>
-                    <InfluencerCampaigns />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/influencer/campaigns/:slug"
-                element={
-                  <ProtectedRoute allowedRoles={['influencer']}>
-                    <InfluencerCampaignDetail />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/influencer/applications"
-                element={
-                  <ProtectedRoute allowedRoles={['influencer']}>
-                    <InfluencerApplications />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/influencer/profile"
-                element={
-                  <ProtectedRoute allowedRoles={['influencer']}>
-                    <InfluencerProfile />
-                  </ProtectedRoute>
-                }
-              />
+      <main className="flex-1">
+        <Routes>
+          <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
+          <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+          <Route path="/auth/callback" element={<InstagramAuthCallback />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/waiting-for-approval" element={<WaitingForApproval />} />
+          <Route path="/pricing" element={<PublicRoute><Pricing /></PublicRoute>} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
 
-              {/* Brand Routes */}
-              <Route
-                path="/brand/setup"
-                element={
-                  <ProtectedRoute allowedRoles={['brand']}>
-                    <BrandSetup />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/brand/dashboard"
-                element={
-                  <ProtectedRoute allowedRoles={['brand']}>
-                    <BrandDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/brand/discover"
-                element={
-                  <ProtectedRoute allowedRoles={['brand']}>
-                    <BrandDiscover />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/brand/campaigns"
-                element={
-                  <ProtectedRoute allowedRoles={['brand']}>
-                    <BrandCampaigns />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/brand/campaigns/:slug"
-                element={
-                  <ProtectedRoute allowedRoles={['brand']}>
-                    <BrandCampaignDetail />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/brand/create-campaign"
-                element={
-                  <ProtectedRoute allowedRoles={['brand']}>
-                    <BrandCreateCampaign />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/brand/profile"
-                element={
-                  <ProtectedRoute allowedRoles={['brand']}>
-                    <BrandProfile />
-                  </ProtectedRoute>
-                }
-              />
+          {/* Influencer Routes */}
+          <Route
+            path="/influencer/setup"
+            element={
+              <ProtectedRoute allowedRoles={['influencer']}>
+                <InfluencerSetup />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/influencer/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['influencer']}>
+                <InfluencerDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/influencer/campaigns"
+            element={
+              <ProtectedRoute allowedRoles={['influencer']}>
+                <InfluencerCampaigns />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/influencer/campaigns/:slug"
+            element={
+              <ProtectedRoute allowedRoles={['influencer']}>
+                <InfluencerCampaignDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/influencer/applications"
+            element={
+              <ProtectedRoute allowedRoles={['influencer']}>
+                <InfluencerApplications />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/influencer/deliverables"
+            element={
+              <ProtectedRoute allowedRoles={['influencer']}>
+                <InfluencerDeliverables />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/influencer/profile"
+            element={
+              <ProtectedRoute allowedRoles={['influencer']}>
+                <InfluencerProfile />
+              </ProtectedRoute>
+            }
+          />
 
-              {/* Shared Routes */}
-              <Route
-                path="/subscription"
-                element={
-                  <ProtectedRoute>
-                    <Subscription />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                }
-              />
+          {/* Brand Routes */}
+          <Route
+            path="/brand/setup"
+            element={
+              <ProtectedRoute allowedRoles={['brand']}>
+                <BrandSetup />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/brand/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['brand']}>
+                <BrandDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/brand/discover"
+            element={
+              <ProtectedRoute allowedRoles={['brand']}>
+                <BrandDiscover />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/brand/campaigns"
+            element={
+              <ProtectedRoute allowedRoles={['brand']}>
+                <BrandCampaigns />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/brand/campaigns/:slug"
+            element={
+              <ProtectedRoute allowedRoles={['brand']}>
+                <BrandCampaignDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/brand/create-campaign"
+            element={
+              <ProtectedRoute allowedRoles={['brand']}>
+                <BrandCreateCampaign />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/brand/profile"
+            element={
+              <ProtectedRoute allowedRoles={['brand']}>
+                <BrandProfile />
+              </ProtectedRoute>
+            }
+          />
 
-              {/* 404 */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-        </div>
-      ) : (
-        <main className="flex-1">
-          <Routes>
-            <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
-            <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
-            <Route path="/auth/callback" element={<InstagramAuthCallback />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/pricing" element={<PublicRoute><Pricing /></PublicRoute>} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/waiting-for-approval" element={<WaitingForApproval />} />
+          {/* Shared Routes */}
+          <Route
+            path="/subscription"
+            element={
+              <ProtectedRoute>
+                <Subscription />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
 
-            {/* Influencer Routes */}
-            <Route
-              path="/influencer/setup"
-              element={
-                <ProtectedRoute allowedRoles={['influencer']}>
-                  <InfluencerSetup />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/influencer/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['influencer']}>
-                  <InfluencerDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/influencer/campaigns"
-              element={
-                <ProtectedRoute allowedRoles={['influencer']}>
-                  <InfluencerCampaigns />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/influencer/applications"
-              element={
-                <ProtectedRoute allowedRoles={['influencer']}>
-                  <InfluencerApplications />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/influencer/profile"
-              element={
-                <ProtectedRoute allowedRoles={['influencer']}>
-                  <InfluencerProfile />
-                </ProtectedRoute>
-              }
-            />
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
 
-            {/* Brand Routes */}
-            <Route
-              path="/brand/setup"
-              element={
-                <ProtectedRoute allowedRoles={['brand']}>
-                  <BrandSetup />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brand/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['brand']}>
-                  <BrandDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brand/discover"
-              element={
-                <ProtectedRoute allowedRoles={['brand']}>
-                  <BrandDiscover />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brand/campaigns"
-              element={
-                <ProtectedRoute allowedRoles={['brand']}>
-                  <BrandCampaigns />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brand/campaigns/:slug"
-              element={
-                <ProtectedRoute allowedRoles={['brand']}>
-                  <BrandCampaignDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brand/create-campaign"
-              element={
-                <ProtectedRoute allowedRoles={['brand']}>
-                  <BrandCreateCampaign />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brand/profile"
-              element={
-                <ProtectedRoute allowedRoles={['brand']}>
-                  <BrandProfile />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Shared Routes */}
-            <Route
-              path="/subscription"
-              element={
-                <ProtectedRoute>
-                  <Subscription />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-      )}
-      {!hideNavFooter && <Footer />}
+      {!hideChrome && !isAppSurface && <Footer />}
     </div>
   );
 };

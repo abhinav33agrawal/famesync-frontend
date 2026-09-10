@@ -37,7 +37,7 @@ export const LockedFeature = ({
                 </div>
                 {showUpgrade && (
                   <Link to="/pricing">
-                    <Button size="sm" className="gradient-instagram text-xs">
+                    <Button size="sm" className="bg-primary text-xs">
                       Upgrade Now
                     </Button>
                   </Link>
@@ -85,7 +85,7 @@ export const LockedText = ({
 };
 
 export const PremiumBadgeIndicator = () => (
-  <Badge variant="default" className="gradient-instagram gap-1 text-xs">
+  <Badge variant="default" className="bg-primary gap-1 text-xs">
     <Lock className="h-3 w-3" />
     Premium
   </Badge>

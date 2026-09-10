@@ -54,7 +54,7 @@ const CampaignsSkeleton = () => {
           </div>
 
           {/* Search Bar Skeleton */}
-          <Card className="mb-6 glass border-border/50">
+          <Card className="mb-6 bg-card border border-border border-border/50">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row gap-4">
                 <Skeleton className="flex-1 h-10" />
@@ -73,7 +73,7 @@ const CampaignsSkeleton = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
               >
-                <Card className="h-full glass border-border/50">
+                <Card className="h-full bg-card border border-border border-border/50">
                   <CardHeader>
                     <div className="flex justify-between items-start mb-3">
                       <Skeleton className="h-6 w-20" />

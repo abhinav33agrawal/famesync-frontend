@@ -120,12 +120,12 @@ const Terms = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-16"
           >
-            <Badge className="mb-4 gradient-instagram text-white" variant="secondary">
+            <Badge className="mb-4 bg-primary text-white" variant="secondary">
               <FileText className="w-4 h-4 mr-2" />
               Last Updated: January 2025
             </Badge>
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Terms of <span className="gradient-text">Service</span>
+              Terms of <span className="text-foreground">Service</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Please read these terms carefully before using FameSync. They govern your access to and use of our platform.
@@ -141,7 +141,7 @@ const Terms = () => {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Card className="glass border-2">
+                <Card className="bg-card border border-border border-2">
                   <CardContent className="p-8">
                     <h2 className="text-2xl font-bold mb-4">
                       {section.title}
@@ -164,7 +164,7 @@ const Terms = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <Card className="glass-dark border-2">
+              <Card className="bg-card border border-border border-2">
                 <CardContent className="p-8">
                   <h2 className="text-2xl font-bold mb-4">Contact Information</h2>
                   <p className="text-muted-foreground mb-4">

@@ -92,12 +92,12 @@ const Contact = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-16"
           >
-            <Badge className="mb-4 gradient-instagram text-white" variant="secondary">
+            <Badge className="mb-4 bg-primary text-white" variant="secondary">
               <MessageCircle className="w-4 h-4 mr-2" />
               Get in Touch
             </Badge>
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Contact <span className="gradient-text">Us</span>
+              Contact <span className="text-foreground">Us</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
@@ -115,7 +115,7 @@ const Contact = () => {
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ y: -5 }}
                 >
-                  <Card className="glass border-2 hover:border-primary/50 transition-all h-full text-center group">
+                  <Card className="bg-card border border-border border-2 hover:border-primary/50 transition-all h-full text-center group">
                     <CardContent className="p-8">
                       <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                         <Icon className="h-10 w-10 text-primary" />
@@ -145,10 +145,10 @@ const Contact = () => {
             transition={{ delay: 0.2 }}
             className="mb-16"
           >
-            <Card className="glass border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-secondary/5 max-w-3xl mx-auto">
+            <Card className="bg-card border border-border border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-secondary/5 max-w-3xl mx-auto">
               <CardContent className="p-8 md:p-12">
                 <h2 className="text-3xl font-bold mb-8 text-center">
-                  Send us a <span className="gradient-text">Message</span>
+                  Send us a <span className="text-foreground">Message</span>
                 </h2>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
@@ -196,7 +196,7 @@ const Contact = () => {
                   
                   <Button 
                     type="submit" 
-                    className="w-full gradient-instagram hover-glow" 
+                    className="w-full bg-primary lift" 
                     size="lg"
                     disabled={isSubmitting}
                   >
@@ -233,7 +233,7 @@ const Contact = () => {
                 transition={{ delay: 0.4 + index * 0.1 }}
                 whileHover={{ scale: 1.02 }}
               >
-                <Card className="glass border hover:border-primary/30 transition-all p-6">
+                <Card className="bg-card border border-border border hover:border-primary/30 transition-all p-6">
                   <h3 className="font-semibold text-lg mb-3 text-primary">{faq.q}</h3>
                   <p className="text-muted-foreground">{faq.a}</p>
                 </Card>

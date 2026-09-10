@@ -130,7 +130,7 @@ const Settings = () => {
               </motion.div>
               <div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                  <span className="gradient-text">Settings</span>
+                  <span className="text-foreground">Settings</span>
                 </h1>
               </div>
             </div>
@@ -242,7 +242,7 @@ const Settings = () => {
                     )}
                     <Button
                       type="submit"
-                      className="w-full sm:w-auto gradient-instagram"
+                      className="w-full sm:w-auto bg-primary"
                       disabled={!canChangePassword}
                     >
                       Update Password

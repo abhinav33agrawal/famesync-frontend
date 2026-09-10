@@ -23,7 +23,7 @@ const Footer = ({ variant = 'landing' }: FooterProps) => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
             {/* Left */}
             <div className="flex items-center gap-4">
-              <Link to="/" className="brand text-lg font-semibold">
+              <Link to="/" className="font-display font-semibold tracking-[-0.035em] text-lg font-semibold">
                 FameSync
               </Link>
 

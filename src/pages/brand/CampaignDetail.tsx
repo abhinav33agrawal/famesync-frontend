@@ -148,7 +148,7 @@ const StatCard = ({
     whileHover={{ y: -2 }}
     className="h-full"
   >
-    <Card className="glass border-border/50 hover:border-primary/30 transition-all duration-300 group h-full">
+    <Card className="bg-card border border-border border-border/50 hover:border-primary/30 transition-all duration-300 group h-full">
       <CardContent className="p-3 sm:p-4">
         <div className="flex items-center gap-2 sm:gap-3">
           <motion.div
@@ -159,7 +159,7 @@ const StatCard = ({
           </motion.div>
           <div className="min-w-0 flex-1">
             <p className="text-xs sm:text-sm text-muted-foreground truncate">{label}</p>
-            <div className={`text-base sm:text-xl font-bold truncate ${gradient ? 'gradient-text' : ''}`}>
+            <div className={`text-base sm:text-xl font-bold truncate ${gradient ? 'text-foreground' : ''}`}>
               {value}
             </div>
           </div>
@@ -443,7 +443,7 @@ const CampaignDetail = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
         <FloatingOrb className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
         <div className="relative z-10 p-8 flex items-center justify-center min-h-[calc(100vh-4rem)]">
-          <Card className="glass border-border/50 p-8 text-center max-w-md">
+          <Card className="bg-card border border-border border-border/50 p-8 text-center max-w-md">
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ repeat: Infinity, duration: 3 }}
@@ -452,7 +452,7 @@ const CampaignDetail = () => {
               <FileText className="h-10 w-10 text-destructive" />
             </motion.div>
             <p className="text-destructive mb-4 text-lg font-semibold">Campaign not found</p>
-            <Button onClick={() => navigate('/brand/campaigns')} className="gradient-instagram">
+            <Button onClick={() => navigate('/brand/campaigns')} className="bg-primary">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Campaigns
             </Button>
@@ -470,7 +470,7 @@ const CampaignDetail = () => {
     <div className="min-h-[calc(100vh-4rem)] relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-      <div className="absolute inset-0 dotted-pattern opacity-30" />
+      <div className="absolute inset-0 opacity-30" />
       <FloatingOrb
         className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl"
         delay={0}
@@ -494,7 +494,7 @@ const CampaignDetail = () => {
             <Button
               variant="ghost"
               onClick={() => navigate('/brand/campaigns')}
-              className="mb-4 sm:mb-6 group hover:gradient-instagram hover:text-white hover:shadow-lg hover:shadow-primary/30 transition-all text-sm sm:text-base"
+              className="mb-4 sm:mb-6 group hover:bg-primary hover:text-primary-foreground hover:shadow-lg hover:shadow-primary/30 transition-all text-sm sm:text-base"
             >
               <ArrowLeft className="mr-1 sm:mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
               <span className="hidden sm:inline">Back to Campaigns</span>
@@ -508,7 +508,7 @@ const CampaignDetail = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="glass border-border/50 mb-4 sm:mb-6 overflow-hidden">
+            <Card className="bg-card border border-border border-border/50 mb-4 sm:mb-6 overflow-hidden">
               <div className="absolute top-0 right-0 w-32 sm:w-64 h-32 sm:h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-bl-full" />
               <CardHeader className="relative p-4 sm:p-6">
                 <div className="flex flex-col gap-4">
@@ -518,7 +518,7 @@ const CampaignDetail = () => {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", delay: 0.2 }}
-                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl gradient-instagram flex items-center justify-center flex-shrink-0"
+                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-primary flex items-center justify-center flex-shrink-0"
                       >
                         <Sparkles className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                       </motion.div>
@@ -548,7 +548,7 @@ const CampaignDetail = () => {
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="glass border-border/50">
+                        <DropdownMenuContent align="end" className="bg-card border border-border border-border/50">
                           {campaign.status === 'draft' && (
                             <>
                               <DropdownMenuItem onClick={() => setDialogState({ open: true, action: 'publish' })}>
@@ -633,10 +633,10 @@ const CampaignDetail = () => {
             transition={{ delay: 0.3 }}
           >
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="glass border-border/50 mb-4 sm:mb-6 w-full sm:w-auto grid grid-cols-2 sm:flex">
+              <TabsList className="bg-card border border-border border-border/50 mb-4 sm:mb-6 w-full sm:w-auto grid grid-cols-2 sm:flex">
                 <TabsTrigger
                   value="overview"
-                  className="data-[state=active]:gradient-instagram data-[state=active]:text-white text-xs sm:text-sm"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs sm:text-sm"
                 >
                   <FileText className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden sm:inline">Overview</span>
@@ -644,7 +644,7 @@ const CampaignDetail = () => {
                 </TabsTrigger>
                 <TabsTrigger
                   value="applications"
-                  className="data-[state=active]:gradient-instagram data-[state=active]:text-white text-xs sm:text-sm"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs sm:text-sm"
                 >
                   <Users className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden sm:inline">Applications</span>
@@ -658,7 +658,7 @@ const CampaignDetail = () => {
               </TabsList>
 
               <TabsContent value="overview">
-                <Card className="glass border-border/50">
+                <Card className="bg-card border border-border border-border/50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Sparkles className="h-5 w-5 text-primary" />
@@ -676,7 +676,7 @@ const CampaignDetail = () => {
                         </div>
                         Deliverables
                       </h4>
-                      <Card className="glass border-border/50">
+                      <Card className="bg-card border border-border border-border/50">
                         <CardContent className="p-4">
                           <div>{renderDeliverables(campaign.deliverables_required as unknown)}</div>
                         </CardContent>
@@ -693,7 +693,7 @@ const CampaignDetail = () => {
                         </div>
                         Requirements
                       </h4>
-                      <Card className="glass border-border/50">
+                      <Card className="bg-card border border-border border-border/50">
                         <CardContent className="p-4">
                           <p className="text-muted-foreground whitespace-pre-wrap">{campaign.requirements}</p>
                         </CardContent>
@@ -712,7 +712,7 @@ const CampaignDetail = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <Card className="glass border-border/50 hover:border-primary/30 transition-all duration-300 group">
+                      <Card className="bg-card border border-border border-border/50 hover:border-primary/30 transition-all duration-300 group">
                         <CardContent className="p-4 sm:pt-6">
                           <div className="flex flex-col gap-4">
                             {/* Mobile Layout: Stack vertically */}
@@ -720,7 +720,7 @@ const CampaignDetail = () => {
                               <motion.div whileHover={{ scale: 1.05 }} className="flex-shrink-0">
                                 <Avatar className="h-12 w-12 sm:h-16 sm:w-16 ring-2 ring-primary/20">
                                   <AvatarImage src="" />
-                                  <AvatarFallback className="gradient-instagram text-white text-lg sm:text-xl">
+                                  <AvatarFallback className="bg-primary text-white text-lg sm:text-xl">
                                     {application.influencer.username.charAt(0).toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
@@ -766,7 +766,7 @@ const CampaignDetail = () => {
 
                             {/* Message */}
                             {application.message && (
-                              <Card className="glass border-border/50">
+                              <Card className="bg-card border border-border border-border/50">
                                 <CardContent className="p-3">
                                   <div className="flex items-start gap-2">
                                     <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
@@ -838,7 +838,7 @@ const CampaignDetail = () => {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                     >
-                      <Card className="glass border-border/50">
+                      <Card className="bg-card border border-border border-border/50">
                         <CardContent className="py-16 text-center">
                           <motion.div
                             animate={{ y: [0, -10, 0] }}

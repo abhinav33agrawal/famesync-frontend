@@ -98,7 +98,7 @@ export function CampaignStatusDialog({
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isLoading}
-            className={config.variant === 'destructive' ? 'bg-destructive hover:bg-destructive/90' : 'gradient-instagram'}
+            className={config.variant === 'destructive' ? 'bg-destructive hover:bg-destructive/90' : 'bg-primary'}
           >
             {isLoading ? (
               <>

@@ -316,10 +316,10 @@ const InfluencerSetup = () => {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 mesh-gradient opacity-30" />
+      <div className="absolute inset-0 opacity-30" />
       <FloatingOrb className="w-[400px] h-[400px] bg-primary/10 -top-40 -left-40" delay={0} />
       <FloatingOrb className="w-[500px] h-[500px] bg-accent/10 -bottom-40 -right-40" delay={2} />
-      <div className="absolute inset-0 grid-pattern opacity-20" />
+      <div className="absolute inset-0 opacity-20" />
 
       {/* Header */}
       <motion.header
@@ -329,7 +329,7 @@ const InfluencerSetup = () => {
       >
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center">
-            <span className="brand gradient-text">FameSync</span>
+            <span className="font-display font-semibold tracking-[-0.035em] text-foreground">FameSync</span>
           </Link>
           <div className="text-sm text-muted-foreground">
             Welcome, <span className="font-medium text-foreground">{user?.first_name || 'Creator'}</span>
@@ -356,7 +356,7 @@ const InfluencerSetup = () => {
             </motion.div>
             <div>
               <h1 className="text-3xl lg:text-4xl font-bold mb-2">
-                Complete Your <span className="gradient-text">Profile</span>
+                Complete Your <span className="text-foreground">Profile</span>
               </h1>
               <p className="text-muted-foreground">
                 Tell us about yourself to start applying to campaigns.
@@ -651,7 +651,7 @@ const InfluencerSetup = () => {
                 >
                   <Button
                     type="submit"
-                    className="w-full h-14 gradient-instagram text-white font-semibold text-lg shadow-lg shadow-primary/25 shimmer"
+                    className="w-full h-14 bg-primary text-white font-semibold text-lg shadow-lg shadow-primary/25"
                     disabled={setupMutation.isPending}
                   >
                     {setupMutation.isPending ? (

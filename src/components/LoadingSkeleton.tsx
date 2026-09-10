@@ -5,8 +5,8 @@ const LoadingSkeleton = () => {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Animated background mesh */}
-      <div className="absolute inset-0 mesh-gradient opacity-40" />
-      <div className="absolute inset-0 grid-pattern opacity-10" />
+      <div className="absolute inset-0 opacity-40" />
+      <div className="absolute inset-0 opacity-10" />
       
       {/* Floating orbs with pulse animation */}
       <motion.div

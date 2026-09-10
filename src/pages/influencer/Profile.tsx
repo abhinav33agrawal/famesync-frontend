@@ -710,7 +710,7 @@ const InfluencerProfile = () => {
                           type="button"
                           onClick={handleConnectInstagram}
                           disabled={!instagramServiceReady}
-                          className="gradient-instagram text-white"
+                          className="bg-primary text-white"
                         >
                           <Instagram className="h-4 w-4 mr-2" />
                           Continue with Instagram

@@ -115,7 +115,7 @@ const StepIndicator = ({
           >
             <motion.div
               className={`flex items-center justify-center w-12 h-12 rounded-xl border-2 transition-all duration-300 ${isActive
-                ? 'gradient-instagram text-white border-transparent shadow-lg shadow-primary/30'
+                ? 'bg-primary text-white border-transparent shadow-lg shadow-primary/30'
                 : isCompleted
                   ? 'bg-green-500/20 border-green-500/50 text-green-500'
                   : 'border-border/50 bg-card/50 text-muted-foreground'
@@ -583,7 +583,7 @@ const CreateCampaign = () => {
       <div className="min-h-[calc(100vh-4rem)] relative overflow-hidden">
         {/* Background Elements */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-        <div className="absolute inset-0 dotted-pattern opacity-30" />
+        <div className="absolute inset-0 opacity-30" />
         <FloatingOrb
           className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl"
           delay={0}
@@ -610,7 +610,7 @@ const CreateCampaign = () => {
                   clearFormDraft();
                   navigate('/brand/dashboard');
                 }}
-                className="mb-6 group hover:gradient-instagram hover:text-white hover:shadow-lg hover:shadow-primary/30 transition-all"
+                className="mb-6 group hover:bg-primary hover:text-primary-foreground hover:shadow-lg hover:shadow-primary/30 transition-all"
               >
                 <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
                 Back to Dashboard
@@ -624,7 +624,7 @@ const CreateCampaign = () => {
               className="text-center mb-8"
             >
               <motion.div
-                className="w-16 h-16 rounded-2xl gradient-instagram flex items-center justify-center mx-auto mb-4"
+                className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", delay: 0.2 }}
@@ -632,7 +632,7 @@ const CreateCampaign = () => {
                 <Megaphone className="h-8 w-8 text-white" />
               </motion.div>
               <h1 className="text-4xl font-bold mb-2">
-                Create <span className="gradient-text">Campaign</span>
+                Create <span className="text-foreground">Campaign</span>
               </h1>
               <p className="text-muted-foreground mb-4">Set up a new campaign for creators to apply to</p>
 
@@ -659,7 +659,7 @@ const CreateCampaign = () => {
 
               {!isPremium && (
                 <motion.div
-                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full glass border-border/50"
+                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border border-border/50"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
@@ -687,7 +687,7 @@ const CreateCampaign = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <Card className="glass border-border/50 overflow-hidden">
+              <Card className="bg-card border border-border border-border/50 overflow-hidden">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-primary/10 to-transparent rounded-bl-full" />
                 <CardHeader className="relative">
                   <div className="flex items-center gap-3">
@@ -1613,7 +1613,7 @@ const CreateCampaign = () => {
                           </div>
 
                           <FormField delay={0.35}>
-                            <Card className="glass border-border/50">
+                            <Card className="bg-card border border-border border-border/50">
                               <CardContent className="p-4">
                                 <div className="flex items-start gap-3">
                                   <motion.div
@@ -1658,7 +1658,7 @@ const CreateCampaign = () => {
                     )}
                     {
                       step < 4 ? (
-                        <Button onClick={handleNext} className="gradient-instagram group">
+                        <Button onClick={handleNext} className="bg-primary group">
                           Next
                           <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </Button>
@@ -1688,7 +1688,7 @@ const CreateCampaign = () => {
                                 <span className="flex-1">
                                   <Button
                                     onClick={() => handleSubmit('active')}
-                                    className="w-full gradient-instagram group"
+                                    className="w-full bg-primary group"
                                     disabled={isSubmitting || !user?.is_approved}
                                   >
                                     {isSubmitting ? (

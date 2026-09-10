@@ -78,11 +78,11 @@ const About = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-16"
           >
-            <Badge className="mb-4 gradient-instagram text-white" variant="secondary">
+            <Badge className="mb-4 bg-primary text-white" variant="secondary">
               Our Story
             </Badge>
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              About <span className="gradient-text">FameSync</span>
+              About <span className="text-foreground">FameSync</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               We're building a simple way for micro-creators and brands to find each other and collaborate authentically.
@@ -98,7 +98,7 @@ const About = () => {
             >
               <div>
                 <h2 className="text-4xl font-bold mb-6">
-                  Our <span className="gradient-text">Mission</span>
+                  Our <span className="text-foreground">Mission</span>
                 </h2>
                 <p className="text-lg text-muted-foreground leading-relaxed mb-4">
                   FameSync started because we noticed something: micro-creators struggle to find brand collaborations, and small brands struggle to find the right creators.
@@ -111,24 +111,24 @@ const About = () => {
                 </p>
               </div>
               <div className="relative">
-                <div className="absolute inset-0 gradient-instagram opacity-10 rounded-3xl blur-3xl"></div>
-                <Card className="glass border-2 relative">
+                <div className="absolute inset-0 bg-primary opacity-10 rounded-3xl blur-3xl"></div>
+                <Card className="bg-card border border-border border-2 relative">
                   <CardContent className="p-8">
                     <div className="grid grid-cols-2 gap-6">
                       <div>
-                        <div className="text-4xl font-bold gradient-text mb-2">Growing</div>
+                        <div className="text-4xl font-bold text-foreground mb-2">Growing</div>
                         <div className="text-sm text-muted-foreground">User Base</div>
                       </div>
                       <div>
-                        <div className="text-4xl font-bold gradient-text mb-2">Early</div>
+                        <div className="text-4xl font-bold text-foreground mb-2">Early</div>
                         <div className="text-sm text-muted-foreground">Stage Beta</div>
                       </div>
                       <div>
-                        <div className="text-4xl font-bold gradient-text mb-2">Active</div>
+                        <div className="text-4xl font-bold text-foreground mb-2">Active</div>
                         <div className="text-sm text-muted-foreground">Development</div>
                       </div>
                       <div>
-                        <div className="text-4xl font-bold gradient-text mb-2">India</div>
+                        <div className="text-4xl font-bold text-foreground mb-2">India</div>
                         <div className="text-sm text-muted-foreground">Based</div>
                       </div>
                     </div>
@@ -146,7 +146,7 @@ const About = () => {
               className="text-center mb-12"
             >
               <h2 className="text-4xl font-bold mb-4">
-                Our <span className="gradient-text">Values</span>
+                Our <span className="text-foreground">Values</span>
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 These core principles guide everything we do at FameSync.
@@ -164,7 +164,7 @@ const About = () => {
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Card className="glass border-2 hover:border-primary/50 transition-all h-full">
+                    <Card className="bg-card border border-border border-2 hover:border-primary/50 transition-all h-full">
                       <CardContent className="p-8">
                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-6">
                           <Icon className="h-7 w-7 text-primary" />
@@ -187,7 +187,7 @@ const About = () => {
               className="text-center mb-12"
             >
               <h2 className="text-4xl font-bold mb-4">
-                Meet the <span className="gradient-text">Team</span>
+                Meet the <span className="text-foreground">Team</span>
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 A small team working to make creator-brand connections simpler.
@@ -203,9 +203,9 @@ const About = () => {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card className="glass border-2 hover:border-primary/50 transition-all text-center">
+                  <Card className="bg-card border border-border border-2 hover:border-primary/50 transition-all text-center">
                     <CardContent className="p-6">
-                      <div className="w-20 h-20 rounded-full gradient-instagram flex items-center justify-center text-4xl mx-auto mb-4">
+                      <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-4xl mx-auto mb-4">
                         {member.avatar}
                       </div>
                       <h3 className="font-bold text-lg mb-1">{member.name}</h3>

@@ -64,7 +64,7 @@ const Deliverables = () => {
           className="mb-8"
         >
           <h1 className="text-4xl font-bold mb-2">
-            My <span className="gradient-text">Deliverables</span>
+            My <span className="text-foreground">Deliverables</span>
           </h1>
           <p className="text-muted-foreground">
             Manage and track your campaign deliverables.
@@ -104,11 +104,11 @@ const Deliverables = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="hover-glow transition-smooth">
+                <Card className="lift transition-all duration-200 ease-soft">
                   <CardContent className="p-6">
                     <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                       <div className="flex items-start gap-4 flex-1">
-                        <div className="w-12 h-12 rounded-lg gradient-instagram flex items-center justify-center text-2xl flex-shrink-0">
+                        <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center text-2xl flex-shrink-0">
                           {deliverable.application.campaign.brand.username.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -156,7 +156,7 @@ const Deliverables = () => {
                         {deliverable.status === 'pending' && (
                           <Button
                             size="sm"
-                            className="gradient-instagram"
+                            className="bg-primary"
                             onClick={() => handleUpload(deliverable.id)}
                           >
                             <Upload className="h-4 w-4 mr-1" />

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import {
   ArrowLeft,
@@ -196,7 +197,7 @@ const InfluencerCampaignDetail = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
         <FloatingOrb className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
         <div className="relative z-10 p-8 flex items-center justify-center min-h-[calc(100vh-4rem)]">
-          <Card className="glass border-border/50 p-8 text-center max-w-md">
+          <Card className="bg-card border border-border border-border/50 p-8 text-center max-w-md">
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ repeat: Infinity, duration: 3 }}
@@ -205,7 +206,7 @@ const InfluencerCampaignDetail = () => {
               <FileText className="h-10 w-10 text-destructive" />
             </motion.div>
             <p className="text-destructive mb-4 text-lg font-semibold">Campaign not found</p>
-            <Button onClick={() => navigate('/influencer/campaigns')} className="gradient-instagram">
+            <Button onClick={() => navigate('/influencer/campaigns')} className="bg-primary">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Campaigns
             </Button>
@@ -219,7 +220,7 @@ const InfluencerCampaignDetail = () => {
     <div className="min-h-[calc(100vh-4rem)] relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-      <div className="absolute inset-0 dotted-pattern opacity-30" />
+      <div className="absolute inset-0 opacity-30" />
       <FloatingOrb
         className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl"
         delay={0}
@@ -256,7 +257,7 @@ const InfluencerCampaignDetail = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <Card className="glass border-border/50 overflow-hidden">
+                <Card className="bg-card border border-border border-border/50 overflow-hidden">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-primary/10 to-transparent rounded-bl-full" />
                   <CardHeader className="relative pb-4">
                     <div className="flex items-start gap-4">
@@ -264,7 +265,7 @@ const InfluencerCampaignDetail = () => {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", delay: 0.2 }}
-                        className="w-14 h-14 rounded-xl gradient-instagram flex items-center justify-center flex-shrink-0 text-white text-2xl font-bold"
+                        className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 text-white text-2xl font-bold"
                       >
                         {brandName.charAt(0).toUpperCase()}
                       </motion.div>
@@ -300,7 +301,7 @@ const InfluencerCampaignDetail = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <Card className="glass border-border/50">
+                <Card className="bg-card border border-border border-border/50">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <FileText className="h-5 w-5 text-primary" />
@@ -515,7 +516,7 @@ const InfluencerCampaignDetail = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <Card className="glass border-border/50">
+                  <Card className="bg-card border border-border border-border/50">
                     <CardHeader className="pb-4">
                       <CardTitle className="text-lg flex items-center gap-2">
                         <Users className="h-5 w-5 text-primary" />
@@ -572,7 +573,7 @@ const InfluencerCampaignDetail = () => {
                         <span className="w-full">
                           <Button
                             onClick={() => setShowApplyDialog(true)}
-                            className="w-full gradient-instagram text-white group"
+                            className="w-full bg-primary text-white group"
                             size="lg"
                             disabled={!user?.is_approved}
                           >
@@ -596,7 +597,7 @@ const InfluencerCampaignDetail = () => {
                   transition={{ delay: 0.35 }}
                   className="mt-5"
                 >
-                  <Card className={`glass ${hasAcceptedApplication ? 'border-green-500/30 bg-green-500/5' : 'border-amber-500/30 bg-amber-500/5'}`}>
+                  <Card className={`bg-card border border-border ${hasAcceptedApplication ? 'border-green-500/30 bg-green-500/5' : 'border-amber-500/30 bg-amber-500/5'}`}>
                     <CardContent className="p-4 text-center">
                       <div className="flex items-center justify-center gap-2">
                         {hasAcceptedApplication ? (
@@ -635,7 +636,7 @@ const InfluencerCampaignDetail = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
               >
-                <Card className="glass border-border/50">
+                <Card className="bg-card border border-border border-border/50">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg">Campaign Overview</CardTitle>
                   </CardHeader>
@@ -696,7 +697,7 @@ const InfluencerCampaignDetail = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
               >
-                <Card className="glass border-border/50">
+                <Card className="bg-card border border-border border-border/50">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Building2 className="h-5 w-5 text-primary" />
@@ -773,7 +774,7 @@ const InfluencerCampaignDetail = () => {
                           </p>
                           <Button
                             size="sm"
-                            className="gradient-instagram mt-2"
+                            className="bg-primary mt-2"
                             onClick={() => setShowUpgradePrompt(true)}
                           >
                             Upgrade
@@ -821,7 +822,7 @@ const InfluencerCampaignDetail = () => {
                     <Button
                       onClick={handleApply}
                       disabled={isApplying || !applicationMessage.trim()}
-                      className="gradient-instagram text-white flex-1 group"
+                      className="bg-primary text-white flex-1 group"
                     >
                       {isApplying ? (
                         <>

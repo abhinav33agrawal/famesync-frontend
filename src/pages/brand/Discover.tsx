@@ -73,7 +73,7 @@ export default function Discover() {
         <p className="text-muted-foreground">Find the perfect influencers for your next campaign.</p>
       </div>
 
-      <Card className="glass overflow-hidden border-border/50">
+      <Card className="bg-card border border-border overflow-hidden border-border/50">
         <CardContent className="p-6">
           <form onSubmit={handleSearch} className="flex flex-wrap gap-4 items-end">
             <div className="space-y-2 flex-1 min-w-[200px]">
@@ -127,7 +127,7 @@ export default function Discover() {
               <Label htmlFor="verified" className="cursor-pointer">Verified Only</Label>
             </div>
 
-            <Button type="submit" className="gradient-instagram text-white shadow-lg shadow-pink-500/25">
+            <Button type="submit" className="bg-primary text-white shadow-lg shadow-pink-500/25">
               <Search className="h-4 w-4 mr-2" />
               Search
             </Button>
@@ -165,7 +165,7 @@ export default function Discover() {
                   <CardContent className="p-0 flex-1 flex flex-col">
                     <div className="p-6 pb-4 flex-1 flex flex-col items-center text-center">
                       <div className="relative mb-4">
-                        <div className="w-20 h-20 rounded-full gradient-instagram p-1">
+                        <div className="w-20 h-20 rounded-full bg-primary p-1">
                           <div className="w-full h-full bg-background rounded-full flex items-center justify-center text-2xl font-bold border-2 border-background">
                             {username.charAt(0).toUpperCase()}
                           </div>

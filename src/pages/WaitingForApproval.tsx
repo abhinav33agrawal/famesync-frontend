@@ -106,7 +106,7 @@ const WaitingForApproval = () => {
                         </Button>
                         <Button
                             onClick={() => window.location.reload()}
-                            className="gradient-instagram hover-glow rounded-xl"
+                            className="bg-primary lift rounded-xl"
                         >
                             Check Status
                         </Button>

@@ -134,12 +134,12 @@ const Privacy = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-16"
           >
-            <Badge className="mb-4 gradient-instagram text-white" variant="secondary">
+            <Badge className="mb-4 bg-primary text-white" variant="secondary">
               <Shield className="w-4 h-4 mr-2" />
               Last Updated: March 2026
             </Badge>
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Privacy <span className="gradient-text">Policy</span>
+              Privacy <span className="text-foreground">Policy</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Your privacy is important to us. This Privacy Policy explains how
@@ -156,7 +156,7 @@ const Privacy = () => {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="glass border-2">
+                <Card className="bg-card border border-border border-2">
                   <CardContent className="p-8">
                     <h2 className="text-2xl font-bold mb-4">{section.title}</h2>
                     {section.paragraphs.length > 0 && (
@@ -184,7 +184,7 @@ const Privacy = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <Card className="glass-dark border-2">
+              <Card className="bg-card border border-border border-2">
                 <CardContent className="p-8">
                   <h2 className="text-2xl font-bold mb-4">Contact Us</h2>
                   <p className="text-muted-foreground mb-4">

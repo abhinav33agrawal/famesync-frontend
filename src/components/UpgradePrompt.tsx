@@ -79,7 +79,7 @@ export const UpgradePrompt = ({
 
         <AlertDialogFooter className="flex-col sm:flex-col gap-2">
           <Link to="/pricing" className="w-full">
-            <Button className="w-full gradient-instagram">
+            <Button className="w-full bg-primary">
               <Crown className="mr-2 h-4 w-4" />
               View Pricing Plans
             </Button>

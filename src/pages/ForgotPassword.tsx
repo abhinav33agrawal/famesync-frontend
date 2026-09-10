@@ -67,18 +67,18 @@ const ForgotPassword = () => {
     <div className="min-h-screen relative overflow-hidden flex">
       {/* Left Panel - Decorative */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 gradient-instagram" />
-        <div className="absolute inset-0 mesh-gradient opacity-40" />
+        <div className="absolute inset-0 bg-primary" />
+        <div className="absolute inset-0 opacity-40" />
         
         <FloatingOrb className="w-[400px] h-[400px] bg-white/10 top-0 -left-40" delay={0} />
         <FloatingOrb className="w-[500px] h-[500px] bg-white/10 -bottom-20 -right-40" delay={2} />
         <FloatingOrb className="w-[300px] h-[300px] bg-white/5 top-1/3 right-1/4" delay={4} />
         
-        <div className="absolute inset-0 grid-pattern opacity-20" />
+        <div className="absolute inset-0 opacity-20" />
         
         <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
           <Link to="/" className="flex items-center group w-fit">
-            <span className="brand text-white text-4xl">FameSync</span>
+            <span className="font-display font-semibold tracking-[-0.035em] text-white text-4xl">FameSync</span>
           </Link>
           
           <div className="flex-1 flex flex-col justify-center">
@@ -114,7 +114,7 @@ const ForgotPassword = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.6 }}
-            className="glass-card rounded-2xl p-6 max-w-md"
+            className="bg-card border border-border rounded-2xl p-6 max-w-md"
           >
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
@@ -133,7 +133,7 @@ const ForgotPassword = () => {
 
       {/* Right Panel - Form */}
       <div className="w-full lg:w-1/2 relative">
-        <div className="absolute inset-0 mesh-gradient opacity-30 lg:opacity-0" />
+        <div className="absolute inset-0 opacity-30 lg:opacity-0" />
         <FloatingOrb className="w-[300px] h-[300px] bg-primary/10 top-0 right-0 lg:hidden" delay={0} />
         <FloatingOrb className="w-[250px] h-[250px] bg-accent/10 bottom-20 left-0 lg:hidden" delay={2} />
         
@@ -144,7 +144,7 @@ const ForgotPassword = () => {
           className="lg:hidden relative z-20 p-4"
         >
           <Link to="/" className="flex items-center">
-            <span className="brand gradient-text">FameSync</span>
+            <span className="font-display font-semibold tracking-[-0.035em] text-foreground">FameSync</span>
           </Link>
         </motion.header>
         
@@ -309,7 +309,7 @@ const ForgotPassword = () => {
                           <Button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-12 gradient-instagram text-white font-semibold text-base shadow-lg shadow-primary/25 shimmer"
+                            className="w-full h-12 bg-primary text-white font-semibold text-base shadow-lg shadow-primary/25"
                           >
                             {isLoading ? (
                               <motion.div

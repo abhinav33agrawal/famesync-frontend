@@ -46,7 +46,7 @@ const CampaignDetailSkeleton = () => {
           <Skeleton className="h-10 w-40 mb-6" />
 
           {/* Header Card Skeleton */}
-          <Card className="glass border-border/50 mb-6">
+          <Card className="bg-card border border-border border-border/50 mb-6">
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -69,7 +69,7 @@ const CampaignDetailSkeleton = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
                   >
-                    <Card className="glass border-border/50">
+                    <Card className="bg-card border border-border border-border/50">
                       <CardContent className="p-4">
                         <div className="flex items-center gap-3">
                           <Skeleton className="w-12 h-12 rounded-xl" />
@@ -91,7 +91,7 @@ const CampaignDetailSkeleton = () => {
           <Skeleton className="h-10 w-80 mb-6" />
 
           {/* Content Card Skeleton */}
-          <Card className="glass border-border/50">
+          <Card className="bg-card border border-border border-border/50">
             <CardHeader>
               <Skeleton className="h-8 w-48" />
             </CardHeader>

@@ -74,7 +74,7 @@ const StatCard = ({
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
   >
-    <Card className="glass border-border/50 hover:border-primary/30 transition-all duration-300 group">
+    <Card className="bg-card border border-border border-border/50 hover:border-primary/30 transition-all duration-300 group">
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <motion.div
@@ -335,7 +335,7 @@ const Campaigns = () => {
   if (error) {
     return (
       <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-8 flex items-center justify-center">
-        <Card className="glass border-destructive/50 p-8 text-center">
+        <Card className="bg-card border border-border border-destructive/50 p-8 text-center">
           <p className="text-destructive mb-4">Failed to load campaigns. Please try again.</p>
           <Button variant="outline" onClick={() => window.location.reload()}>
             Retry
@@ -349,7 +349,7 @@ const Campaigns = () => {
     <div className="min-h-[calc(100vh-4rem)] relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-      <div className="absolute inset-0 dotted-pattern opacity-30" />
+      <div className="absolute inset-0 opacity-30" />
       <FloatingOrb
         className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl"
         delay={0}
@@ -382,7 +382,7 @@ const Campaigns = () => {
                     <Megaphone className="h-6 w-6 text-white" />
                   </div>
                   <h1 className="text-4xl font-bold">
-                    My <span className="gradient-text">Campaigns</span>
+                    My <span className="text-foreground">Campaigns</span>
                   </h1>
                 </motion.div>
                 <p className="text-muted-foreground">
@@ -395,7 +395,7 @@ const Campaigns = () => {
                 transition={{ delay: 0.2 }}
               >
                 <Link to="/brand/create-campaign">
-                  <Button className="gradient-instagram group">
+                  <Button className="bg-primary group">
                     <PlusCircle className="mr-2 h-4 w-4 group-hover:rotate-90 transition-transform duration-300" />
                     Create Campaign
                     <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -444,8 +444,8 @@ const Campaigns = () => {
               setStatusFilter(value);
               handleFilterChange();
             }}>
-              <TabsList className="glass border-border/50">
-                <TabsTrigger value="all" className="data-[state=active]:gradient-instagram data-[state=active]:text-white">
+              <TabsList className="bg-card border border-border border-border/50">
+                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   All
                   <Badge className={`ml-2 text-xs px-2 font-semibold ${statusFilter === 'all'
                     ? 'bg-white/20 text-white border-white/30'
@@ -492,7 +492,7 @@ const Campaigns = () => {
             transition={{ delay: 0.3 }}
             className="mb-6"
           >
-            <Card className="glass border-border/50">
+            <Card className="bg-card border border-border border-border/50">
               <CardContent className="p-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -520,7 +520,7 @@ const Campaigns = () => {
                 transition={{ delay: 0.4 + index * 0.1 }}
                 whileHover={{ y: -5 }}
               >
-                <Card className="h-full glass border-border/50 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group">
+                <Card className="h-full bg-card border border-border border-border/50 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group">
                   <CardHeader>
                     <div className="flex justify-between items-start mb-3">
                       <Badge
@@ -672,7 +672,7 @@ const Campaigns = () => {
                     size="sm"
                     onClick={() => handlePageChange(page as number)}
                     className={`min-w-[2.5rem] font-semibold transition-all duration-200 ${currentPage === page
-                      ? 'gradient-instagram text-white border-transparent shadow-lg shadow-primary/20 scale-105 hover:scale-110'
+                      ? 'bg-primary text-white border-transparent shadow-lg shadow-primary/20 scale-105 hover:scale-110'
                       : 'bg-background/80 backdrop-blur-sm border-2 border-primary/20 hover:border-primary/50 hover:bg-primary/10 hover:text-primary hover:scale-105'
                       }`}
                   >
@@ -701,7 +701,7 @@ const Campaigns = () => {
               animate={{ opacity: 1, scale: 1 }}
               className="text-center py-16"
             >
-              <Card className="glass border-border/50 max-w-md mx-auto p-8">
+              <Card className="bg-card border border-border border-border/50 max-w-md mx-auto p-8">
                 <motion.div
                   animate={{
                     y: [0, -10, 0],
@@ -719,7 +719,7 @@ const Campaigns = () => {
                     : "Create your first campaign to start connecting with influencers"}
                 </p>
                 <Link to="/brand/create-campaign">
-                  <Button className="gradient-instagram">
+                  <Button className="bg-primary">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Create Your First Campaign
                   </Button>
