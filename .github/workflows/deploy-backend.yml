@@ -1,0 +1,75 @@
+# name: Deploy Backend to EC2
+
+# on:
+#   push:
+#     branches: [ main ]
+#     paths:
+#       - 'backend/**'
+#       - '.github/workflows/deploy-backend.yml'
+#   workflow_dispatch:
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+    
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+
+#       - name: Deploy to EC2
+#         env:
+#           EC2_HOST: ${{ secrets.EC2_BACKEND_HOST }}
+#           EC2_USER: ${{ secrets.EC2_BACKEND_USER || 'ubuntu' }}
+#           EC2_SSH_KEY: ${{ secrets.EC2_BACKEND_SSH_KEY }}
+#           EC2_PORT: ${{ secrets.EC2_BACKEND_PORT || '22' }}
+#         run: |
+#           # Setup SSH key
+#           mkdir -p ~/.ssh
+#           echo "$EC2_SSH_KEY" > ~/.ssh/deploy_key
+#           chmod 600 ~/.ssh/deploy_key
+          
+#           # Add EC2 host to known_hosts
+#           ssh-keyscan -p $EC2_PORT -H $EC2_HOST >> ~/.ssh/known_hosts
+          
+#           # Deploy via SSH
+#           ssh -i ~/.ssh/deploy_key -p $EC2_PORT $EC2_USER@$EC2_HOST << 'ENDSSH'
+#             set -e
+            
+#             echo "🚀 Starting deployment..."
+            
+#             # Navigate to project directory
+#             cd /home/ubuntu/famesync
+            
+#             # Pull latest code
+#             echo "📥 Pulling latest code from main branch..."
+#             git fetch origin
+#             git reset --hard origin/main
+            
+
+#             # Restart gunicorn service
+#             echo "🔄 Restarting gunicorn service..."
+#             sudo systemctl restart gunicorn
+            
+#             # Check service status
+#             echo "✅ Checking service status..."
+#             sudo systemctl status gunicorn --no-pager
+            
+#             # Restart nginx (optional, uncomment if needed)
+#             # echo "🔄 Restarting nginx..."
+#             # sudo systemctl restart nginx
+            
+#             echo "✨ Deployment completed successfully!"
+#           ENDSSH
+          
+#           # Cleanup
+#           rm -f ~/.ssh/deploy_key
+
+#       - name: Deployment Status
+#         if: always()
+#         run: |
+#           if [ ${{ job.status }} == 'success' ]; then
+#             echo "✅ Backend deployed successfully to EC2!"
+#           else
+#             echo "❌ Deployment failed. Check the logs above for details."
+#             exit 1
+#           fi
