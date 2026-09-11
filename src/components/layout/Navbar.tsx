@@ -112,11 +112,13 @@ export const Navbar = () => {
 
         <div className="flex items-center gap-2.5">
           {!user ? (
+            /* Below sm these live in the mobile sheet, so the row can't
+               overflow the 390px viewport. */
             <>
-              <Button variant="ghost" size="sm" onClick={() => go("/auth?mode=login")}>
+              <Button variant="ghost" size="sm" className="hidden sm:inline-flex" onClick={() => go("/auth?mode=login")}>
                 Log in
               </Button>
-              <Button size="sm" onClick={() => go("/auth?mode=signup")}>
+              <Button size="sm" className="hidden sm:inline-flex" onClick={() => go("/auth?mode=signup")}>
                 Start free
               </Button>
             </>

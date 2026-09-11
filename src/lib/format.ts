@@ -57,8 +57,15 @@ export const deliverableChips = (d: unknown): string[] => {
     return raw;
   };
 
+  // "Story" -> "Stories", not "Storys"
+  const pluralise = (name: string) => {
+    if (name.endsWith("s")) return name;
+    if (/[^aeiou]y$/i.test(name)) return name.slice(0, -1) + "ies";
+    return name + "s";
+  };
+
   const plural = (name: string, count: number) =>
-    count > 1 ? count + " " + name + (name.endsWith("s") ? "" : "s") : "1 " + name;
+    count > 1 ? count + " " + pluralise(name) : "1 " + name;
 
   if (Array.isArray(d)) {
     if (d.length && typeof d[0] === "object" && d[0] !== null) {
