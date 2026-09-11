@@ -27,11 +27,7 @@ import {
 import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { useAvailabilityCheck } from '@/hooks/useAvailabilityCheck';
 import { AvailabilityIndicator } from '@/components/AvailabilityIndicator';
-import {
-  fetchInstagramServiceProvidersStatus,
-  getInstagramServiceLoginUrl,
-  isInstagramServiceConfigured,
-} from '@/lib/instagramService';
+import { getInstagramErrorMessage, startInstagramAuth } from '@/lib/instagram';
 
 /* Removed from the old Auth.tsx: the floating-orb blobs, the AnimatedInput
    slide wrapper, the spring tab indicator, the ping ring behind the mail
@@ -109,14 +105,12 @@ const Auth = () => {
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [instagramServiceAvailable, setInstagramServiceAvailable] = useState(false);
-  const [instagramServiceStatusMessage, setInstagramServiceStatusMessage] = useState('');
+  const [instagramStarting, setInstagramStarting] = useState(false);
+  const [instagramStatusMessage, setInstagramStatusMessage] = useState('');
 
   // Real-time availability checks with debouncing
   const usernameAvailability = useAvailabilityCheck('username', signUpData.username, 400);
   const emailAvailability = useAvailabilityCheck('email', signUpData.email, 400);
-  const instagramServiceReady = isInstagramServiceConfigured();
-  const instagramLoginUrl = getInstagramServiceLoginUrl();
 
   useEffect(() => {
     const instagramStatus = `${searchParams.get('instagram') || ''}`.trim().toLowerCase();
@@ -131,51 +125,6 @@ const Auth = () => {
       toast.error(error);
     }
   }, [searchParams]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    if (!instagramServiceReady) {
-      setInstagramServiceAvailable(false);
-      setInstagramServiceStatusMessage('Instagram login will be enabled once the service URL is configured.');
-      return () => {
-        isMounted = false;
-      };
-    }
-
-    fetchInstagramServiceProvidersStatus()
-      .then((status) => {
-        if (!isMounted) {
-          return;
-        }
-
-        const instagramReady = Boolean(status.instagram.configured && status.instagram.ready);
-        setInstagramServiceAvailable(instagramReady);
-        const databaseHelp = !status.database.configured
-          ? 'Instagram login needs the websocket backend to be connected to MySQL.'
-          : !status.database.ready
-            ? 'Instagram login is waiting for the websocket backend to reconnect to MySQL.'
-            : '';
-        setInstagramServiceStatusMessage(
-          status.instagram.disabledReason ||
-            databaseHelp ||
-            status.database.message ||
-            (instagramReady ? '' : 'Instagram login is temporarily unavailable.')
-        );
-      })
-      .catch(() => {
-        if (!isMounted) {
-          return;
-        }
-
-        setInstagramServiceAvailable(false);
-        setInstagramServiceStatusMessage('Instagram login is temporarily unavailable.');
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [instagramServiceReady]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -271,19 +220,23 @@ const Auth = () => {
     }
   };
 
-  const handleInstagramLogin = () => {
-    if (!instagramServiceReady || !instagramLoginUrl) {
-        toast.error('Instagram service is not configured yet.');
-        return;
-    }
+  const handleInstagramLogin = async () => {
+    setInstagramStarting(true);
+    setInstagramStatusMessage('');
 
-    if (!instagramServiceAvailable) {
-        toast.error(instagramServiceStatusMessage || 'Instagram login is temporarily unavailable.');
-        return;
-    }
-
+    // Remembered so the callback knows which role to create if this turns
+    // out to be a signup.
     localStorage.setItem('famee_instagram_role', selectedRole);
-    window.location.href = instagramLoginUrl;
+
+    try {
+      // Redirects the browser on success; nothing below runs.
+      await startInstagramAuth(selectedRole);
+    } catch (error) {
+      const message = getInstagramErrorMessage(error, 'Instagram login is temporarily unavailable.');
+      setInstagramStatusMessage(message);
+      toast.error(message);
+      setInstagramStarting(false);
+    }
   };
 
   const googleResponse = async (credentialResponse: CredentialResponse) => {
@@ -318,16 +271,14 @@ const Auth = () => {
         type="button"
         variant="outline"
         onClick={handleInstagramLogin}
-        disabled={!instagramServiceReady || !instagramServiceAvailable}
+        disabled={instagramStarting}
         className="h-12 w-full font-medium"
       >
         <Instagram />
-        Continue with Instagram
+        {instagramStarting ? 'Opening Instagram…' : 'Continue with Instagram'}
       </Button>
-      {(!instagramServiceReady || !instagramServiceAvailable) && (
-        <p className="text-center text-xs text-muted-foreground">
-          {instagramServiceStatusMessage || 'Instagram login is temporarily unavailable.'}
-        </p>
+      {instagramStatusMessage && (
+        <p className="text-center text-xs text-muted-foreground">{instagramStatusMessage}</p>
       )}
     </div>
   );

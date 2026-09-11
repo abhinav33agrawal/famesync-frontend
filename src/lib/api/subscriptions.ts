@@ -92,22 +92,6 @@ export const subscriptionsApi = {
     return response.data;
   },
 
-  // Create Stripe checkout session
-  createCheckout: async (): Promise<{ url: string; session_id: string }> => {
-    const response = await api.post('/subscriptions/create-checkout/');
-    return response.data;
-  },
-
-  // Check subscription status
-  checkStatus: async (): Promise<{
-    subscribed: boolean;
-    plan: 'free' | 'pro';
-    subscription_end: string | null;
-  }> => {
-    const response = await api.get('/subscriptions/check-status/');
-    return response.data;
-  },
-
   // Generic payment creation
   createPayment: async (gateway: 'stripe' | 'razorpay'): Promise<any> => {
     const response = await api.post('/subscriptions/payment/create/', { gateway });

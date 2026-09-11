@@ -30,7 +30,6 @@ const CREATOR_LINKS = [
   { to: "/influencer/dashboard", label: "Home" },
   { to: "/influencer/campaigns", label: "Discover" },
   { to: "/influencer/applications", label: "Applications" },
-  { to: "/influencer/deliverables", label: "Deliverables" },
 ];
 
 const BRAND_LINKS = [
@@ -40,15 +39,14 @@ const BRAND_LINKS = [
 ];
 
 export const Navbar = () => {
-  const { user, logout, authSource } = useAuth();
+  const { user, logout } = useAuth();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   const role = user?.role;
-  const isInstagramSession = authSource === "instagram";
 
-  const influencerProfile = useInfluencerProfile(role === "influencer" && !isInstagramSession);
+  const influencerProfile = useInfluencerProfile(role === "influencer");
   const brandProfile = useBrandProfile(role === "brand");
   const profile = role === "brand" ? brandProfile : influencerProfile;
 

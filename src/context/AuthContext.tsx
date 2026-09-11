@@ -3,15 +3,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import type { User } from '@/lib/api/types';
 import { api, API_BASE_URL } from '@/lib/api';
-import {
-  clearInstagramServiceToken,
-  fetchInstagramServiceUser,
-  getInstagramServiceToken,
-  setInstagramServiceToken,
-  type InstagramServiceUser,
-} from '@/lib/instagramService';
+import { exchangeInstagramCode, type InstagramAccountData } from '@/lib/instagram';
 
-type AuthSource = 'famee' | 'instagram' | null;
+/* Instagram used to sign you into a separate Node service, which issued its
+   own token and its own user. The context carried both identities and every
+   consumer had to branch on which one was live. Instagram is now just
+   another way to obtain a FameSync session, so there is one token, one user
+   and no `authSource`. */
 
 interface AuthContextType {
   user: User | null;
@@ -27,92 +25,47 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   loginWithGoogle: (idToken: string, role: 'influencer' | 'brand') => Promise<'influencer' | 'brand'>;
-  completeInstagramLogin: (token: string, role: 'influencer' | 'brand', email?: string) => Promise<'influencer' | 'brand' | 'needs_email'>;
-  authSource: AuthSource;
+  completeInstagramLogin: (
+    code: string,
+    options?: { email?: string; role?: 'influencer' | 'brand' }
+  ) => Promise<'influencer' | 'brand' | 'needs_email'>;
+  pendingInstagramAccount: InstagramAccountData | null;
   isAuthenticated: boolean;
   loading: boolean;
 }
 
-const AUTH_SOURCE_KEY = 'famee_auth_source';
-
-const readAuthSource = (): AuthSource => {
-  const value = `${localStorage.getItem(AUTH_SOURCE_KEY) || ''}`.trim().toLowerCase();
-  if (value === 'famee' || value === 'instagram') return value;
-  return null;
-};
-
-const persistAuthSource = (source: AuthSource) => {
-  if (source) {
-    localStorage.setItem(AUTH_SOURCE_KEY, source);
-    return;
-  }
-  localStorage.removeItem(AUTH_SOURCE_KEY);
-};
-
-const toInstagramSessionUser = (instagramUser: InstagramServiceUser): User => {
-  const username = `${instagramUser.username || ''}`.trim() || 'instagram-user';
-  const numericId = Number.parseInt(`${instagramUser.id || ''}`.trim(), 10);
-  const role: User['role'] = instagramUser.role === 'brand' ? 'brand' : 'influencer';
-
-  return {
-    id: Number.isFinite(numericId) ? numericId : 0,
-    username,
-    email: `${instagramUser.email || ''}`.trim(),
-    first_name: username,
-    last_name: '',
-    role,
-    credits: 0,
-    created_at: new Date().toISOString(),
-    subscription_plan: 'free',
-    has_profile: true,
-    email_verified: true,
-    is_approved: true,
-    is_new_member: false,
-  };
-};
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [authSource, setAuthSource] = useState<AuthSource>(() => readAuthSource());
   const [user, setUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem('famee_user');
-    if (!savedUser) return null;
-
-    const source = readAuthSource();
-    const hasFameeToken = Boolean(localStorage.getItem('famee_tokens'));
-    const hasInstagramToken = Boolean(getInstagramServiceToken());
-    const canRestoreSession =
-      (source === 'famee' && hasFameeToken) || (source === 'instagram' && hasInstagramToken);
-
-    if (!canRestoreSession) return null;
-
+    // A cached user without a token is a stale session, not a logged-in one.
+    if (!savedUser || !localStorage.getItem('famee_tokens')) return null;
     try {
       return JSON.parse(savedUser);
     } catch {
       return null;
     }
   });
-  const [isInstagramBootstrapping, setIsInstagramBootstrapping] = useState(false);
+  const [pendingInstagramAccount, setPendingInstagramAccount] =
+    useState<InstagramAccountData | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const savedTokens = localStorage.getItem('famee_tokens');
-  const hasFameeToken = Boolean(savedTokens);
+  const hasToken = Boolean(localStorage.getItem('famee_tokens'));
 
-  const setSession = (nextUser: User, source: Exclude<AuthSource, null>) => {
+  const setSession = (nextUser: User) => {
     setUser(nextUser);
-    setAuthSource(source);
     localStorage.setItem('famee_user', JSON.stringify(nextUser));
-    persistAuthSource(source);
+  };
+
+  const storeTokens = (access: string, refresh: string) => {
+    localStorage.setItem('famee_tokens', JSON.stringify({ access, refresh }));
   };
 
   const clearSession = () => {
     localStorage.removeItem('famee_tokens');
     localStorage.removeItem('famee_user');
-    clearInstagramServiceToken();
-    setAuthSource(null);
-    persistAuthSource(null);
     setUser(null);
   };
 
@@ -123,7 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const res = await api.get('/auth/me/');
         return res.data as User;
       } catch (error: any) {
-        if (error.response?.status === 401 && hasFameeToken) {
+        if (error.response?.status === 401 && hasToken) {
           try {
             const tokensRaw = localStorage.getItem('famee_tokens');
             if (!tokensRaw) throw error;
@@ -136,9 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const retryRes = await api.get('/auth/me/');
             return retryRes.data as User;
           } catch {
-            localStorage.removeItem('famee_tokens');
-            localStorage.removeItem('famee_user');
-            persistAuthSource(null);
+            clearSession();
             window.location.href = '/auth';
             throw error;
           }
@@ -146,70 +97,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
     },
-    enabled: hasFameeToken,
+    enabled: hasToken,
     retry: false,
   });
 
   useEffect(() => {
     if (!currentUser) return;
-    setSession(currentUser, 'famee');
+    setSession(currentUser);
   }, [currentUser]);
 
-  useEffect(() => {
-    if (hasFameeToken) return;
-
-    const instagramToken = getInstagramServiceToken();
-    if (!instagramToken) {
-      if (authSource === 'instagram') {
-        localStorage.removeItem('famee_user');
-        setAuthSource(null);
-        persistAuthSource(null);
-        setUser(null);
-      }
-      return;
-    }
-
-    if (authSource && authSource !== 'instagram') return;
-
-    let isMounted = true;
-    setIsInstagramBootstrapping(true);
-
-    fetchInstagramServiceUser(instagramToken)
-      .then(({ user: instagramUser }) => {
-        if (!isMounted) return;
-        setSession(toInstagramSessionUser(instagramUser), 'instagram');
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        clearInstagramServiceToken();
-        localStorage.removeItem('famee_user');
-        setAuthSource(null);
-        persistAuthSource(null);
-        setUser(null);
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsInstagramBootstrapping(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [hasFameeToken, authSource]);
-
-  const loading =
-    (hasFameeToken && isQueryLoading && !user) || (isInstagramBootstrapping && !user);
+  const loading = hasToken && isQueryLoading && !user;
   const isAuthenticated = Boolean(user);
 
   const login = async (username: string, password: string): Promise<'influencer' | 'brand'> => {
     try {
       const response = await api.post('/auth/login/', { username, password });
-      const tokens = { access: response.data.access, refresh: response.data.refresh };
-      localStorage.setItem('famee_tokens', JSON.stringify(tokens));
+      storeTokens(response.data.access, response.data.refresh);
 
       const currentFameeUser = await api.get('/auth/me/').then((res) => res.data as User);
-      setSession(currentFameeUser, 'famee');
+      setSession(currentFameeUser);
 
       toast({ title: 'Login successful', description: `Welcome back, ${currentFameeUser.username}!` });
       return currentFameeUser.role;
@@ -261,11 +167,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   ): Promise<'influencer' | 'brand'> => {
     try {
       const response = await api.post(`${API_BASE_URL}/auth/google-login/`, { id_token: idToken, role });
-      const tokens = { access: response.data.access, refresh: response.data.refresh };
-      localStorage.setItem('famee_tokens', JSON.stringify(tokens));
+      storeTokens(response.data.access, response.data.refresh);
 
       const currentFameeUser = response.data.user as User;
-      setSession(currentFameeUser, 'famee');
+      setSession(currentFameeUser);
 
       queryClient.invalidateQueries({ queryKey: ['user'] });
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
@@ -279,36 +184,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const completeInstagramLogin = async (token: string, role: 'influencer' | 'brand', email?: string): Promise<'influencer' | 'brand' | 'needs_email'> => {
-    const normalizedToken = `${token || ''}`.trim();
-    if (!normalizedToken) {
-      throw new Error('Instagram callback token is missing.');
+  /** Redeem the one-time code the API put on /auth/callback. */
+  const completeInstagramLogin = async (
+    code: string,
+    options: { email?: string; role?: 'influencer' | 'brand' } = {}
+  ): Promise<'influencer' | 'brand' | 'needs_email'> => {
+    const normalizedCode = `${code || ''}`.trim();
+    if (!normalizedCode) {
+      throw new Error('Instagram sign-in code is missing.');
     }
 
-    setInstagramServiceToken(normalizedToken);
-    
     try {
-      const response = await api.post(`${API_BASE_URL}/auth/instagram-login/`, { token: normalizedToken, role, email });
-      
-      if (response.status === 206) {
+      const result = await exchangeInstagramCode(normalizedCode, options);
+
+      if (result.status === 'needs_email') {
+        setPendingInstagramAccount(result.instagram);
         return 'needs_email';
       }
 
-      const tokens = { access: response.data.access, refresh: response.data.refresh };
-      localStorage.setItem('famee_tokens', JSON.stringify(tokens));
-
-      const currentFameeUser = response.data.user as User;
-      setSession(currentFameeUser, 'famee');
+      storeTokens(result.access, result.refresh);
+      setSession(result.user);
+      setPendingInstagramAccount(null);
 
       queryClient.invalidateQueries({ queryKey: ['user'] });
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
 
-      toast({ title: 'Login successful', description: `Welcome back, ${currentFameeUser.username}!` });
-      return currentFameeUser.role;
+      toast({ title: 'Login successful', description: `Welcome back, ${result.user.username}!` });
+      return result.user.role;
     } catch (error: any) {
-      if (error.response?.status === 206) {
-        return 'needs_email';
-      }
       const errorMessage = error.response?.data?.error || 'Instagram login failed';
       toast({ title: 'Instagram login failed', description: errorMessage, variant: 'destructive' });
       throw new Error(errorMessage);
@@ -317,14 +220,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshUser = async () => {
     try {
-      if (authSource === 'instagram') {
-        const instagramToken = getInstagramServiceToken();
-        if (!instagramToken) return;
-        const { user: instagramUser } = await fetchInstagramServiceUser(instagramToken);
-        setSession(toInstagramSessionUser(instagramUser), 'instagram');
-        return;
-      }
-
       await refetch();
     } catch (error) {
       console.error('Failed to refresh user:', error);
@@ -359,7 +254,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         refreshUser,
         loginWithGoogle,
         completeInstagramLogin,
-        authSource,
+        pendingInstagramAccount,
         isAuthenticated,
         loading,
       }}

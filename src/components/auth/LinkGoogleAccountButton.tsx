@@ -3,11 +3,6 @@ import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from '@react-oau
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import {
-  getInstagramServiceToken,
-  linkGoogleAccountInInstagramService,
-  setInstagramServiceToken,
-} from '@/lib/instagramService';
 
 interface LinkGoogleAccountButtonProps {
   role: 'influencer' | 'brand';
@@ -43,7 +38,7 @@ const LinkGoogleAccountButton = ({
   label = 'Link Google Account',
   className = '',
 }: LinkGoogleAccountButtonProps) => {
-  const { loginWithGoogle, refreshUser } = useAuth();
+  const { loginWithGoogle } = useAuth();
   const [isLinking, setIsLinking] = useState(false);
 
   const handleGoogleSuccess = async (response: CredentialResponse) => {
@@ -54,35 +49,11 @@ const LinkGoogleAccountButton = ({
     }
 
     setIsLinking(true);
-    const instagramServiceToken = getInstagramServiceToken();
     try {
-      if (instagramServiceToken) {
-        const linked = await linkGoogleAccountInInstagramService({
-          token: instagramServiceToken,
-          idToken,
-        });
-        if (linked.token) {
-          setInstagramServiceToken(linked.token);
-        }
-        await refreshUser();
-        toast.success('Google account linked successfully.');
-        return;
-      }
-
       await loginWithGoogle(idToken, role);
       toast.success('Google account linked successfully.');
-    } catch (error) {
-      if (!instagramServiceToken) {
-        // Error toast already handled in AuthContext for FameSync Google login.
-        return;
-      }
-
-      const message =
-        error && typeof error === 'object' && 'message' in error
-          ? `${(error as { message?: string }).message || ''}`.trim()
-          : '';
-
-      toast.error(message || 'Failed to link Google account.');
+    } catch {
+      // AuthContext already raised a toast with the server's message.
     } finally {
       setIsLinking(false);
     }

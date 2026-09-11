@@ -7,10 +7,10 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const { isAuthenticated, authSource } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const fetchUnread = async () => {
-    if (!isAuthenticated || authSource === 'instagram') {
+    if (!isAuthenticated) {
       setNotifications([]);
       setUnreadCount(0);
       return;
@@ -29,8 +29,6 @@ export const useNotifications = () => {
   };
 
   const markAsRead = async () => {
-    if (authSource === 'instagram') return;
-
     try {
       await notificationsApi.markAsRead();
       setNotifications([]);
@@ -47,7 +45,7 @@ export const useNotifications = () => {
 
   useEffect(() => {
     fetchUnread();
-  }, [isAuthenticated, authSource]);
+  }, [isAuthenticated]);
 
   return {
     notifications,

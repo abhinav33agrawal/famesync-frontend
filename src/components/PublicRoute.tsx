@@ -8,16 +8,13 @@ interface PublicRouteProps {
 }
 
 const PublicRoute = ({ children }: PublicRouteProps) => {
-  const { user, isAuthenticated, loading, authSource } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return <LoadingSkeleton />;
   }
 
   if (isAuthenticated && user) {
-    if (authSource === 'instagram') {
-      return <Navigate to="/influencer/dashboard" replace />;
-    }
     return <Navigate to={`/${user.role}/dashboard`} replace />;
   }
 

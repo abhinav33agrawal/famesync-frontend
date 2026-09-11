@@ -21,7 +21,7 @@ import { TrustLayer } from '@/components/TrustBadges';
 import { PlatformFollowersCard } from '@/components/PlatformFollowersCard';
 import { formatCompact } from '@/lib/format';
 import { SocialUrlEntry } from '@/lib/api/types';
-import { buildInstagramInsightCards, InstagramAccountData, toInstagramDisplayCount } from '@/lib/instagramService';
+import { buildInstagramInsightCards, InstagramAccountData, toInstagramDisplayCount } from '@/lib/instagram';
 
 /* Every gradient chip, `text-white` icon tile and green/blue tinted badge is
    gone: brand marks come from BrandLogo/Avatar, reach from
