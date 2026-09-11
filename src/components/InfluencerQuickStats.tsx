@@ -1,26 +1,23 @@
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Target, Instagram, Youtube, Twitter } from 'lucide-react';
+import { CheckCircle, Target, Instagram, Youtube, Twitter, Users } from 'lucide-react';
+import { formatCompact } from '@/lib/format';
 import type { InfluencerProfile, SocialUrlEntry } from '@/lib/api/types';
 
-const formatFollowers = (count: number | undefined): string => {
-  if (!count) return '0';
-  if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
-  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
-  return count.toString();
-};
+/* The per-platform tiles are a hairline-split numeric strip in the display
+   face (the CreatorCard idiom), not blue-tinted pills. Reach goes through
+   `formatCompact`, the local formatFollowers helper is gone. */
 
 const getPlatformIcon = (platform: string) => {
-  const iconClass = "h-3 w-3";
   switch (platform.toLowerCase()) {
     case 'instagram':
-      return <Instagram className={iconClass} />;
+      return <Instagram className="size-3" />;
     case 'youtube':
-      return <Youtube className={iconClass} />;
+      return <Youtube className="size-3" />;
     case 'twitter':
     case 'x':
-      return <Twitter className={iconClass} />;
+      return <Twitter className="size-3" />;
     default:
-      return null;
+      return <Users className="size-3" />;
   }
 };
 
@@ -32,46 +29,49 @@ export const InfluencerQuickStats = ({ profile }: InfluencerQuickStatsProps) => 
   const socialUrls = profile.social_urls as SocialUrlEntry[] | undefined;
   const platformsWithFollowers = socialUrls?.filter(s => s.followers && s.followers > 0) || [];
 
+  const completion = profile.profile_completion;
+  const completionVariant =
+    completion === undefined || completion === null
+      ? 'neutral'
+      : completion >= 80
+        ? 'success'
+        : completion >= 50
+          ? 'warning'
+          : 'destructive';
+
   return (
-    <div className="flex flex-wrap gap-1.5 py-2">
-      {/* Platform Follower Badges */}
-      {platformsWithFollowers.map((social) => (
-        <Badge 
-          key={social.platform} 
-          variant="secondary" 
-          className="text-xs bg-secondary/50 gap-1"
-        >
-          {getPlatformIcon(social.platform)}
-          <span>{formatFollowers(social.followers)}</span>
-          {social.verified && (
-            <CheckCircle className="h-3 w-3 text-blue-500" />
-          )}
-        </Badge>
-      ))}
-
-      {/* Niche Badge */}
-      {profile.niche && (
-        <Badge variant="outline" className="text-xs gap-1">
-          <Target className="h-3 w-3" />
-          {profile.niche}
-        </Badge>
+    <div className="space-y-2.5 py-2">
+      {platformsWithFollowers.length > 0 && (
+        <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-3">
+          {platformsWithFollowers.map((social) => (
+            <div key={social.platform} className="min-w-0 bg-card px-2.5 py-2">
+              <dd className="num flex items-center gap-1.5 text-[0.9375rem]">
+                {formatCompact(social.followers)}
+                {social.verified && <CheckCircle className="size-3 shrink-0 text-success" />}
+              </dd>
+              <dt className="mt-0.5 flex items-center gap-1 truncate text-[10px] font-medium capitalize text-muted-foreground/75">
+                {getPlatformIcon(social.platform)}
+                {social.platform}
+              </dt>
+            </div>
+          ))}
+        </dl>
       )}
 
-      {/* Profile Completion */}
-      {profile.profile_completion && (
-        <Badge 
-          variant="outline" 
-          className={`text-xs ${
-            profile.profile_completion >= 80 
-              ? 'border-green-500/30 text-green-600' 
-              : profile.profile_completion >= 50 
-              ? 'border-yellow-500/30 text-yellow-600' 
-              : 'border-orange-500/30 text-orange-600'
-          }`}
-        >
-          {profile.profile_completion}% complete
-        </Badge>
-      )}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {profile.niche && (
+          <Badge variant="outline">
+            <Target className="size-3" />
+            {profile.niche}
+          </Badge>
+        )}
+
+        {completion ? (
+          <Badge variant={completionVariant}>
+            <span className="num">{completion}%</span> complete
+          </Badge>
+        ) : null}
+      </div>
     </div>
   );
 };

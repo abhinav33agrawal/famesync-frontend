@@ -5,7 +5,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import {
   Building2,
@@ -14,13 +14,18 @@ import {
   Instagram,
   Users,
   Target,
-  Package,
-  CheckCircle2,
-  Youtube,
 } from 'lucide-react';
+import { Avatar, BrandLogo } from '@/components/Avatar';
+import { Stat } from '@/components/Stat';
 import { TrustLayer } from '@/components/TrustBadges';
+import { PlatformFollowersCard } from '@/components/PlatformFollowersCard';
+import { formatCompact } from '@/lib/format';
 import { SocialUrlEntry } from '@/lib/api/types';
 import { buildInstagramInsightCards, InstagramAccountData, toInstagramDisplayCount } from '@/lib/instagramService';
+
+/* Every gradient chip, `text-white` icon tile and green/blue tinted badge is
+   gone: brand marks come from BrandLogo/Avatar, reach from
+   PlatformFollowersCard + `formatCompact`, numerals from `.num`. */
 
 interface BrandProfileData {
   company_name: string;
@@ -64,26 +69,11 @@ interface ProfileViewModalProps {
   influencerProfile?: InfluencerProfileData;
 }
 
-const getPlatformIcon = (platform: string) => {
-  const platformLower = platform.toLowerCase();
-  if (platformLower.includes('instagram')) return <Instagram className="h-4 w-4" />;
-  if (platformLower.includes('youtube')) return <Youtube className="h-4 w-4" />;
-  return <Globe className="h-4 w-4" />;
-};
-
-const getPlatformColor = (platform: string) => {
-  const platformLower = platform.toLowerCase();
-  if (platformLower.includes('instagram')) return 'from-pink-500 to-purple-600';
-  if (platformLower.includes('youtube')) return 'from-red-500 to-red-600';
-  return 'from-primary to-secondary';
-};
-
-const formatFollowers = (count: number | null | undefined): string => {
-  if (!count) return '—';
-  if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
-  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
-  return count.toLocaleString();
-};
+const MatchedNote = () => (
+  <p className="text-center text-sm text-muted-foreground">
+    You&apos;re matched — reach out to discuss collaboration details.
+  </p>
+);
 
 export function ProfileViewModal({
   isOpen,
@@ -95,17 +85,15 @@ export function ProfileViewModal({
   if (profileType === 'brand' && brandProfile) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto rounded-xl sm:rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl flex items-center gap-2">
-              <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center text-xl font-bold">
-                {brandProfile.company_name.charAt(0).toUpperCase()}
-              </div>
-              {brandProfile.company_name}
+            <DialogTitle className="flex items-center gap-3 pr-10 font-display text-display-3">
+              <BrandLogo name={brandProfile.company_name} />
+              <span className="min-w-0 break-words">{brandProfile.company_name}</span>
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-6 mt-4">
+          <div className="mt-4 space-y-6">
             {/* Trust Layer */}
             <TrustLayer
               emailVerified={brandProfile.user.email_verified}
@@ -116,70 +104,58 @@ export function ProfileViewModal({
 
             {/* Quick Info */}
             <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary" className="gap-1">
-                <Building2 className="h-3 w-3" />
+              <Badge variant="secondary">
+                <Building2 className="size-3" />
                 {brandProfile.industry}
               </Badge>
             </div>
 
             {/* Description */}
             {brandProfile.description && (
-              <Card>
-                <CardContent className="pt-6">
-                  <h3 className="font-semibold mb-2 flex items-center gap-2">
-                    <Package className="h-4 w-4 text-primary" />
-                    About the Company
-                  </h3>
-                  <p className="text-muted-foreground">{brandProfile.description}</p>
-                </CardContent>
+              <Card className="p-5">
+                <p className="eyebrow mb-2.5">About the company</p>
+                <p className="leading-relaxed text-muted-foreground">{brandProfile.description}</p>
               </Card>
             )}
 
             <Separator />
 
             {/* Contact Information */}
-            <Card className="border-primary/20">
-              <CardContent className="pt-6">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-primary" />
-                  Contact Information
-                </h3>
-                <div className="space-y-3">
-                  {brandProfile.user.email && (
-                    <div className="flex items-center gap-3">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <a
-                        href={`mailto:${brandProfile.user.email}`}
-                        className="text-primary hover:underline"
-                      >
-                        {brandProfile.user.email}
-                      </a>
-                    </div>
-                  )}
-                  {brandProfile.website && (
-                    <div className="flex items-center gap-3">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <a
-                        href={brandProfile.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        {brandProfile.website}
-                      </a>
-                    </div>
-                  )}
+            <Card className="p-5">
+              <p className="eyebrow mb-4">Contact</p>
+              <div className="space-y-3">
+                {brandProfile.user.email && (
                   <div className="flex items-center gap-3">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">@{brandProfile.user.username}</span>
+                    <Mail className="size-4 shrink-0 text-muted-foreground" />
+                    <a
+                      href={`mailto:${brandProfile.user.email}`}
+                      className="min-w-0 break-all text-sm font-medium text-primary hover:underline"
+                    >
+                      {brandProfile.user.email}
+                    </a>
                   </div>
+                )}
+                {brandProfile.website && (
+                  <div className="flex items-center gap-3">
+                    <Globe className="size-4 shrink-0 text-muted-foreground" />
+                    <a
+                      href={brandProfile.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="min-w-0 break-all text-sm font-medium text-primary hover:underline"
+                    >
+                      {brandProfile.website}
+                    </a>
+                  </div>
+                )}
+                <div className="flex items-center gap-3">
+                  <Users className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">@{brandProfile.user.username}</span>
                 </div>
-              </CardContent>
+              </div>
             </Card>
 
-            <p className="text-sm text-muted-foreground text-center">
-              🎉 You're matched! Reach out to discuss collaboration details.
-            </p>
+            <MatchedNote />
           </div>
         </DialogContent>
       </Dialog>
@@ -188,19 +164,21 @@ export function ProfileViewModal({
 
   if (profileType === 'influencer' && influencerProfile && influencerProfile.user) {
     const username = influencerProfile.user.username || 'Unknown';
+    const insightCards = influencerProfile.instagram_data?.accountInsights
+      ? buildInstagramInsightCards(influencerProfile.instagram_data)
+      : [];
+
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto rounded-xl sm:rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl flex items-center gap-2">
-              <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center text-xl font-bold">
-                {username.charAt(0).toUpperCase()}
-              </div>
-              @{username}
+            <DialogTitle className="flex items-center gap-3 pr-10 font-display text-display-3">
+              <Avatar name={username} size={46} />
+              <span className="min-w-0 break-all">@{username}</span>
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-6 mt-4">
+          <div className="mt-4 space-y-6">
             {/* Trust Layer */}
             <TrustLayer
               emailVerified={influencerProfile.user.email_verified}
@@ -211,81 +189,45 @@ export function ProfileViewModal({
 
             {/* Quick Info */}
             <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary" className="gap-1">
-                <Target className="h-3 w-3" />
+              <Badge variant="secondary">
+                <Target className="size-3" />
                 {influencerProfile.niche}
               </Badge>
               {influencerProfile.location && (
-                <Badge variant="secondary" className="gap-1">
-                  <Globe className="h-3 w-3" />
+                <Badge variant="secondary">
+                  <Globe className="size-3" />
                   {influencerProfile.location}
                 </Badge>
               )}
               {influencerProfile.engagement_rate != null && (
-                <Badge variant="secondary" className="gap-1 bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20 border-green-500/20">
-                  <Instagram className="h-3 w-3" />
-                  {influencerProfile.engagement_rate}% Engagement
+                <Badge variant="success">
+                  <Instagram className="size-3" />
+                  <span className="num">{influencerProfile.engagement_rate}%</span> engagement
                 </Badge>
               )}
             </div>
 
-            {/* Platform-Specific Stats Cards */}
+            {/* Platform-Specific Stats */}
             {influencerProfile.social_urls && influencerProfile.social_urls.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3">
-                {influencerProfile.social_urls.map((social, index) => (
-                  <Card key={index}>
-                    <CardContent className="pt-4 pb-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getPlatformColor(social.platform)} flex items-center justify-center text-white`}>
-                          {getPlatformIcon(social.platform)}
-                        </div>
-                        <span className="text-sm text-muted-foreground capitalize">{social.platform}</span>
-                        {social.verified && (
-                          <CheckCircle2 className="h-4 w-4 text-blue-500" />
-                        )}
-                      </div>
-                      <p className="text-xl font-bold">
-                {formatFollowers(social.followers)}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    ) : influencerProfile.follower_count ? (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-2 mb-1">
-            <Users className="h-4 w-4 text-primary" />
-            <span className="text-sm text-muted-foreground">Followers</span>
-          </div>
-          <p className="text-2xl font-bold">
-            {influencerProfile.follower_count.toLocaleString('en-IN')}
-          </p>
-        </CardContent>
-      </Card>
-    ) : null}
-    
+              <PlatformFollowersCard socialUrls={influencerProfile.social_urls} compact />
+            ) : influencerProfile.follower_count ? (
+              <Stat label="Followers" value={formatCompact(influencerProfile.follower_count)} />
+            ) : null}
+
             {/* Detailed Instagram Insights */}
-            {influencerProfile.instagram_data && influencerProfile.instagram_data.accountInsights && (
-              <div className="space-y-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                    <Instagram className="h-4 w-4 text-white" />
-                  </div>
-                  Instagram Insights
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {buildInstagramInsightCards(influencerProfile.instagram_data).map((insight) => (
-                    <Card key={insight.key} className="bg-card border border-border">
-                      <CardContent className="p-4">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-sm font-medium text-muted-foreground">{insight.label}</span>
-                          <span className="text-2xl font-bold text-foreground">{toInstagramDisplayCount(insight.value)}</span>
-                          <span className="text-xs text-muted-foreground truncate" title={insight.hint}>
-                            {insight.hint}
-                          </span>
-                        </div>
-                      </CardContent>
+            {insightCards.length > 0 && (
+              <div className="space-y-3">
+                <p className="eyebrow">Instagram insights</p>
+                <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                  {insightCards.map((insight) => (
+                    <Card key={insight.key} className="p-4">
+                      <span className="eyebrow text-[10.5px]">{insight.label}</span>
+                      <div className="num mt-2 text-[1.5rem] leading-none">
+                        {toInstagramDisplayCount(insight.value)}
+                      </div>
+                      <p className="mt-1.5 truncate text-xs text-muted-foreground" title={insight.hint}>
+                        {insight.hint}
+                      </p>
                     </Card>
                   ))}
                 </div>
@@ -294,56 +236,44 @@ export function ProfileViewModal({
 
             {/* Bio */}
             {influencerProfile.bio && (
-              <Card>
-                <CardContent className="pt-6">
-                  <h3 className="font-semibold mb-2 flex items-center gap-2">
-                    <Package className="h-4 w-4 text-primary" />
-                    About
-                  </h3>
-                  <p className="text-muted-foreground">{influencerProfile.bio}</p>
-                </CardContent>
+              <Card className="p-5">
+                <p className="eyebrow mb-2.5">About</p>
+                <p className="leading-relaxed text-muted-foreground">{influencerProfile.bio}</p>
               </Card>
             )}
 
             <Separator />
 
             {/* Contact Information */}
-            <Card className="border-primary/20">
-              <CardContent className="pt-6">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-primary" />
-                  Contact Information
-                </h3>
-                <div className="space-y-3">
-                  {influencerProfile.user.email && (
-                    <div className="flex items-center gap-3">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <a
-                        href={`mailto:${influencerProfile.user.email}`}
-                        className="text-primary hover:underline"
-                      >
-                        {influencerProfile.user.email}
-                      </a>
-                    </div>
-                  )}
+            <Card className="p-5">
+              <p className="eyebrow mb-4">Contact</p>
+              <div className="space-y-3">
+                {influencerProfile.user.email && (
                   <div className="flex items-center gap-3">
-                    <Instagram className="h-4 w-4 text-muted-foreground" />
+                    <Mail className="size-4 shrink-0 text-muted-foreground" />
                     <a
-                      href={`https://instagram.com/${influencerProfile.instagram_handle}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
+                      href={`mailto:${influencerProfile.user.email}`}
+                      className="min-w-0 break-all text-sm font-medium text-primary hover:underline"
                     >
-                      @{influencerProfile.instagram_handle}
+                      {influencerProfile.user.email}
                     </a>
                   </div>
+                )}
+                <div className="flex items-center gap-3">
+                  <Instagram className="size-4 shrink-0 text-muted-foreground" />
+                  <a
+                    href={`https://instagram.com/${influencerProfile.instagram_handle}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="min-w-0 break-all text-sm font-medium text-primary hover:underline"
+                  >
+                    @{influencerProfile.instagram_handle}
+                  </a>
                 </div>
-              </CardContent>
+              </div>
             </Card>
 
-            <p className="text-sm text-muted-foreground text-center">
-              🎉 You're matched! Reach out to discuss collaboration details.
-            </p>
+            <MatchedNote />
           </div>
         </DialogContent>
       </Dialog>

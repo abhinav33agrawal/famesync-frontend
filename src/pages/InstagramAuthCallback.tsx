@@ -5,8 +5,13 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { setInstagramServiceToken } from "@/lib/instagramService";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Rise } from "@/components/motion";
+
+/* Removed from the old callback screen: the primary→secondary gradient icon
+   tiles, the translucent `bg-card/70` panels and the hand-rolled radii. */
 
 const InstagramAuthCallback = () => {
   const navigate = useNavigate();
@@ -53,7 +58,7 @@ const InstagramAuthCallback = () => {
     }
 
     setTokenToSubmit(token);
-    
+
     completeInstagramLogin(token, role)
       .then((result) => {
         if (result === 'needs_email') {
@@ -85,7 +90,7 @@ const InstagramAuthCallback = () => {
       toast.error("Please enter an email address.");
       return;
     }
-    
+
     setIsSubmittingEmail(true);
     try {
       const result = await completeInstagramLogin(tokenToSubmit, role, emailInput);
@@ -101,51 +106,72 @@ const InstagramAuthCallback = () => {
 
   if (needsEmail) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-8">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-secondary/20">
-            <Mail className="h-7 w-7 text-primary" />
-          </div>
-          <h1 className="text-xl font-semibold mb-2 text-center">Almost there!</h1>
-          <p className="text-sm text-muted-foreground mb-6 text-center">
-            Your Instagram account doesn't have a public email address. Please provide one to complete your registration.
-          </p>
-          <form onSubmit={handleEmailSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your best email"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isSubmittingEmail}>
-              {isSubmittingEmail ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              {isSubmittingEmail ? "Completing..." : "Complete Registration"}
-            </Button>
-          </form>
+      <div className="flex min-h-screen items-center justify-center bg-background px-5 py-14 sm:px-8">
+        <div className="relative w-full max-w-md">
+          {/* the one decorative panel */}
+          <div aria-hidden="true" className="wash absolute -inset-x-1 -inset-y-5 rounded-2xl" />
+
+          <Rise className="relative">
+            <Card className="rounded-2xl shadow-e2">
+              <CardContent className="pt-6 text-center sm:pt-7">
+                <span className="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-secondary text-primary">
+                  <Mail className="size-7" />
+                </span>
+                <h1 className="mt-5 font-display text-display-3">Almost there</h1>
+                <p className="mt-3 leading-relaxed text-muted-foreground">
+                  Your Instagram account doesn&apos;t have a public email address. Please provide one
+                  to complete your registration.
+                </p>
+
+                <form onSubmit={handleEmailSubmit} className="mt-7 space-y-4 text-left">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email address</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Enter your best email"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" variant="form" className="w-full" disabled={isSubmittingEmail}>
+                    {isSubmittingEmail ? <Loader2 className="animate-spin" /> : null}
+                    {isSubmittingEmail ? "Completing…" : "Complete registration"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </Rise>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-8 text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-secondary/20">
-          <Instagram className="h-7 w-7 text-primary" />
-        </div>
-        <h1 className="text-xl font-semibold mb-2">Finalizing Instagram Login</h1>
-        <p className="text-sm text-muted-foreground mb-6">
-          We are securely connecting your Instagram account.
-        </p>
-        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Redirecting...
-        </div>
+    <div className="flex min-h-screen items-center justify-center bg-background px-5 py-14 sm:px-8">
+      <div className="relative w-full max-w-md">
+        {/* the one decorative panel */}
+        <div aria-hidden="true" className="wash absolute -inset-x-1 -inset-y-5 rounded-2xl" />
+
+        <Rise className="relative">
+          <Card className="rounded-2xl shadow-e2">
+            <CardContent className="pt-6 text-center sm:pt-7">
+              <span className="mx-auto inline-flex size-14 items-center justify-center rounded-2xl bg-secondary text-primary">
+                <Instagram className="size-7" />
+              </span>
+              <p className="eyebrow mt-6">Instagram</p>
+              <h1 className="mt-2.5 font-display text-display-3">Finalising your login</h1>
+              <p className="mt-3 leading-relaxed text-muted-foreground">
+                We&apos;re securely connecting your Instagram account.
+              </p>
+              <p className="mt-7 flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground">
+                <Loader2 className="size-4 animate-spin" />
+                Redirecting…
+              </p>
+            </CardContent>
+          </Card>
+        </Rise>
       </div>
     </div>
   );

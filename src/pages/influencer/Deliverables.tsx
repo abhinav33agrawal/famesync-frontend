@@ -1,12 +1,36 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ExternalLink, Search, Upload } from 'lucide-react';
+import { toast } from 'sonner';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, ExternalLink, Upload, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
+import { StatusBadge } from '@/components/Stat';
+import { Avatar } from '@/components/Avatar';
+import { Rise, listItemMotion } from '@/components/motion';
+import { deliverableChips } from '@/lib/format';
+import { formatDateDMY } from '@/lib/utils';
 import { useInfluencerDeliverables } from '@/hooks/useDeliverables';
+
+/* Removed from the old screen: getStatusConfig()'s icon + variant map (now
+   `StatusBadge`) and the full-page spinner (now a skeleton list). */
+
+const DeliverablesSkeleton = () => (
+  <div className="container py-10 md:py-14">
+    <div className="mb-10 md:mb-12">
+      <Skeleton className="mb-4 h-3 w-28" />
+      <Skeleton className="h-11 w-64 max-w-full" />
+      <Skeleton className="mt-4 h-5 w-80 max-w-full" />
+    </div>
+    <Skeleton className="mb-6 h-12 rounded-lg" />
+    <div className="grid gap-4">
+      {[0, 1, 2].map((i) => (
+        <Skeleton key={i} className="h-36 rounded-xl" />
+      ))}
+    </div>
+  </div>
+);
 
 const Deliverables = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,172 +42,121 @@ const Deliverables = () => {
   );
 
   if (isLoading) {
-    return (
-      <div className="min-h-[calc(100vh-4rem)] p-6 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <DeliverablesSkeleton />;
   }
-
-  const getStatusConfig = (status: string) => {
-    const configs = {
-      approved: {
-        variant: 'success',
-        icon: CheckCircle,
-        label: 'Approved',
-      },
-      in_review: {
-        variant: 'warning',
-        icon: Clock,
-        label: 'In Review',
-      },
-      pending: {
-        variant: 'secondary',
-        icon: Upload,
-        label: 'Pending Upload',
-      },
-      rejected: {
-        variant: 'destructive',
-        icon: XCircle,
-        label: 'Rejected',
-      },
-    };
-    return configs[status as keyof typeof configs] || configs.pending;
-  };
 
   const handleUpload = (deliverableId: number) => {
     toast.success('Deliverable upload initiated');
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] p-6">
-      <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-4xl font-bold mb-2">
-            My <span className="text-foreground">Deliverables</span>
-          </h1>
-          <p className="text-muted-foreground">
-            Manage and track your campaign deliverables.
+    <div className="container py-10 md:py-14">
+      {/* -------------------------------------------------------- page header */}
+      <Rise>
+        <header className="mb-10 md:mb-12">
+          <p className="eyebrow mb-3">Your work</p>
+          <h1 className="font-display text-display-2">Deliverables.</h1>
+          <p className="mt-3 max-w-[52ch] text-muted-foreground">
+            Manage and track the content you owe each brand.
           </p>
-        </motion.div>
+        </header>
+      </Rise>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-6"
-        >
-          <Card>
-            <CardContent className="p-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  placeholder="Search deliverables..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+      {/* ------------------------------------------------------------- search */}
+      <div className="relative mb-6">
+        <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search deliverables..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-11"
+          aria-label="Search deliverables"
+        />
+      </div>
 
-        <div className="space-y-4">
-          {filteredDeliverables.map((deliverable, index) => {
-            const statusConfig = getStatusConfig(deliverable.status);
-            const StatusIcon = statusConfig.icon;
+      {/* --------------------------------------------------------------- list */}
+      {filteredDeliverables.length > 0 && (
+        <ul className="grid gap-4">
+          <AnimatePresence initial={false}>
+            {filteredDeliverables.map((deliverable) => (
+              <motion.li key={deliverable.id} {...listItemMotion}>
+                <Card className="p-5 sm:p-6">
+                  <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
+                    <div className="flex min-w-0 flex-1 items-start gap-4">
+                      <Avatar name={deliverable.application.campaign.brand.username} size={46} />
+                      <div className="min-w-0 flex-1">
+                        <h2 className="truncate font-display text-[1.1875rem] font-semibold tracking-[-0.02em]">
+                          {deliverable.application.campaign.title}
+                        </h2>
+                        <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                          @{deliverable.application.campaign.brand.username}
+                        </p>
 
-            return (
-              <motion.div
-                key={deliverable.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className="lift transition-all duration-200 ease-soft">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                      <div className="flex items-start gap-4 flex-1">
-                        <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center text-2xl flex-shrink-0">
-                          {deliverable.application.campaign.brand.username.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-lg mb-1">
-                            {deliverable.application.campaign.title}
-                          </h3>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            @{deliverable.application.campaign.brand.username}
-                          </p>
-                          <div className="space-y-2 text-sm">
-                            <p className="text-muted-foreground">
-                              <span className="font-medium">Type:</span> {deliverable.deliverable_type}
-                            </p>
-                            <p className="text-muted-foreground">
-                              <span className="font-medium">Submitted:</span>{' '}
-                              {new Date(deliverable.submitted_at).toLocaleDateString()}
-                            </p>
-                            {deliverable.link && (
-                              <a
-                                href={deliverable.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-primary hover:underline"
-                              >
-                                <ExternalLink className="h-3 w-3" />
-                                View Content
-                              </a>
-                            )}
-                            {deliverable.feedback && (
-                              <div className="mt-2 p-3 rounded-lg bg-muted/50">
-                                <p className="text-xs font-medium mb-1">Feedback:</p>
-                                <p className="text-sm">{deliverable.feedback}</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                        <ul className="mt-3.5 flex flex-wrap items-center gap-1.5">
+                          {deliverableChips(deliverable.deliverable_type).map((chip) => (
+                            <li key={chip} className="rounded-sm bg-muted px-2.5 py-1 text-xs font-medium">
+                              {chip}
+                            </li>
+                          ))}
+                          <li className="text-xs text-muted-foreground">
+                            Submitted{' '}
+                            <span className="num">{formatDateDMY(deliverable.submitted_at) || '—'}</span>
+                          </li>
+                        </ul>
 
-                      <div className="flex flex-col items-start lg:items-end gap-3">
-                        <Badge variant={statusConfig.variant as any} className="gap-1">
-                          <StatusIcon className="h-3 w-3" />
-                          {statusConfig.label}
-                        </Badge>
-
-                        {deliverable.status === 'pending' && (
-                          <Button
-                            size="sm"
-                            className="bg-primary"
-                            onClick={() => handleUpload(deliverable.id)}
+                        {deliverable.link && (
+                          <a
+                            href={deliverable.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
                           >
-                            <Upload className="h-4 w-4 mr-1" />
-                            Upload Now
-                          </Button>
+                            <ExternalLink className="size-4" />
+                            View content
+                          </a>
+                        )}
+
+                        {deliverable.feedback && (
+                          <div className="mt-3 rounded-lg bg-muted p-3.5">
+                            <p className="eyebrow mb-1.5">Brand feedback</p>
+                            <p className="text-sm leading-relaxed">{deliverable.feedback}</p>
+                          </div>
                         )}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </div>
 
-        {filteredDeliverables.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
-          >
-            <p className="text-muted-foreground text-lg">
-              No deliverables found.
-            </p>
-          </motion.div>
-        )}
-      </div>
+                    <div className="flex shrink-0 items-center gap-3 lg:flex-col lg:items-end">
+                      <StatusBadge
+                        status={deliverable.status === 'pending' ? 'not_submitted' : deliverable.status}
+                      />
+
+                      {deliverable.status === 'pending' && (
+                        <Button variant="form" size="sm" onClick={() => handleUpload(deliverable.id)}>
+                          <Upload />
+                          Upload now
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              </motion.li>
+            ))}
+          </AnimatePresence>
+        </ul>
+      )}
+
+      {/* -------------------------------------------------------- empty state */}
+      {filteredDeliverables.length === 0 && (
+        <Card intent="dashed" className="p-10 text-center sm:p-14">
+          <p className="eyebrow mb-3">Nothing to deliver</p>
+          <h2 className="font-display text-display-3">No deliverables found</h2>
+          <p className="mx-auto mt-2.5 max-w-[38ch] leading-relaxed text-muted-foreground">
+            {searchTerm
+              ? 'Try a different search term.'
+              : 'Once a brand accepts you, the content you owe shows up here.'}
+          </p>
+        </Card>
+      )}
     </div>
   );
 };

@@ -1,82 +1,81 @@
-import { Link } from 'react-router-dom';
-import { Instagram, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Link } from "react-router-dom";
+import { Instagram } from "lucide-react";
+import { Rise } from "@/components/motion";
+
+/* Rebuilt on the new language: paper ground, one hairline, the Navbar's
+   wordmark treatment. Removed: the deleted Grand Hotel `.brand` mark, the
+   `border-border/40` hairline and the bespoke footer entrance animation. */
 
 type FooterProps = {
-  variant?: 'landing' | 'dashboard';
+  variant?: "landing" | "dashboard";
 };
 
-const Footer = ({ variant = 'landing' }: FooterProps) => {
+const FOOTER_LINKS = [
+  { to: "/about", label: "About Us" },
+  { to: "/contact", label: "Contact Us" },
+  { to: "/pricing", label: "Pricing" },
+  { to: "/privacy", label: "Privacy Policy" },
+  { to: "/terms", label: "Terms of Service" },
+];
+
+const Footer = ({ variant = "landing" }: FooterProps) => {
   const currentYear = new Date().getFullYear();
-  const isLanding = variant === 'landing';
+  const isLanding = variant === "landing";
 
   return (
-    <>
-      {/* FOOTER */}
-      <motion.footer
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-        className="border-t border-border/40 bg-background"
-      >
-        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-5">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-            {/* Left */}
-            <div className="flex items-center gap-4">
-              <Link to="/" className="font-display font-semibold tracking-[-0.035em] text-lg font-semibold">
-                FameSync
-              </Link>
-
-              {isLanding && (
-                <span className="text-xs text-muted-foreground hidden sm:inline">
-                  © {currentYear}
-                </span>
-              )}
-            </div>
-
-            {/* Center — links (landing only) */}
+    <footer className="mt-auto border-t border-border bg-background">
+      <Rise>
+        <div className="container flex flex-col gap-9 py-12 md:flex-row md:items-start md:justify-between md:gap-16">
+          <div className="max-w-[38ch]">
+            <Link
+              to="/"
+              className="font-display text-[1.4375rem] font-semibold tracking-[-0.035em] text-foreground"
+            >
+              FameSync
+            </Link>
             {isLanding && (
-              <nav className="flex flex-wrap gap-2 sm:gap-4 md:gap-5 text-xs sm:text-sm text-muted-foreground justify-center max-w-full">
-                <Link to="/about" className="hover:text-primary transition whitespace-nowrap">
-                  About Us
-                </Link>
-                <Link to="/contact" className="hover:text-primary transition whitespace-nowrap">
-                  Contact Us
-                </Link>
-                <Link to="/pricing" className="hover:text-primary transition whitespace-nowrap">
-                  Pricing
-                </Link>
-                <Link to="/privacy" className="hover:text-primary transition whitespace-nowrap">
-                  Privacy Policy
-                </Link>
-                <Link to="/terms" className="hover:text-primary transition whitespace-nowrap">
-                  Terms of Service
-                </Link>
-              </nav>
+              <p className="mt-3.5 text-sm leading-relaxed text-muted-foreground">
+                Real brands, real budgets, real briefs — paid collabs for micro-creators, with
+                no agency in the middle.
+              </p>
             )}
-
-            {/* Right */}
-            <div className="flex items-center gap-3">
-              <a
-                href="https://www.instagram.com/famesync_/"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className="p-2 rounded-lg bg-muted hover:bg-muted/70 transition"
-              >
-                <Instagram className="h-4 w-4" />
-              </a>
-
-              {!isLanding && (
-                <span className="text-xs text-muted-foreground">
-                  © {currentYear}
-                </span>
-              )}
-            </div>
           </div>
+
+          {isLanding && (
+            <nav aria-label="Footer" className="flex flex-col sm:flex-row sm:flex-wrap sm:gap-x-8">
+              {FOOTER_LINKS.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="inline-flex min-h-11 items-center whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          )}
+
+          <a
+            href="https://www.instagram.com/famesync_/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="FameSync on Instagram"
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground"
+          >
+            <Instagram className="size-4" />
+          </a>
         </div>
-      </motion.footer>
-    </>
+      </Rise>
+
+      <div className="border-t border-border">
+        <div className="container flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-6">
+          <p className="text-xs text-muted-foreground">
+            © {currentYear} FameSync. All rights reserved.
+          </p>
+          <p className="eyebrow">India first</p>
+        </div>
+      </div>
+    </footer>
   );
 };
 

@@ -1,145 +1,101 @@
-import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 
-const DashboardSkeleton = () => {
-  return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse" />
+/* Mirrors the dashboard: four Stat tiles, a two-thirds activity list and a
+   sidebar. The fixed orb layer, the per-card gradient overlays and the
+   framer entrance stagger are gone. */
+
+const StatSkeleton = () => (
+  <Card className="p-6">
+    <Skeleton className="h-3 w-24 rounded-sm" />
+    <Skeleton className="mt-5 h-9 w-28 rounded-lg" />
+    <Skeleton className="mt-3 h-3.5 w-32 rounded-sm" />
+  </Card>
+);
+
+const DashboardSkeleton = () => (
+  <div className="container space-y-8 py-10">
+    {/* header */}
+    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="space-y-3">
+        <Skeleton className="h-3.5 w-28 rounded-sm" />
+        <Skeleton className="h-10 w-72 max-w-full rounded-lg" />
+        <Skeleton className="h-4 w-56 max-w-full rounded-sm" />
       </div>
+      <Skeleton className="h-12 w-40 rounded-full" />
+    </div>
 
-      <div className="p-6 md:p-8">
-        <div className="max-w-7xl mx-auto space-y-8">
-          {/* Header Skeleton */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
-          >
-            <div className="space-y-3">
-              <Skeleton className="h-10 w-80" />
-              <Skeleton className="h-5 w-60" />
+    {/* stat row */}
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {[0, 1, 2, 3].map((i) => (
+        <StatSkeleton key={i} />
+      ))}
+    </div>
+
+    {/* main + sidebar */}
+    <div className="grid gap-5 lg:grid-cols-3">
+      <Card className="p-5 sm:p-6 lg:col-span-2">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <Skeleton className="h-5 w-40 rounded-sm" />
+          <Skeleton className="h-8 w-20 rounded-lg" />
+        </div>
+        <div className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="rounded-xl border border-border p-4">
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Skeleton className="size-[46px] shrink-0 rounded-md" />
+                  <div className="min-w-0 space-y-2">
+                    <Skeleton className="h-4 w-40 max-w-full rounded-sm" />
+                    <Skeleton className="h-3 w-24 rounded-sm" />
+                  </div>
+                </div>
+                <Skeleton className="h-6 w-20 shrink-0 rounded-full" />
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Skeleton className="h-3.5 w-24 rounded-sm" />
+                <Skeleton className="h-3.5 w-32 rounded-sm" />
+              </div>
             </div>
-            <Skeleton className="h-11 w-40" />
-          </motion.div>
+          ))}
+        </div>
+      </Card>
 
-          {/* Stats Grid Skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <Card className="relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-                  <CardContent className="p-6 relative">
-                    <div className="flex items-center justify-between mb-4">
-                      <Skeleton className="h-12 w-12 rounded-xl" />
-                      <Skeleton className="h-6 w-20 rounded-full" />
-                    </div>
-                    <Skeleton className="h-8 w-24 mb-2" />
-                    <Skeleton className="h-4 w-32" />
-                  </CardContent>
-                </Card>
-              </motion.div>
+      <div className="space-y-5">
+        <Card className="p-5 sm:p-6">
+          <Skeleton className="mb-5 h-5 w-36 rounded-sm" />
+          <div className="space-y-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="space-y-2 rounded-lg bg-muted p-3">
+                <Skeleton className="h-3.5 w-full rounded-sm" />
+                <Skeleton className="h-3 w-20 rounded-sm" />
+              </div>
             ))}
           </div>
+        </Card>
 
-          {/* Main Content Skeleton */}
-          <div className="grid lg:grid-cols-3 gap-6">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="lg:col-span-2"
-            >
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <Skeleton className="h-6 w-40" />
-                  <Skeleton className="h-8 w-20" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="p-4 rounded-xl border border-border/50">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <Skeleton className="w-12 h-12 rounded-xl" />
-                          <div className="space-y-2">
-                            <Skeleton className="h-5 w-40" />
-                            <Skeleton className="h-4 w-24" />
-                          </div>
-                        </div>
-                        <Skeleton className="h-6 w-16 rounded-full" />
-                      </div>
-                      <div className="flex gap-4">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-4 w-32" />
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="space-y-6"
-            >
-              <Card>
-                <CardHeader>
-                  <Skeleton className="h-6 w-36" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="p-3 rounded-lg bg-muted/30">
-                      <Skeleton className="h-4 w-full mb-2" />
-                      <Skeleton className="h-3 w-20" />
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center">
-                    <Skeleton className="h-12 w-12 rounded-full mb-4" />
-                    <Skeleton className="h-5 w-32 mb-2" />
-                    <Skeleton className="h-4 w-48 mb-4" />
-                    <Skeleton className="h-10 w-full" />
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+        <Card className="p-5 sm:p-6">
+          <div className="flex flex-col items-center text-center">
+            <Skeleton className="mb-4 size-12 rounded-full" />
+            <Skeleton className="mb-2 h-4 w-32 rounded-sm" />
+            <Skeleton className="mb-4 h-3.5 w-44 max-w-full rounded-sm" />
+            <Skeleton className="h-10 w-full rounded-lg" />
           </div>
-
-          {/* CTA Skeleton */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Card className="relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20" />
-              <CardContent className="p-8 relative">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="space-y-3">
-                    <Skeleton className="h-7 w-72" />
-                    <Skeleton className="h-5 w-96" />
-                  </div>
-                  <Skeleton className="h-12 w-44" />
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
+        </Card>
       </div>
     </div>
-  );
-};
+
+    {/* CTA panel */}
+    <Card className="rounded-2xl p-8">
+      <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-3">
+          <Skeleton className="h-6 w-64 max-w-full rounded-lg" />
+          <Skeleton className="h-4 w-80 max-w-full rounded-sm" />
+        </div>
+        <Skeleton className="h-12 w-44 shrink-0 rounded-full" />
+      </div>
+    </Card>
+  </div>
+);
 
 export default DashboardSkeleton;

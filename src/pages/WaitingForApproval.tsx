@@ -1,9 +1,15 @@
 import { useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Clock, CheckCircle2, ShieldCheck, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { StatusBadge } from '@/components/Stat';
+import { Rise } from '@/components/motion';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+
+/* Removed from the old WaitingForApproval.tsx: the blurred halo, the pulsing
+   clock, the raw palette colours behind it, the heavy tile shadow and `lift`
+   on a button (lift belongs to cards). */
 
 const WaitingForApproval = () => {
     const { user, logout } = useAuth();
@@ -16,102 +22,83 @@ const WaitingForApproval = () => {
     }, [user, navigate]);
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
-            <div className="max-w-md w-full text-center space-y-8">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="flex justify-center"
-                >
-                    <div className="relative">
-                        <div className="absolute inset-0 bg-amber-500/20 blur-3xl rounded-full" />
-                        <div className="relative bg-background border border-amber-500/20 w-24 h-24 rounded-3xl flex items-center justify-center shadow-2xl">
-                            <Clock className="w-12 h-12 text-amber-500 animate-pulse" />
-                        </div>
-                    </div>
-                </motion.div>
+        <div className="flex min-h-screen items-center justify-center bg-background px-5 py-14 sm:px-8">
+            <div className="relative w-full max-w-md">
+                {/* the one decorative panel */}
+                <div aria-hidden="true" className="wash absolute -inset-x-1 top-24 -bottom-5 rounded-2xl" />
 
-                <div className="space-y-3">
-                    <motion.h1
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-3xl font-bold tracking-tight text-foreground"
-                    >
-                        Review in Progress
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="text-muted-foreground text-lg"
-                    >
-                        Hi <span className="text-foreground font-medium">{user?.first_name || user?.username}</span>, we've received your registration!
-                    </motion.p>
-                </div>
+                <Rise className="relative">
+                    <div className="text-center">
+                        <span className="inline-flex size-16 items-center justify-center rounded-2xl bg-warning/10 text-warning">
+                            <Clock className="size-8" />
+                        </span>
+                        <p className="eyebrow mt-6">Account review</p>
+                        <h1 className="mt-2.5 font-display text-display-2">Review in progress</h1>
+                        <p className="mt-4 leading-relaxed text-muted-foreground">
+                            Hi{' '}
+                            <span className="font-semibold text-foreground">
+                                {user?.first_name || user?.username}
+                            </span>
+                            , we&apos;ve received your registration.
+                        </p>
+                    </div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="bg-muted/50 border border-border/50 rounded-2xl p-6 text-left space-y-4 shadow-sm"
-                >
-                    <div className="flex items-start gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-sm text-foreground/80">Account created successfully</p>
-                    </div>
-                    <div className="flex items-start gap-3 border-l-2 border-amber-500 pl-4 py-1">
-                        <Clock className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-                        <div>
-                            <p className="text-sm font-medium text-foreground">Waiting for admin approval</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Our team is currently reviewing your profile to ensure it meets our quality standards. This usually takes 24-48 hours.
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-start gap-3 opacity-50">
-                        <ShieldCheck className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                        <p className="text-sm text-muted-foreground">Access platform features</p>
-                    </div>
-                </motion.div>
-
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                    className="space-y-4 pt-4"
-                >
-                    <div className="bg-muted/30 border border-border/30 rounded-xl p-5">
-                        <div className="flex flex-col items-center gap-3 text-center">
-                            <Mail className="w-5 h-5 text-primary flex-shrink-0" />
-                            <div className="space-y-2">
-                                <p className="text-sm text-muted-foreground leading-relaxed">
-                                    We'll email you once approved at
-                                </p>
-                                <p className="font-medium text-foreground text-sm break-all px-2">
-                                    {user?.email}
-                                </p>
+                    <Card className="mt-8 rounded-2xl shadow-e2">
+                        <CardContent className="divide-y divide-border pt-5 sm:pt-6">
+                            <div className="flex items-start gap-3.5 pb-4">
+                                <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-success" />
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-[0.9375rem] font-semibold">Account created</p>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        Your details are saved and secure.
+                                    </p>
+                                </div>
+                                <StatusBadge status="completed" />
                             </div>
-                        </div>
-                    </div>
 
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                        <Button
-                            variant="outline"
-                            onClick={() => logout()}
-                            className="rounded-xl"
-                        >
-                            Log Out
+                            <div className="flex items-start gap-3.5 py-4">
+                                <Clock className="mt-0.5 size-5 shrink-0 text-warning" />
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-[0.9375rem] font-semibold">Waiting for admin approval</p>
+                                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                                        Our team is reviewing your profile to make sure it meets our quality
+                                        standards. This usually takes 24&ndash;48 hours.
+                                    </p>
+                                </div>
+                                <StatusBadge status="pending" />
+                            </div>
+
+                            <div className="flex items-start gap-3.5 pt-4 opacity-55">
+                                <ShieldCheck className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-[0.9375rem] font-semibold text-muted-foreground">
+                                        Access platform features
+                                    </p>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        Unlocked as soon as you&apos;re approved.
+                                    </p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card intent="tinted" className="mt-4 rounded-2xl">
+                        <CardContent className="flex items-start gap-3.5 pt-5 sm:pt-6">
+                            <Mail className="mt-0.5 size-5 shrink-0" />
+                            <div className="min-w-0">
+                                <p className="text-sm">We&apos;ll email you once approved at</p>
+                                <p className="mt-1 break-all text-[0.9375rem] font-semibold">{user?.email}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                        <Button variant="secondary" onClick={() => logout()}>
+                            Log out
                         </Button>
-                        <Button
-                            onClick={() => window.location.reload()}
-                            className="bg-primary lift rounded-xl"
-                        >
-                            Check Status
-                        </Button>
+                        <Button onClick={() => window.location.reload()}>Check status</Button>
                     </div>
-                </motion.div>
+                </Rise>
             </div>
         </div>
     );

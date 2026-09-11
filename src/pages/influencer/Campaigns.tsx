@@ -1,37 +1,28 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  MapPin,
+  Search,
+  Send,
+  SlidersHorizontal,
+} from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input, Textarea } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Checkbox } from '@/components/ui/checkbox';
-import logo from '@/assets/logo.png';
-
-import {
-  Search,
-  Filter,
-  Calendar,
-  Target,
-  Loader2,
-  Crown,
-  Sparkles,
-  MapPin,
-  Compass,
-  TrendingUp,
-  Zap,
-  ArrowRight,
-  Send,
-  Eye,
-  DollarSign,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
-import { formatDateDMY } from '@/lib/utils';
+import { CampaignCard } from '@/components/CampaignCard';
+import { Stat, StatusBadge } from '@/components/Stat';
+import { BrandLogo } from '@/components/Avatar';
+import { Rise, listItemMotion } from '@/components/motion';
+import { deliverableChips, formatINR } from '@/lib/format';
 import { useInfluencerCampaigns, useApplyToCampaign } from '@/hooks/useCampaigns';
 import type { Campaign } from '@/lib/api/types';
 import { useAuth } from '@/context/AuthContext';
@@ -41,66 +32,10 @@ import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { useCategories } from '@/hooks/useCategories';
 import CampaignsSkeleton from '@/components/CampaignsSkeleton';
 
-// Floating Orb Component
-const FloatingOrb = ({
-  className,
-  delay = 0
-}: {
-  className?: string;
-  delay?: number;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.8 }}
-    animate={{
-      opacity: [0.3, 0.6, 0.3],
-      scale: [1, 1.1, 1],
-      y: [0, -20, 0]
-    }}
-    transition={{
-      duration: 6,
-      delay,
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
-    className={className}
-  />
-);
-
-// Stat Card Component
-const StatCard = ({
-  icon: Icon,
-  label,
-  value,
-  delay = 0
-}: {
-  icon: any;
-  label: string;
-  value: string | number;
-  delay?: number;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay }}
-  >
-    <Card className="bg-card border border-border border-border/50 hover:border-primary/30 transition-all duration-300 group">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <motion.div
-            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center group-hover:scale-110 transition-transform"
-            whileHover={{ rotate: 5 }}
-          >
-            <Icon className="h-6 w-6 text-primary" />
-          </motion.div>
-          <div>
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="text-2xl font-bold">{value}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  </motion.div>
-);
+/* Removed from the old screen: FloatingOrb, the gradient StatCard tiles, the
+   ~100-line renderDeliverables() (now `deliverableChips`), the hand-rolled
+   campaign card (now `CampaignCard`) and every gradient/glow surface.
+   The filter rail is a sticky aside on lg+ and a sheet below it. */
 
 const InfluencerCampaigns = () => {
   const { user } = useAuth();
@@ -115,6 +50,7 @@ const InfluencerCampaigns = () => {
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [showBrandNameUpgrade, setShowBrandNameUpgrade] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const { categories: dynamicCategories, isLoading: categoriesLoading } = useCategories();
 
   const ITEMS_PER_PAGE = 9;
@@ -126,131 +62,6 @@ const InfluencerCampaigns = () => {
   const { data: campaigns = [], isLoading } = useInfluencerCampaigns(
     Object.keys(filterParams).length > 0 ? filterParams : undefined
   );
-
-  // Debug: Log campaign data to see what's available
-  if (campaigns.length > 0) {
-    console.log('Campaign data:', campaigns[0]);
-    console.log('Brand:', campaigns[0].brand);
-    console.log('Brand Profile:', campaigns[0].brand_profile);
-  }
-
-  const DELIVERABLE_LABELS: Record<string, string> = {
-    POST: 'Post',
-    STORY: 'Story',
-    REEL: 'Reel',
-    VIDEO: 'Video',
-    YOUTUBE_VIDEO: 'YT video',
-    YOUTUBE_SHORTS: 'Shorts',
-    MIXED: 'Mixed content',
-  };
-
-  const capitalizeText = (text: string) => {
-    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
-  };
-
-  const renderDeliverables = (d: unknown) => {
-    if (Array.isArray(d)) {
-      if (d.length && typeof d[0] === 'object' && d[0] !== null) {
-        return (
-          <div className="flex flex-wrap gap-1 items-center">
-            {(d as any[]).map((it: any, idx: number, arr: any[]) => {
-              // Get label from mapping or apply string conversion for old formats
-              let displayLabel = DELIVERABLE_LABELS[it.type];
-
-              if (!displayLabel) {
-                // Fallback for old database formats
-                const typeStr = (it.type || '').toLowerCase();
-                if (typeStr.includes('youtube') && typeStr.includes('short')) {
-                  displayLabel = 'Shorts';
-                } else if (typeStr.includes('youtube') || typeStr.includes('yt')) {
-                  displayLabel = 'YT video';
-                } else if (typeStr.includes('post')) {
-                  displayLabel = 'Post';
-                } else if (typeStr.includes('story') || typeStr.includes('stories')) {
-                  displayLabel = 'Story';
-                } else if (typeStr.includes('reel')) {
-                  displayLabel = 'Reel';
-                } else if (typeStr.includes('video')) {
-                  displayLabel = 'Video';
-                } else if (typeStr.includes('short')) {
-                  displayLabel = 'Shorts';
-                } else {
-                  displayLabel = it.type;
-                }
-              }
-
-              return (
-                <div key={idx} className="flex items-center">
-                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-primary/5 border border-primary/10">
-                    <span className="text-sm font-medium text-foreground">
-                      {displayLabel}
-                    </span>
-                    {(it.count && it.count > 0) && (
-                      <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] px-1.5 py-0 h-4 font-semibold">
-                        {it.count}
-                      </Badge>
-                    )}
-                  </div>
-                  {idx < arr.length - 1 && (
-                    <span className="text-muted-foreground mx-1">,</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        );
-      }
-      return (
-        <div className="flex flex-wrap gap-1 items-center">
-          {(d as string[]).map((item: string, idx: number, arr: string[]) => {
-            // Map old database formats to new display format
-            let displayText = item;
-            const lowerItem = item.toLowerCase();
-
-            // YouTube mappings
-            if (lowerItem.includes('youtube') && lowerItem.includes('short')) {
-              displayText = 'Shorts';
-            } else if (lowerItem.includes('youtube') || lowerItem.includes('yt')) {
-              displayText = 'YT video';
-            }
-            // Instagram mappings (remove IG/Instagram prefix)
-            else if (lowerItem.includes('post')) {
-              displayText = 'Post';
-            } else if (lowerItem.includes('story') || lowerItem.includes('stories')) {
-              displayText = 'Story';
-            } else if (lowerItem.includes('reel')) {
-              displayText = 'Reel';
-            } else if (lowerItem.includes('video')) {
-              displayText = 'Video';
-            } else if (lowerItem.includes('short')) {
-              displayText = 'Shorts';
-            }
-
-            return (
-              <div key={idx} className="flex items-center">
-                <span
-                  className="text-sm font-medium text-foreground px-2 py-1 rounded-md bg-primary/5 border border-primary/10"
-                >
-                  {displayText}
-                </span>
-                {idx < arr.length - 1 && (
-                  <span className="text-muted-foreground mx-1">,</span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-    if (typeof d === 'string') {
-      return (
-        <span className="text-sm font-medium text-foreground px-2 py-1 rounded-md bg-primary/5 border border-primary/10">
-          {capitalizeText(d)}
-        </span>
-      );
-    }
-    return null;
-  };
 
   const { mutate: applyToCampaign, isPending: isApplying } = useApplyToCampaign();
   const { data: subscription } = useSubscription();
@@ -311,6 +122,12 @@ const InfluencerCampaigns = () => {
   // Calculate stats
   const totalCampaigns = campaigns.length;
   const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
+  const newThisWeek = campaigns.filter(c => {
+    const created = new Date(c.created_at);
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return created > weekAgo;
+  }).length;
 
   // Pagination logic
   const totalPages = Math.ceil(filteredCampaigns.length / ITEMS_PER_PAGE);
@@ -384,395 +201,222 @@ const InfluencerCampaigns = () => {
     navigate(`/influencer/campaigns/${campaign.slug}`);
   };
 
+  const hasActiveFilters =
+    !!searchTerm || !!locationFilter || categoryFilter !== 'all' || paymentTypeFilter !== 'all' || eventTypeFilter.length > 0;
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setLocationFilter('');
+    setCategoryFilter('all');
+    setPaymentTypeFilter('all');
+    setEventTypeFilter([]);
+    handleFilterChange();
+  };
+
+  /** One filter rail, rendered twice: sticky aside on lg+, sheet below it.
+   *  `idPrefix` keeps the checkbox ids unique between the two copies. */
+  const renderFilters = (idPrefix: string) => (
+    <div className="grid gap-5">
+      <div>
+        <label htmlFor={`${idPrefix}-location`} className="eyebrow mb-2 block">
+          Location
+        </label>
+        <div className="relative">
+          <MapPin className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id={`${idPrefix}-location`}
+            placeholder="Any city"
+            value={locationFilter}
+            onChange={(e) => { setLocationFilter(e.target.value); handleFilterChange(); }}
+            className="pl-11"
+          />
+        </div>
+      </div>
+
+      <div>
+        <span className="eyebrow mb-2 block">Category</span>
+        <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value); handleFilterChange(); }}>
+          <SelectTrigger className="h-12 rounded-lg border-input bg-card px-4 text-[0.95rem]">
+            <SelectValue placeholder={categoriesLoading ? 'Loading...' : 'Category'} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All categories</SelectItem>
+            {dynamicCategories.map((cat) => (
+              <SelectItem key={cat.slug} value={cat.slug}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <span className="eyebrow mb-2 block">Payment</span>
+        <Select value={paymentTypeFilter} onValueChange={(value) => { setPaymentTypeFilter(value); handleFilterChange(); }}>
+          <SelectTrigger className="h-12 rounded-lg border-input bg-card px-4 text-[0.95rem]">
+            <SelectValue placeholder="Payment type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All payment types</SelectItem>
+            <SelectItem value="fixed">Fixed payment</SelectItem>
+            <SelectItem value="negotiable">Negotiable</SelectItem>
+            <SelectItem value="barter">Barter / product exchange</SelectItem>
+            <SelectItem value="sourcing">Sourcing</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <span className="eyebrow mb-2 block">Event type</span>
+        <div className="grid gap-1">
+          {[
+            { value: 'online', label: 'Online' },
+            { value: 'onfield', label: 'On field' },
+          ].map((option) => (
+            <label
+              key={option.value}
+              htmlFor={`${idPrefix}-${option.value}`}
+              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-1 text-[0.9375rem] font-medium hover:bg-muted"
+            >
+              <Checkbox
+                id={`${idPrefix}-${option.value}`}
+                checked={eventTypeFilter.includes(option.value)}
+                onCheckedChange={() => handleEventTypeToggle(option.value)}
+              />
+              {option.label}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {hasActiveFilters && (
+        <Button variant="secondary" size="sm" className="h-11 justify-self-start" onClick={clearFilters}>
+          Clear filters
+        </Button>
+      )}
+    </div>
+  );
+
   if (isLoading) {
     return <CampaignsSkeleton />;
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-      <div className="absolute inset-0 opacity-30" />
-      <FloatingOrb
-        className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl"
-        delay={0}
-      />
-      <FloatingOrb
-        className="absolute bottom-40 left-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"
-        delay={2}
-      />
-      <FloatingOrb
-        className="absolute top-1/2 left-1/3 w-64 h-64 bg-accent/10 rounded-full blur-3xl"
-        delay={4}
-      />
-
-      <div className="relative z-10 p-3 sm:p-4 md:p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 md:mb-8"
-          >
-            <div className="flex flex-col md:flex-row items-start justify-between gap-4">
-              <div>
-                <motion.div
-                  className="flex items-center gap-2 sm:gap-3 mb-2"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                >
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                    <Compass className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                  </div>
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                    Discover <span className="text-foreground">Campaigns</span>
-                  </h1>
-                </motion.div>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  Browse available campaigns and apply to ones that fit your style
-                </p>
-              </div>
-              {!isPremium && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <Card className="bg-card border border-border border-primary/20 bg-primary/5">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                          <Crown className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-semibold">Free Plan</p>
-                          <p className="text-xs text-muted-foreground">
-                            5 applications/month
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6 md:mb-8">
-            <StatCard
-              icon={Compass}
-              label="Available Campaigns"
-              value={totalCampaigns}
-              delay={0.1}
-            />
-            <StatCard
-              icon={Zap}
-              label="Active Campaigns"
-              value={activeCampaigns}
-              delay={0.2}
-            />
-            <StatCard
-              icon={TrendingUp}
-              label="New This Week"
-              value={campaigns.filter(c => {
-                const created = new Date(c.created_at);
-                const weekAgo = new Date();
-                weekAgo.setDate(weekAgo.getDate() - 7);
-                return created > weekAgo;
-              }).length}
-              delay={0.3}
-            />
+    <div className="container py-10 md:py-14">
+      {/* -------------------------------------------------------- page header */}
+      <Rise>
+        <header className="mb-10 flex flex-col gap-5 md:mb-12 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="eyebrow mb-3">Discover</p>
+            <h1 className="font-display text-display-2">Briefs open to you.</h1>
+            <p className="mt-3 max-w-[48ch] text-muted-foreground">
+              Browse available campaigns and apply to the ones that fit your style.
+            </p>
           </div>
 
-          {/* Search and Filters */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mb-6"
-          >
-            <Card className="bg-card border border-border border-border/50">
-              <CardContent className="p-3 sm:p-4 md:p-6">
-                <div className="flex flex-col md:flex-row gap-3">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                      placeholder="Search campaigns or brands..."
-                      value={searchTerm}
-                      onChange={(e) => { setSearchTerm(e.target.value); handleFilterChange(); }}
-                      className="pl-10 bg-background/50"
-                    />
-                  </div>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                    <Input
-                      placeholder="Filter by location..."
-                      value={locationFilter}
-                      onChange={(e) => { setLocationFilter(e.target.value); handleFilterChange(); }}
-                      className="w-full md:w-44 pl-10 bg-background/50"
-                    />
-                  </div>
-                  <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value); handleFilterChange(); }}>
-                    <SelectTrigger className="w-full md:w-44 bg-background/50 justify-between">
-                      <SelectValue placeholder={categoriesLoading ? "Loading..." : "Category"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {dynamicCategories.map((cat) => (
-                        <SelectItem key={cat.slug} value={cat.slug}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={paymentTypeFilter} onValueChange={(value) => { setPaymentTypeFilter(value); handleFilterChange(); }}>
-                    <SelectTrigger className="w-full md:w-44 bg-background/50">
-                      <SelectValue placeholder="Payment Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Payment Types</SelectItem>
-                      <SelectItem value="fixed">Fixed Payment</SelectItem>
-                      <SelectItem value="negotiable">Negotiable</SelectItem>
-                      <SelectItem value="barter">Barter/Product Exchange</SelectItem>
-                      <SelectItem value="sourcing">Sourcing</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Event Type Checkboxes and Results Count */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-3 gap-3">
-                  {/* Results Count - Left Side */}
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-sm text-muted-foreground">
-                      Showing
-                    </span>
-                    <span className="text-sm font-bold text-primary">
-                      {filteredCampaigns.length}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {filteredCampaigns.length === 1 ? 'campaign' : 'campaigns'}
-                    </span>
-                    {(searchTerm || locationFilter || categoryFilter !== 'all' || paymentTypeFilter !== 'all' || eventTypeFilter.length > 0) && (
-                      <button
-                        onClick={() => {
-                          setSearchTerm('');
-                          setLocationFilter('');
-                          setCategoryFilter('all');
-                          setPaymentTypeFilter('all');
-                          setEventTypeFilter([]);
-                          handleFilterChange();
-                        }}
-                        className="ml-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                      >
-                        Clear filters
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Event Type - Right Side */}
-                  <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2 rounded-md border border-input bg-background/50">
-                    <Label className="text-sm font-medium text-muted-foreground whitespace-nowrap">Event Type:</Label>
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="online"
-                          checked={eventTypeFilter.includes('online')}
-                          onCheckedChange={() => handleEventTypeToggle('online')}
-                        />
-                        <label
-                          htmlFor="online"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer whitespace-nowrap"
-                        >
-                          Online
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="onfield"
-                          checked={eventTypeFilter.includes('onfield')}
-                          onCheckedChange={() => handleEventTypeToggle('onfield')}
-                        />
-                        <label
-                          htmlFor="onfield"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer whitespace-nowrap"
-                        >
-                          On Field
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
+          {!isPremium && (
+            <Card intent="tinted" className="shrink-0 p-4">
+              <p className="eyebrow text-secondary-foreground/70">Current plan</p>
+              <p className="num mt-1 text-[1.0625rem]">Free</p>
+              <p className="mt-0.5 text-xs text-secondary-foreground/80">5 applications / month</p>
             </Card>
-          </motion.div>
+          )}
+        </header>
+      </Rise>
 
-          {/* Campaigns Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-            {paginatedCampaigns.map((campaign, index) => (
-              <motion.div
-                key={campaign.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + index * 0.05 }}
-                whileHover={{ y: -5 }}
+      {/* -------------------------------------------------------------- stats */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Stat label="Available campaigns" value={totalCampaigns} note="Matching your filters" />
+        <Stat label="Live now" value={activeCampaigns} note="Accepting applications" noteTone={activeCampaigns ? 'success' : 'muted'} />
+        <Stat label="New this week" value={newThisWeek} note="Posted in the last 7 days" />
+      </div>
+
+      {/* ------------------------------------------------ search + sheet trigger */}
+      <div className="mb-6 flex gap-3">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search campaigns or categories..."
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); handleFilterChange(); }}
+            className="pl-11"
+            aria-label="Search campaigns"
+          />
+        </div>
+
+        <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <SheetTrigger asChild>
+            <Button variant="secondary" className="shrink-0 lg:hidden">
+              <SlidersHorizontal />
+              Filters
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[88vw] max-w-sm overflow-y-auto">
+            <SheetHeader className="mb-6">
+              <SheetTitle className="font-display text-display-3">Filters</SheetTitle>
+            </SheetHeader>
+            {renderFilters('sheet')}
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
+        {/* ---------------------------------------------------------- rail */}
+        <aside className="hidden lg:block">
+          <Card className="sticky top-24 p-5">
+            <p className="eyebrow mb-5">Refine</p>
+            {renderFilters('rail')}
+          </Card>
+        </aside>
+
+        {/* -------------------------------------------------------- results */}
+        <div>
+          <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+            <span className="num text-[1.0625rem]">{filteredCampaigns.length}</span>
+            <span className="text-muted-foreground">
+              {filteredCampaigns.length === 1 ? 'campaign' : 'campaigns'} found
+            </span>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="ml-auto inline-flex min-h-11 items-center rounded-md px-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
               >
-                <Card className="h-full bg-card border border-border border-border/50 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col group">
-                  <CardContent className="p-4 sm:p-5 md:p-6 flex-1 flex flex-col">
-                    <div className="flex items-start justify-between mb-3 sm:mb-4">
-                      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                        {/* Brand Initial Avatar */}
-                        <motion.div
-                          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 border-border/50 group-hover:scale-110 transition-transform relative flex items-center justify-center bg-primary flex-shrink-0"
-                          whileHover={{ rotate: 5 }}
-                        >
-                          <span className={`text-xl sm:text-2xl font-bold text-white ${!isPremium ? 'blur-sm' : ''}`}>
-                            {getBrandName(campaign).charAt(0).toUpperCase()}
-                          </span>
-                        </motion.div>
-
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold text-sm sm:text-base">
-                            {isPremium ? (
-                              getBrandName(campaign)
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setShowBrandNameUpgrade(true);
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setShowBrandNameUpgrade(true);
-                                  }
-                                }}
-                                className="cursor-pointer bg-transparent p-0 border-0 hover:opacity-80 transition-opacity"
-                                aria-label="Upgrade to see brand name"
-                              >
-                                <LockedText
-                                  text={getBrandName(campaign)}
-                                  isLocked={true}
-                                  message="Upgrade to see brand name"
-                                />
-                              </button>
-                            )}
-                          </h3>
-                          <Badge variant="secondary" className="mt-1 bg-gradient-to-r from-primary to-secondary text-white capitalize text-xs">
-                            {campaign.category}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      {/* Status Badge - Moved to top right */}
-                      <Badge
-                        variant="outline"
-                        className={`capitalize text-xs flex-shrink-0 ${campaign.has_applied ? 'opacity-60' : ''} ${campaign.status === 'active'
-                          ? 'bg-green-500/10 text-green-500 border-green-500/30'
-                          : ''
-                          }`}
-                      >
-                        {campaign.status}
-                      </Badge>
-                    </div>
-
-                    <h4 className="text-base sm:text-lg font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-1">
-                      {campaign.title}
-                    </h4>
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 flex-1 overflow-hidden" style={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      lineHeight: '1.5em',
-                      maxHeight: '3em'
-                    }}>
-                      {campaign.description}
-                    </p>
-
-                    <div className="space-y-2 sm:space-y-3 mb-3 sm:mb-4 text-xs sm:text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <span className="text-primary font-bold text-sm">₹</span>
-                        </div>
-                        <span className="font-semibold text-primary">
-                          {isPremium && campaign.budget ? (
-                            `₹${campaign.budget.toLocaleString('en-IN')}`
-                          ) : (
-                            <LockedText
-                              text={campaign.budget_type === 'barter' ? "Item Worth" : "Budget"}
-                              isLocked={!isPremium}
-                              message="Upgrade to see exact detail"
-                            />
-                          )}
-                        </span>
-                        {campaign.budget_type && campaign.budget_type !== 'fixed' && (
-                          <Badge variant="outline" className="text-xs">
-                            {campaign.budget_type.charAt(0).toUpperCase() + campaign.budget_type.slice(1).toLowerCase()}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Target className="h-4 w-4 text-secondary" />
-                        </div>
-                        <div className="flex-1">
-                          {renderDeliverables(campaign.deliverables_required as unknown)}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                          <Calendar className="h-4 w-4 text-accent-foreground" />
-                        </div>
-                        <span className="text-muted-foreground">
-                          Status: Ongoing
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-border/50">
-                      <Button
-                        variant="outline"
-                        onClick={() => handleViewDetails(campaign)}
-                        disabled={campaign.has_applied}
-                        size="sm"
-                        className="group/btn hover:bg-primary hover:text-primary-foreground transition-all w-full text-xs sm:text-sm"
-                      >
-                        {campaign.has_applied ? (
-                          'Already Applied'
-                        ) : (
-                          <>
-                            <Eye className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                            View Details
-                            <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4 opacity-0 group-hover/btn:opacity-100 group-hover/btn:translate-x-1 transition-all" />
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                Clear filters
+              </button>
+            )}
           </div>
 
-          {/* Pagination */}
+          {paginatedCampaigns.length > 0 && (
+            <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <AnimatePresence initial={false}>
+                {paginatedCampaigns.map((campaign) => (
+                  <motion.li key={campaign.id} {...listItemMotion} className="h-full">
+                    <CampaignCard
+                      campaign={campaign}
+                      state={campaign.has_applied ? 'applied' : isPremium ? 'open' : 'locked'}
+                      className="h-full"
+                      onApply={() => handleViewDetails(campaign)}
+                      onView={() => handleViewDetails(campaign)}
+                      onUpgrade={() => setShowBrandNameUpgrade(true)}
+                    />
+                  </motion.li>
+                ))}
+              </AnimatePresence>
+            </ul>
+          )}
+
+          {/* ------------------------------------------------- pagination */}
           {filteredCampaigns.length > 0 && totalPages > 1 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex justify-center items-center gap-2 mt-8 mb-4"
-            >
+            <nav aria-label="Pagination" className="mt-8 flex flex-wrap items-center justify-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
+                className="h-11"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="gap-1 hover:bg-primary/10 hover:border-primary/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft />
                 Prev
               </Button>
 
@@ -782,7 +426,7 @@ const InfluencerCampaigns = () => {
                     return (
                       <span
                         key={`ellipsis-${index}`}
-                        className="px-3 py-1.5 text-muted-foreground"
+                        className="inline-flex size-11 items-center justify-center text-muted-foreground"
                       >
                         ...
                       </span>
@@ -792,15 +436,12 @@ const InfluencerCampaigns = () => {
                   return (
                     <Button
                       key={page}
-                      variant={currentPage === page ? 'default' : 'outline'}
-                      size="sm"
+                      variant={currentPage === page ? 'form' : 'outline'}
+                      size="icon"
+                      aria-current={currentPage === page ? 'page' : undefined}
                       onClick={() => handlePageChange(page as number)}
-                      className={`min-w-[2.5rem] transition-all ${currentPage === page
-                        ? 'bg-primary text-white shadow-lg scale-105'
-                        : 'hover:bg-primary/10 hover:border-primary/50'
-                        }`}
                     >
-                      {page}
+                      <span className="num text-sm">{page}</span>
                     </Button>
                   );
                 })}
@@ -809,325 +450,261 @@ const InfluencerCampaigns = () => {
               <Button
                 variant="outline"
                 size="sm"
+                className="h-11"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="gap-1 hover:bg-primary/10 hover:border-primary/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight />
               </Button>
-            </motion.div>
+            </nav>
           )}
 
-          {/* Empty State */}
+          {/* ------------------------------------------------ empty state */}
           {filteredCampaigns.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-16"
-            >
-              <Card className="bg-card border border-border border-border/50 max-w-md mx-auto p-8">
-                <motion.div
-                  animate={{
-                    y: [0, -10, 0],
-                    rotate: [0, 5, -5, 0]
-                  }}
-                  transition={{ repeat: Infinity, duration: 3 }}
-                  className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center mx-auto mb-6"
-                >
-                  <Compass className="h-10 w-10 text-primary" />
-                </motion.div>
-                <h3 className="text-xl font-semibold mb-2">No campaigns found</h3>
-                <p className="text-muted-foreground">
-                  Try adjusting your search or filter criteria
-                </p>
-              </Card>
-            </motion.div>
-          )}
-
-          {/* Campaign Detail Modal */}
-          <Dialog open={!!selectedCampaign} onOpenChange={() => setSelectedCampaign(null)}>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-card border border-border border-border/50">
-              {selectedCampaign && (
-                <>
-                  <DialogHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-4">
-                        {selectedCampaign.brand_profile?.profile_picture ? (
-                          <motion.div
-                            className="w-16 h-16 rounded-xl overflow-hidden border-2 border-border/50"
-                            whileHover={{ scale: 1.05, rotate: 5 }}
-                          >
-                            <img
-                              src={selectedCampaign.brand_profile.profile_picture.startsWith('http')
-                                ? selectedCampaign.brand_profile.profile_picture
-                                : `${import.meta.env.VITE_API_URL.replace("/api", "")}${selectedCampaign.brand_profile.profile_picture}`}
-                              alt={selectedCampaign.brand_profile.company_name || 'Brand'}
-                              className="w-full h-full object-cover"
-                            />
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            className="w-16 h-16 rounded-xl bg-primary flex items-center justify-center text-4xl font-bold text-white"
-                            whileHover={{ scale: 1.05, rotate: 5 }}
-                          >
-                            {selectedCampaign.brand_profile?.company_name
-                              ? selectedCampaign.brand_profile.company_name.charAt(0).toUpperCase()
-                              : selectedCampaign.brand?.username
-                                ? selectedCampaign.brand.username.charAt(0).toUpperCase()
-                                : '?'}
-                          </motion.div>
-                        )}
-                        <div>
-                          <DialogTitle className="text-2xl">{selectedCampaign.title}</DialogTitle>
-                          <p className="text-muted-foreground">
-                            {isPremium ? (
-                              getBrandName(selectedCampaign)
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setShowBrandNameUpgrade(true);
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setShowBrandNameUpgrade(true);
-                                  }
-                                }}
-                                className="cursor-pointer bg-transparent p-0 border-0 hover:opacity-80 transition-opacity"
-                                aria-label="Upgrade to see brand name"
-                              >
-                                <LockedText
-                                  text={getBrandName(selectedCampaign)}
-                                  isLocked={true}
-                                  message="Upgrade to see brand name"
-                                />
-                              </button>
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                      {!isPremium && (
-                        <Badge variant="outline" className="flex items-center gap-1 bg-primary/5">
-                          <Crown className="h-3 w-3" />
-                          Limited View
-                        </Badge>
-                      )}
-                    </div>
-                  </DialogHeader>
-
-                  <div className="space-y-6 mt-4">
-                    {/* Campaign Overview */}
-                    <div>
-                      <h3 className="font-semibold mb-2 text-lg flex items-center gap-2">
-                        <Sparkles className="h-5 w-5 text-primary" />
-                        Campaign Overview
-                      </h3>
-                      <p className="text-muted-foreground">{selectedCampaign.description}</p>
-                    </div>
-
-                    {/* Key Details */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Card className="bg-card border border-border border-border/50">
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                              <span className="text-white font-bold">₹</span>
-                            </div>
-                            <div>
-                              <p className="text-sm text-muted-foreground">Budget</p>
-                              <p className="text-xl font-bold text-primary">
-                                {isPremium && selectedCampaign.budget ? (
-                                  `₹${selectedCampaign.budget.toLocaleString('en-IN')}`
-                                ) : (
-                                  <LockedText
-                                    text="Budget"
-                                    isLocked={!isPremium}
-                                    message="Upgrade to see exact budget"
-                                  />
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-
-                      <Card className="bg-card border border-border border-border/50">
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                              <Target className="h-5 w-5 text-white" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm text-muted-foreground mb-2">Deliverables</p>
-                              <div>{renderDeliverables(selectedCampaign.deliverables_required as unknown)}</div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="bg-card border border-border border-border/50">
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                              <span className="text-white text-lg">🎯</span>
-                            </div>
-                            <div>
-                              <p className="text-sm text-muted-foreground">Objective</p>
-                              <p className="font-semibold capitalize">{selectedCampaign.objective || 'N/A'}</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {/* Category Badge */}
-                    <div>
-                      <h3 className="font-semibold mb-2">Category</h3>
-                      <Badge variant="secondary" className="text-base px-4 py-1 bg-secondary/10">
-                        {selectedCampaign.category}
-                      </Badge>
-                    </div>
-
-                    {/* Requirements */}
-                    <div>
-                      <h3 className="font-semibold mb-2 text-lg">Requirements</h3>
-                      <p className="text-muted-foreground whitespace-pre-wrap">
-                        {selectedCampaign.requirements}
-                      </p>
-                    </div>
-
-                    {/* Premium Info */}
-                    {isPremium && selectedCampaign.hashtags && (
-                      <div>
-                        <h3 className="font-semibold mb-2">Hashtags</h3>
-                        <p className="text-muted-foreground">{selectedCampaign.hashtags}</p>
-                      </div>
-                    )}
-
-                    {!isPremium && (
-                      <Card className="bg-card border border-border border-primary/20 bg-primary/5">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                              <Crown className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                              <p className="font-semibold mb-1">Unlock Full Campaign Details</p>
-                              <p className="text-sm text-muted-foreground mb-3">
-                                Upgrade to Pro to see brand name, exact budget, contact info, and more.
-                              </p>
-                              <Button
-                                size="sm"
-                                className="bg-primary"
-                                onClick={() => setShowUpgradePrompt(true)}
-                              >
-                                View Plans
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
-
-                    {/* Application Message */}
-                    <div>
-                      <Label htmlFor="message" className="flex items-center gap-2 mb-2">
-                        <Send className="h-4 w-4" />
-                        Application Message
-                      </Label>
-                      <Textarea
-                        id="message"
-                        placeholder="Tell the brand why you're a good fit for this campaign..."
-                        rows={4}
-                        value={applicationMessage}
-                        onChange={(e) => setApplicationMessage(e.target.value)}
-                        disabled={selectedCampaign.has_applied}
-                        className="bg-background/50"
-                      />
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-3 pt-4">
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => setSelectedCampaign(null)}
-                      >
-                        Close
-                      </Button>
-                      <Button
-                        className="flex-1 bg-primary"
-                        onClick={handleApply}
-                        disabled={isApplying || selectedCampaign.has_applied || !applicationMessage.trim()}
-                      >
-                        {isApplying ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Applying...
-                          </>
-                        ) : selectedCampaign.has_applied ? (
-                          'Already Applied'
-                        ) : (
-                          <>
-                            <Send className="mr-2 h-4 w-4" />
-                            Apply to Campaign
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </DialogContent>
-          </Dialog>
-
-          {!isPremium && (
-            <UpgradePrompt
-              open={showUpgradePrompt}
-              onClose={() => setShowUpgradePrompt(false)}
-              title="Application Limit Reached"
-              description={`You've reached the 5 application limit for ${userPlan} plan.`}
-              limitType="applications"
-              currentPlan={userPlan}
-            />
-          )}
-
-          {/* Brand Name Upgrade Modal */}
-          <Dialog open={showBrandNameUpgrade} onOpenChange={setShowBrandNameUpgrade}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <div className="flex items-center justify-center mb-4">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                    <Crown className="h-8 w-8 text-white" />
-                  </div>
-                </div>
-                <DialogTitle className="text-center text-xl">Upgrade to see brand's name</DialogTitle>
-              </DialogHeader>
-              <div className="flex flex-col items-center gap-4 py-4">
-                <p className="text-center text-muted-foreground">
-                  Unlock brand details and access premium features to grow your influencer career
-                </p>
-                <Button
-                  onClick={() => {
-                    setShowBrandNameUpgrade(false);
-                    navigate('/subscription');
-                  }}
-                  className="w-full bg-gradient-to-br from-primary to-secondary text-white hover:opacity-90 transition-opacity"
-                >
-                  <Crown className="mr-2 h-4 w-4" />
-                  Upgrade to Pro
+            <Card intent="dashed" className="p-10 text-center sm:p-14">
+              <p className="eyebrow mb-3">Nothing matched</p>
+              <h2 className="font-display text-display-3">No campaigns found</h2>
+              <p className="mx-auto mt-2.5 max-w-[38ch] leading-relaxed text-muted-foreground">
+                Try adjusting your search or filter criteria.
+              </p>
+              {hasActiveFilters && (
+                <Button variant="outline" className="mt-7" onClick={clearFilters}>
+                  Clear filters
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              )}
+            </Card>
+          )}
         </div>
       </div>
+
+      {/* ------------------------------------------- campaign detail dialog */}
+      <Dialog open={!!selectedCampaign} onOpenChange={() => setSelectedCampaign(null)}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+          {selectedCampaign && (
+            <>
+              <DialogHeader>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex min-w-0 items-center gap-4">
+                    <BrandLogo
+                      src={selectedCampaign.brand_profile?.profile_picture
+                        ? (selectedCampaign.brand_profile.profile_picture.startsWith('http')
+                          ? selectedCampaign.brand_profile.profile_picture
+                          : `${import.meta.env.VITE_API_URL.replace("/api", "")}${selectedCampaign.brand_profile.profile_picture}`)
+                        : undefined}
+                      name={selectedCampaign.brand_profile?.company_name || selectedCampaign.brand?.username}
+                      className="size-14"
+                    />
+                    <div className="min-w-0">
+                      <DialogTitle className="font-display text-display-3">
+                        {selectedCampaign.title}
+                      </DialogTitle>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {isPremium ? (
+                          getBrandName(selectedCampaign)
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowBrandNameUpgrade(true);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShowBrandNameUpgrade(true);
+                              }
+                            }}
+                            className="cursor-pointer border-0 bg-transparent p-0 transition-opacity hover:opacity-80"
+                            aria-label="Upgrade to see brand name"
+                          >
+                            <LockedText
+                              text={getBrandName(selectedCampaign)}
+                              isLocked={true}
+                              message="Upgrade to see brand name"
+                            />
+                          </button>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    <StatusBadge status={selectedCampaign.status} />
+                    {!isPremium && <Badge variant="premium">Limited view</Badge>}
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="mt-4 grid gap-6">
+                {/* Campaign overview */}
+                <section>
+                  <p className="eyebrow mb-2">Campaign overview</p>
+                  <p className="leading-relaxed text-muted-foreground">{selectedCampaign.description}</p>
+                </section>
+
+                {/* Key details */}
+                <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-3">
+                  <div className="min-w-0 bg-card p-4">
+                    <dt className="eyebrow text-[10.5px]">Budget</dt>
+                    <dd className="num mt-1 text-[1.0625rem]">
+                      {isPremium && selectedCampaign.budget ? (
+                        formatINR(selectedCampaign.budget)
+                      ) : (
+                        <LockedText
+                          text="Budget"
+                          isLocked={!isPremium}
+                          message="Upgrade to see exact budget"
+                        />
+                      )}
+                    </dd>
+                  </div>
+                  <div className="min-w-0 bg-card p-4">
+                    <dt className="eyebrow text-[10.5px]">Objective</dt>
+                    <dd className="mt-1 text-[0.9375rem] font-semibold capitalize">
+                      {selectedCampaign.objective || 'N/A'}
+                    </dd>
+                  </div>
+                  <div className="min-w-0 bg-card p-4">
+                    <dt className="eyebrow text-[10.5px]">Category</dt>
+                    <dd className="mt-1 text-[0.9375rem] font-semibold capitalize">
+                      {selectedCampaign.category}
+                    </dd>
+                  </div>
+                </dl>
+
+                {/* Deliverables */}
+                <section>
+                  <p className="eyebrow mb-2.5">Deliverables</p>
+                  <ul className="flex flex-wrap gap-1.5">
+                    {deliverableChips(selectedCampaign.deliverables_required).map((chip) => (
+                      <li key={chip} className="rounded-sm bg-muted px-2.5 py-1 text-xs font-medium">
+                        {chip}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+
+                {/* Requirements */}
+                <section>
+                  <p className="eyebrow mb-2">Requirements</p>
+                  <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                    {selectedCampaign.requirements}
+                  </p>
+                </section>
+
+                {/* Premium info */}
+                {isPremium && selectedCampaign.hashtags && (
+                  <section>
+                    <p className="eyebrow mb-2">Hashtags</p>
+                    <p className="text-muted-foreground">{selectedCampaign.hashtags}</p>
+                  </section>
+                )}
+
+                {!isPremium && (
+                  <Card intent="tinted" className="p-5">
+                    <p className="eyebrow text-secondary-foreground/70">Pro plan</p>
+                    <p className="mb-1.5 mt-1.5 font-display text-[1.0625rem] font-semibold tracking-[-0.02em]">
+                      Unlock full campaign details
+                    </p>
+                    <p className="mb-4 text-sm leading-relaxed text-secondary-foreground/80">
+                      Upgrade to Pro to see brand name, exact budget, contact info, and more.
+                    </p>
+                    <Button variant="form" size="sm" onClick={() => setShowUpgradePrompt(true)}>
+                      View plans
+                    </Button>
+                  </Card>
+                )}
+
+                {/* Application message */}
+                <div>
+                  <label htmlFor="message" className="eyebrow mb-2 block">
+                    Application message
+                  </label>
+                  <Textarea
+                    id="message"
+                    placeholder="Tell the brand why you're a good fit for this campaign..."
+                    rows={4}
+                    value={applicationMessage}
+                    onChange={(e) => setApplicationMessage(e.target.value)}
+                    disabled={selectedCampaign.has_applied}
+                  />
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setSelectedCampaign(null)}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    variant="form"
+                    className="flex-1"
+                    onClick={handleApply}
+                    disabled={isApplying || selectedCampaign.has_applied || !applicationMessage.trim()}
+                  >
+                    {isApplying ? (
+                      <>
+                        <Loader2 className="animate-spin" />
+                        Applying...
+                      </>
+                    ) : selectedCampaign.has_applied ? (
+                      'Already applied'
+                    ) : (
+                      <>
+                        <Send />
+                        Apply to campaign
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {!isPremium && (
+        <UpgradePrompt
+          open={showUpgradePrompt}
+          onClose={() => setShowUpgradePrompt(false)}
+          title="Application Limit Reached"
+          description={`You've reached the 5 application limit for ${userPlan} plan.`}
+          limitType="applications"
+          currentPlan={userPlan}
+        />
+      )}
+
+      {/* --------------------------------------------- brand-name upgrade */}
+      <Dialog open={showBrandNameUpgrade} onOpenChange={setShowBrandNameUpgrade}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <p className="eyebrow">Pro plan</p>
+            <DialogTitle className="font-display text-display-3">
+              Unlock the full brief
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-5 py-2">
+            <p className="leading-relaxed text-muted-foreground">
+              See the brand name, the exact budget and the contact details on every campaign.
+            </p>
+            <Button
+              variant="form"
+              className="w-full"
+              onClick={() => {
+                setShowBrandNameUpgrade(false);
+                navigate('/subscription');
+              }}
+            >
+              Upgrade to Pro
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -8,7 +8,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Loader2, Rocket, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+
+/* Semantic icon tile (lilac, or destructive tint) and the Button variants —
+   no bespoke bg-primary/20 confirm button. */
 
 type StatusAction = 'publish' | 'complete' | 'cancel' | 'delete';
 

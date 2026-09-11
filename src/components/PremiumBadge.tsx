@@ -1,5 +1,9 @@
 import { Badge } from '@/components/ui/badge';
 import { Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+/* The Pro marker: the `premium` badge variant (aubergine with citrus text),
+   replacing the primary→secondary gradient with white text. */
 
 export interface PremiumBadgeProps {
   plan: string;
@@ -11,12 +15,10 @@ export interface PremiumBadgeProps {
 export const PremiumBadge = ({ plan, size = 'md', showIcon = true, className = '' }: PremiumBadgeProps) => {
   if (plan.toLowerCase() !== 'pro') return null;
 
-  const iconSize = size === 'sm' ? 'h-3 w-3' : size === 'md' ? 'h-4 w-4' : 'h-5 w-5';
+  const iconSize = size === 'sm' ? 'size-3' : size === 'md' ? 'size-3.5' : 'size-4';
 
   return (
-    <Badge
-      className={`bg-gradient-to-r from-primary to-secondary text-white gap-1 border-0 ${className}`}
-    >
+    <Badge variant="premium" className={cn(size === 'sm' && 'px-2 py-0.5 text-[11px]', className)}>
       {showIcon && <Star className={iconSize} />}
       Pro
     </Badge>

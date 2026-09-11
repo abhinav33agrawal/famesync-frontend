@@ -137,7 +137,8 @@ export interface Campaign {
   contact_email?: string;
   contact_phone?: string;
 
-  status: 'draft' | 'active' | 'completed' | 'cancelled';
+  // mirrors Campaign.STATUS_CHOICES in campaigns/models.py
+  status: 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
   created_at: string;
   updated_at: string;
   applications_count?: number;
