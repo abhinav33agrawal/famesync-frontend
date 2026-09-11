@@ -725,7 +725,7 @@ const CreateCampaign = () => {
                                   placeholder="Search categories..."
                                   value={categorySearch}
                                   onChange={(e) => setCategorySearch(e.target.value)}
-                                  className="h-8 text-sm"
+                                  className="h-10 text-sm"
                                   onClick={(e) => e.stopPropagation()}
                                   onKeyDown={(e) => e.stopPropagation()}
                                 />
@@ -778,7 +778,7 @@ const CreateCampaign = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField delay={0.25}>
                           <Label htmlFor="budget" className="flex items-center mb-3">
-                            <span className="text-primary font-bold mr-2">₹</span>
+                            <span className="num mr-2 text-primary">₹</span>
                             <span>{formData.budget_type === 'barter' ? 'Item Worth *' : 'Budget *'}</span>
                             <InfoTooltip
                               title={formData.budget_type === 'barter' ? "Item Worth" : "Campaign Budget"}
@@ -794,7 +794,7 @@ const CreateCampaign = () => {
                             placeholder="5000"
                             value={formData.budget}
                             onChange={(e) => handleInputChange('budget', e.target.value)}
-                            className={getInputHighlightClass(formData.budget)}
+                            className={`num ${getInputHighlightClass(formData.budget)}`}
                             required
                           />
                           {fieldErrors.budget && (
@@ -1333,6 +1333,7 @@ const CreateCampaign = () => {
                               id="min_followers"
                               type="number"
                               placeholder="10000"
+                              className="num"
                               value={formData.min_followers}
                               onChange={(e) => handleInputChange('min_followers', e.target.value)}
                             />
@@ -1350,6 +1351,7 @@ const CreateCampaign = () => {
                               id="max_followers"
                               type="number"
                               placeholder="100000"
+                              className="num"
                               value={formData.max_followers}
                               onChange={(e) => handleInputChange('max_followers', e.target.value)}
                             />
