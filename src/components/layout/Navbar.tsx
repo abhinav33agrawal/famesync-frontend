@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar } from "@/components/Avatar";
 import { NotificationsDropdown } from "@/components/NotificationsDropdown";
+import { mediaUrl } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useBrandProfile, useInfluencerProfile } from "@/hooks/useProfile";
 import { cn } from "@/lib/utils";
@@ -51,12 +52,7 @@ export const Navbar = () => {
   const profile = role === "brand" ? brandProfile : influencerProfile;
 
   // Uploaded pictures come back as a server-relative path; Instagram ones are absolute.
-  const picture = (() => {
-    const raw = profile?.data?.profile_picture;
-    if (!raw) return undefined;
-    if (raw.startsWith("http")) return raw;
-    return `${import.meta.env.VITE_API_URL?.replace("/api", "") ?? ""}${raw}`;
-  })();
+  const picture = mediaUrl(profile?.data?.profile_picture);
 
   const displayName = user?.first_name || user?.username || "Account";
   const links = !user ? MARKETING_LINKS : role === "brand" ? BRAND_LINKS : CREATOR_LINKS;
