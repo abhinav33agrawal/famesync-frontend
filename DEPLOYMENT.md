@@ -19,13 +19,24 @@ dashboard does not need to be configured beyond the environment variables.
 
 ## 2. Environment variables
 
-Add these under **Settings → Environment Variables**. There are only two.
+The app reads exactly two variables, and one of them is already committed.
+
+`VITE_API_URL` is set to `https://api.famesync.com/api` in `.env.production`,
+so a production build is correct without touching the dashboard. You only need
+a dashboard entry for it to *override* that — for example pointing Preview
+deployments at a staging API.
+
+So the one entry to add under **Settings → Environment Variables**:
 
 | Name | Environments | Value |
 |---|---|---|
-| `VITE_API_URL` | Production | `https://api.famesync.com/api` |
-| `VITE_API_URL` | Preview, Development | `https://staging-api.famesync.com/api` (or the production URL if you have no staging API) |
 | `VITE_GOOGLE_CLIENT_ID` | Production, Preview, Development | the Web client ID from Google Cloud → Credentials, ending in `.apps.googleusercontent.com` |
+
+Optionally, to send previews somewhere else:
+
+| Name | Environments | Value |
+|---|---|---|
+| `VITE_API_URL` | Preview | `https://staging-api.famesync.com/api` |
 
 Notes that matter:
 
