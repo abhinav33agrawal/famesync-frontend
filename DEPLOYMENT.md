@@ -73,8 +73,10 @@ CORS_ALLOWED_ORIGINS=https://famesync.com,https://www.famesync.com
 CSRF_TRUSTED_ORIGINS=https://famesync.com,https://www.famesync.com
 FRONTEND_URL=https://famesync.com
 
-# Optional: let Vercel preview deployments talk to the API too.
-CORS_ALLOWED_ORIGIN_REGEXES=^https://famesync-frontend-[a-z0-9-]+\.vercel\.app$
+# Optional: let Vercel preview deployments talk to the API too. The prefix
+# must match your Vercel project name, which is what preview hostnames
+# start with. This is the same value as in the backend's .env.example.
+CORS_ALLOWED_ORIGIN_REGEXES=^https://famesync-[a-z0-9-]+\.vercel\.app$
 ```
 
 Then `sudo systemctl restart gunicorn`. Skipping this is the single most
