@@ -39,42 +39,23 @@ import { Rise } from '@/components/motion';
 import { Stat } from '@/components/Stat';
 import { Avatar } from '@/components/Avatar';
 import { formatCompact } from '@/lib/format';
-import { getPreferredAccountEmail, hasUsableAccountEmail } from '@/lib/accountEmail';
+import { hasUsableAccountEmail } from '@/lib/accountEmail';
 import {
   buildInstagramInsightCards,
-  clearInstagramServiceToken,
-  fetchInstagramServiceUser,
+  fetchInstagramStatus,
   formatInstagramPostDate,
   formatInstagramSyncTimestamp,
-  getInstagramServiceLoginUrl,
-  getInstagramServiceToken,
-  isInstagramServiceConfigured,
-  setInstagramServiceToken,
-  syncInstagramServiceUser,
-  toInstagramDisplayCount,
-  type InstagramServiceUser,
-} from '@/lib/instagramService';
+  getInstagramErrorMessage,
+  getInstagramErrorStatus,
+  startInstagramAuth,
+  syncInstagram,
+  type InstagramAccountData,
+} from '@/lib/instagram';
 
 /* Removed from the old page: FloatingOrb (looping animation), the unused
    gradient StatCard, the mesh/radial page backgrounds, every gradient
    fill and blur-glow, the local formatFollowers() (now `formatCompact`)
    and the backdrop-blur card surfaces. */
-
-const getInstagramErrorMessage = (error: unknown, fallback: string) => {
-  if (error && typeof error === 'object' && 'message' in error) {
-    const message = `${(error as { message?: string }).message || ''}`.trim();
-    if (message) return message;
-  }
-  return fallback;
-};
-
-const getInstagramErrorStatus = (error: unknown) => {
-  if (error && typeof error === 'object' && 'status' in error) {
-    const status = Number((error as { status?: number }).status);
-    if (Number.isFinite(status)) return status;
-  }
-  return 0;
-};
 
 const ProfileSkeleton = () => (
   <div className="container py-10 sm:py-12">
@@ -98,14 +79,13 @@ const ProfileSkeleton = () => (
 );
 
 const InfluencerProfile = () => {
-  const { user, authSource } = useAuth();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [isEditing, setIsEditing] = useState(false);
-  const isInstagramOnlyMode = authSource === 'instagram';
-  const shouldLoadFameeProfileData = user?.role === 'influencer' && !isInstagramOnlyMode;
-  const { data: profile, isLoading } = useInfluencerProfile(shouldLoadFameeProfileData);
-  const { data: dashboardData } = useInfluencerDashboard(shouldLoadFameeProfileData);
-  const { data: subscription } = useSubscription(shouldLoadFameeProfileData);
+  const isInfluencer = user?.role === 'influencer';
+  const { data: profile, isLoading } = useInfluencerProfile(isInfluencer);
+  const { data: dashboardData } = useInfluencerDashboard(isInfluencer);
+  const { data: subscription } = useSubscription(isInfluencer);
   const updateProfile = useUpdateInfluencerProfile();
 
   // Get dynamic stats from dashboard
@@ -127,11 +107,11 @@ const InfluencerProfile = () => {
     bio: '',
     phone_number: '',
   });
-  const [instagramServiceUser, setInstagramServiceUser] = useState<InstagramServiceUser | null>(null);
+  const [instagramAccountData, setInstagramAccountData] = useState<InstagramAccountData | null>(null);
   const [instagramLoading, setInstagramLoading] = useState(false);
   const [instagramSyncing, setInstagramSyncing] = useState(false);
   const [instagramError, setInstagramError] = useState('');
-  const instagramServiceReady = isInstagramServiceConfigured();
+  const [instagramConfigured, setInstagramServiceReady] = useState(true);
 
   useEffect(() => {
     if (profile) {
@@ -166,38 +146,22 @@ const InfluencerProfile = () => {
     const loadInstagramProfile = async () => {
       if (user && user.role !== 'influencer') return;
 
-      const token = getInstagramServiceToken();
-      if (!token) {
-        if (isMounted) {
-          setInstagramServiceUser(null);
-          setInstagramError('');
-        }
-        return;
-      }
-
-      if (isMounted) {
-        setInstagramLoading(true);
-        setInstagramError('');
-      }
+      setInstagramLoading(true);
+      setInstagramError('');
 
       try {
-        const { user: connectedUser } = await fetchInstagramServiceUser(token);
+        const status = await fetchInstagramStatus();
         if (!isMounted) return;
-        setInstagramServiceUser(connectedUser);
+        setInstagramServiceReady(status.configured);
+        setInstagramAccountData(status.instagram);
       } catch (error) {
         if (!isMounted) return;
-        const status = getInstagramErrorStatus(error);
-        if (status === 401) {
-          clearInstagramServiceToken();
-          setInstagramServiceUser(null);
-          setInstagramError('Instagram session expired. Please reconnect Instagram.');
-          return;
-        }
+        // 401 means the FameSync session lapsed, which the API client is
+        // already handling -- don't shout about Instagram for that.
+        if (getInstagramErrorStatus(error) === 401) return;
         setInstagramError(getInstagramErrorMessage(error, 'Unable to load Instagram profile.'));
       } finally {
-        if (isMounted) {
-          setInstagramLoading(false);
-        }
+        if (isMounted) setInstagramLoading(false);
       }
     };
 
@@ -208,48 +172,26 @@ const InfluencerProfile = () => {
     };
   }, [user?.role]);
 
-  const handleConnectInstagram = () => {
-    const currentServiceToken = getInstagramServiceToken();
-    const nextInstagramLoginUrl = getInstagramServiceLoginUrl({
-      linkToken: currentServiceToken,
-    });
-
-    if (!instagramServiceReady || !nextInstagramLoginUrl) {
-      toast.error('Instagram service is not configured yet.');
-      return;
+  const handleConnectInstagram = async () => {
+    try {
+      // Redirects the browser; nothing after this runs on success.
+      await startInstagramAuth('influencer');
+    } catch (error) {
+      toast.error(getInstagramErrorMessage(error, 'Instagram login is not available right now.'));
     }
-    window.location.href = nextInstagramLoginUrl;
   };
 
   const handleInstagramSync = async () => {
-    const token = getInstagramServiceToken();
-    if (!token) {
-      toast.error('Connect Instagram first to sync account details.');
-      return;
-    }
-
     setInstagramSyncing(true);
     setInstagramError('');
 
     try {
-      const synced = await syncInstagramServiceUser(token);
-      if (synced.token) {
-        setInstagramServiceToken(synced.token);
-      }
-      setInstagramServiceUser(synced.user);
+      setInstagramAccountData(await syncInstagram());
       toast.success('Instagram profile and insights synced.');
     } catch (error) {
-      const status = getInstagramErrorStatus(error);
-      if (status === 401) {
-        clearInstagramServiceToken();
-        setInstagramServiceUser(null);
-        setInstagramError('Instagram session expired. Please reconnect Instagram.');
-        toast.error('Instagram session expired. Please reconnect.');
-      } else {
-        const message = getInstagramErrorMessage(error, 'Failed to sync Instagram profile.');
-        setInstagramError(message);
-        toast.error(message);
-      }
+      const message = getInstagramErrorMessage(error, 'Failed to sync Instagram profile.');
+      setInstagramError(message);
+      toast.error(message);
     } finally {
       setInstagramSyncing(false);
     }
@@ -302,7 +244,7 @@ const InfluencerProfile = () => {
     setProfilePicture(null);
   };
 
-  const instagramAccount = instagramServiceUser?.instagram || null;
+  const instagramAccount = instagramAccountData;
   const instagramInsightCards = instagramAccount
     ? buildInstagramInsightCards(instagramAccount)
     : [];
@@ -314,10 +256,10 @@ const InfluencerProfile = () => {
     ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
     : '';
   const displayUsername = user?.username || instagramAccount?.username || 'instagram-user';
-  const displayEmail = getPreferredAccountEmail(user?.email, instagramServiceUser?.email);
+  const displayEmail = `${user?.email || ''}`.trim();
   const hasStableEmail = hasUsableAccountEmail(displayEmail);
   const accountRole: 'influencer' | 'brand' = user?.role === 'brand' ? 'brand' : 'influencer';
-  const shouldShowGoogleLink = isInstagramOnlyMode || !hasStableEmail;
+  const shouldShowGoogleLink = !hasStableEmail;
 
   const headline =
     user?.first_name && user?.last_name
@@ -532,9 +474,10 @@ const InfluencerProfile = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-5">
-                {!instagramServiceReady && (
+                {!instagramConfigured && (
                   <div className="rounded-lg bg-muted p-4 text-sm leading-relaxed text-muted-foreground">
-                    Instagram service URL is not configured yet. Set <code>VITE_INSTAGRAM_SERVICE_URL</code> to enable connect and sync.
+                    Instagram sign-in isn&apos;t switched on for this environment yet. Connect and
+                    sync will light up once it is.
                   </div>
                 )}
 
@@ -547,7 +490,7 @@ const InfluencerProfile = () => {
                       type="button"
                       variant="form"
                       onClick={handleConnectInstagram}
-                      disabled={!instagramServiceReady}
+                      disabled={!instagramConfigured}
                     >
                       <Instagram />
                       Continue with Instagram
@@ -574,7 +517,7 @@ const InfluencerProfile = () => {
                     <div className="flex flex-col justify-between gap-4 rounded-lg border border-border p-4 md:flex-row md:items-center">
                       <div className="flex items-center gap-3">
                         <Avatar
-                          src={instagramServiceUser?.picture || ''}
+                          src={instagramAccount.picture || ''}
                           name={instagramAccount.username || user?.username || 'IG'}
                           size={48}
                         />
@@ -711,19 +654,6 @@ const InfluencerProfile = () => {
               </CardContent>
             </Card>
           </Rise>
-
-          {isInstagramOnlyMode && (
-            <Card intent="tinted">
-              <CardContent className="p-5 sm:p-6">
-                <p className="text-sm leading-relaxed text-secondary-foreground/80">
-                  You are in Instagram-only mode. Instagram insights are connected, but FameSync profile and campaign features still require account sign in.
-                </p>
-                <Button variant="outline" size="sm" className="mt-4" asChild>
-                  <Link to="/auth?mode=login">Sign in to FameSync</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Profile Information Card */}
           <Card>
@@ -876,16 +806,11 @@ const InfluencerProfile = () => {
 
               {/* Edit Profile Buttons */}
               <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-5">
-                {isInstagramOnlyMode && (
-                  <p className="mr-auto text-xs text-muted-foreground">
-                    Sign in to edit FameSync profile fields.
-                  </p>
-                )}
                 {!isEditing ? (
                   <Button
                     variant="form"
                     onClick={() => setIsEditing(true)}
-                    disabled={!user || isInstagramOnlyMode}
+                    disabled={!user}
                   >
                     <Edit />
                     Edit profile

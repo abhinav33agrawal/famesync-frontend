@@ -13,6 +13,9 @@ export interface User {
   email_verified?: boolean;
   is_approved?: boolean;
   is_new_member?: boolean;
+  /** False for accounts created via Instagram or Google that never set one. */
+  has_usable_password?: boolean;
+  instagram_connected?: boolean;
 }
 export interface Category {
   id: number;
@@ -243,8 +246,6 @@ export interface InfluencerDashboardStats {
     total_applications: number;
     accepted_applications: number;
     pending_applications: number;
-    total_deliverables: number;
-    approved_deliverables: number;
   };
 }
 

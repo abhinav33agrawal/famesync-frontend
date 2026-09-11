@@ -3,24 +3,24 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Loader2, Instagram, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { setInstagramServiceToken } from "@/lib/instagramService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Rise } from "@/components/motion";
 
-/* Removed from the old callback screen: the primary→secondary gradient icon
-   tiles, the translucent `bg-card/70` panels and the hand-rolled radii. */
+/* The API redirects here with a single-use `code`, never with tokens -- a
+   JWT on a redirect URL ends up in history, referrer headers and proxy logs.
+   We trade the code for a session over POST. */
 
 const InstagramAuthCallback = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated, loading, authSource, completeInstagramLogin } = useAuth();
+  const { loading, completeInstagramLogin } = useAuth();
   const didHandleRef = useRef(false);
   const [needsEmail, setNeedsEmail] = useState(false);
   const [emailInput, setEmailInput] = useState("");
-  const [tokenToSubmit, setTokenToSubmit] = useState("");
+  const [code, setCode] = useState("");
   const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
   const role = (localStorage.getItem("famee_instagram_role") as "influencer" | "brand") || "influencer";
 
@@ -30,7 +30,7 @@ const InstagramAuthCallback = () => {
 
     const query = new URLSearchParams(location.search);
     const error = `${query.get("error") || ""}`.trim();
-    const token = `${query.get("token") || ""}`.trim();
+    const callbackCode = `${query.get("code") || ""}`.trim();
 
     if (error) {
       toast.error(error);
@@ -38,51 +38,30 @@ const InstagramAuthCallback = () => {
       return;
     }
 
-    if (!token) {
-      toast.error("Instagram callback token is missing.");
+    if (!callbackCode) {
+      toast.error("Instagram did not return a sign-in code.");
       navigate("/auth?mode=login", { replace: true });
       return;
     }
 
-    if (isAuthenticated && authSource === "famee") {
-      setInstagramServiceToken(token);
-      toast.success("Instagram connected successfully.");
+    setCode(callbackCode);
 
-      if (user?.role === "brand") {
-        navigate("/brand/dashboard", { replace: true });
-        return;
-      }
-
-      navigate("/influencer/dashboard?instagram=connected", { replace: true });
-      return;
-    }
-
-    setTokenToSubmit(token);
-
-    completeInstagramLogin(token, role)
+    completeInstagramLogin(callbackCode, { role })
       .then((result) => {
-        if (result === 'needs_email') {
+        if (result === "needs_email") {
           setNeedsEmail(true);
-        } else {
-          toast.success("Instagram connected successfully.");
-          navigate(`/${result}/dashboard?instagram=connected`, { replace: true });
+          return;
         }
+        localStorage.removeItem("famee_instagram_role");
+        toast.success("Instagram connected successfully.");
+        navigate(`/${result}/dashboard?instagram=connected`, { replace: true });
       })
       .catch((callbackError) => {
         const fallbackMessage = `${(callbackError as { message?: string })?.message || ""}`.trim();
         toast.error(fallbackMessage || "Instagram login failed. Please try again.");
         navigate("/auth?mode=login", { replace: true });
       });
-  }, [
-    loading,
-    location.search,
-    navigate,
-    isAuthenticated,
-    user,
-    authSource,
-    completeInstagramLogin,
-    role
-  ]);
+  }, [loading, location.search, navigate, completeInstagramLogin, role]);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,12 +72,13 @@ const InstagramAuthCallback = () => {
 
     setIsSubmittingEmail(true);
     try {
-      const result = await completeInstagramLogin(tokenToSubmit, role, emailInput);
-      if (result !== 'needs_email') {
-         toast.success("Account created and Instagram connected successfully.");
-         navigate(`/${result}/dashboard?instagram=connected`, { replace: true });
+      const result = await completeInstagramLogin(code, { email: emailInput, role });
+      if (result !== "needs_email") {
+        localStorage.removeItem("famee_instagram_role");
+        toast.success("Account created and Instagram connected successfully.");
+        navigate(`/${result}/dashboard?instagram=connected`, { replace: true });
       }
-    } catch (error) {
+    } catch {
       // Error is handled in context
       setIsSubmittingEmail(false);
     }
@@ -119,8 +99,8 @@ const InstagramAuthCallback = () => {
                 </span>
                 <h1 className="mt-5 font-display text-display-3">Almost there</h1>
                 <p className="mt-3 leading-relaxed text-muted-foreground">
-                  Your Instagram account doesn&apos;t have a public email address. Please provide one
-                  to complete your registration.
+                  Instagram doesn&apos;t share an email address with us. Add one so we can
+                  reach you about campaigns and payouts.
                 </p>
 
                 <form onSubmit={handleEmailSubmit} className="mt-7 space-y-4 text-left">

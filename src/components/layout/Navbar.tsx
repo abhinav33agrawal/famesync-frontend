@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar } from "@/components/Avatar";
 import { NotificationsDropdown } from "@/components/NotificationsDropdown";
+import { mediaUrl } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useBrandProfile, useInfluencerProfile } from "@/hooks/useProfile";
 import { cn } from "@/lib/utils";
@@ -30,7 +31,6 @@ const CREATOR_LINKS = [
   { to: "/influencer/dashboard", label: "Home" },
   { to: "/influencer/campaigns", label: "Discover" },
   { to: "/influencer/applications", label: "Applications" },
-  { to: "/influencer/deliverables", label: "Deliverables" },
 ];
 
 const BRAND_LINKS = [
@@ -40,25 +40,19 @@ const BRAND_LINKS = [
 ];
 
 export const Navbar = () => {
-  const { user, logout, authSource } = useAuth();
+  const { user, logout } = useAuth();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   const role = user?.role;
-  const isInstagramSession = authSource === "instagram";
 
-  const influencerProfile = useInfluencerProfile(role === "influencer" && !isInstagramSession);
+  const influencerProfile = useInfluencerProfile(role === "influencer");
   const brandProfile = useBrandProfile(role === "brand");
   const profile = role === "brand" ? brandProfile : influencerProfile;
 
   // Uploaded pictures come back as a server-relative path; Instagram ones are absolute.
-  const picture = (() => {
-    const raw = profile?.data?.profile_picture;
-    if (!raw) return undefined;
-    if (raw.startsWith("http")) return raw;
-    return `${import.meta.env.VITE_API_URL?.replace("/api", "") ?? ""}${raw}`;
-  })();
+  const picture = mediaUrl(profile?.data?.profile_picture);
 
   const displayName = user?.first_name || user?.username || "Account";
   const links = !user ? MARKETING_LINKS : role === "brand" ? BRAND_LINKS : CREATOR_LINKS;

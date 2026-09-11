@@ -3,6 +3,24 @@ import axios from "axios";
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
+/** Where uploaded media lives: the API origin without the /api suffix.
+ *
+ *  Only a *trailing* /api is stripped. Call sites used to inline
+ *  `VITE_API_URL.replace("/api", "")`, which removes the first match
+ *  anywhere in the string -- so the obvious production value
+ *  "https://api.famesync.com/api" became "https:/.famesync.com/api" and
+ *  every profile picture 404'd. It only worked on localhost. */
+export const MEDIA_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, "");
+
+/** Absolute URL for a server-relative upload path.
+ *  Values that are already absolute (Instagram CDN, S3, blob: previews)
+ *  are returned untouched. */
+export const mediaUrl = (path?: string | null): string | undefined => {
+  if (!path) return undefined;
+  if (/^(https?:|blob:|data:)/i.test(path)) return path;
+  return `${MEDIA_BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+};
+
 // Create main axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,

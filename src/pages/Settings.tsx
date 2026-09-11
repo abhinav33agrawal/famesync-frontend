@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,12 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { Bell, Lock, Trash2, Mail } from 'lucide-react';
 import LinkGoogleAccountButton from '@/components/auth/LinkGoogleAccountButton';
-import { getPreferredAccountEmail, hasUsableAccountEmail } from '@/lib/accountEmail';
-import {
-  fetchInstagramServiceUser,
-  getInstagramServiceToken,
-  type InstagramServiceUser,
-} from '@/lib/instagramService';
+import { hasUsableAccountEmail } from '@/lib/accountEmail';
 
 /* Signed-in app surface: the Navbar is the only chrome, no footer, no
    sidebar. Removed: FloatingOrb (looping animation), the mesh/radial
@@ -44,19 +39,19 @@ const NOTIFICATION_ROWS = [
 ] as const;
 
 const Settings = () => {
-  const { user, authSource } = useAuth();
+  const { user } = useAuth();
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [campaignUpdates, setCampaignUpdates] = useState(true);
-  const [instagramServiceUser, setInstagramServiceUser] = useState<InstagramServiceUser | null>(null);
-  const [instagramEmailLoading, setInstagramEmailLoading] = useState(false);
-
-  const linkedEmail = getPreferredAccountEmail(user?.email, instagramServiceUser?.email);
-  const displayEmail = linkedEmail || (instagramEmailLoading ? 'Loading linked email...' : 'No linked email');
+  const linkedEmail = `${user?.email || ''}`.trim();
+  const displayEmail = linkedEmail || 'No linked email';
   const hasStableEmail = hasUsableAccountEmail(linkedEmail);
   const accountRole: 'influencer' | 'brand' = user?.role === 'brand' ? 'brand' : 'influencer';
-  const shouldShowGoogleLink = authSource === 'instagram' || !hasStableEmail;
-  const canChangePassword = authSource === 'famee';
+  const shouldShowGoogleLink = !hasStableEmail;
+  // Accounts created through Instagram or Google have no password to change
+  // until they link one; the API reports this rather than us guessing from
+  // how the current session happened to start.
+  const canChangePassword = user?.has_usable_password !== false;
   const fullName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'User';
 
   const notificationState = {
@@ -65,34 +60,6 @@ const Settings = () => {
     'campaign-updates': [campaignUpdates, setCampaignUpdates],
   } as const;
 
-  useEffect(() => {
-    let isMounted = true;
-    const token = getInstagramServiceToken();
-    if (!token) {
-      setInstagramServiceUser(null);
-      return;
-    }
-
-    setInstagramEmailLoading(true);
-    fetchInstagramServiceUser(token)
-      .then(({ user: connectedUser }) => {
-        if (!isMounted) return;
-        setInstagramServiceUser(connectedUser);
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        setInstagramServiceUser(null);
-      })
-      .finally(() => {
-        if (isMounted) {
-          setInstagramEmailLoading(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [authSource]);
 
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();

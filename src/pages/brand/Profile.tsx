@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { mediaUrl } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -194,11 +195,7 @@ const Profile = () => {
 
   // Uploaded pictures come back as a server-relative path; blob: previews and
   // Instagram URLs are already absolute.
-  const logoSrc = (() => {
-    if (!previewUrl) return undefined;
-    if (previewUrl.startsWith('http') || previewUrl.startsWith('blob:')) return previewUrl;
-    return `${import.meta.env.VITE_API_URL?.replace('/api', '') ?? ''}${previewUrl}`;
-  })();
+  const logoSrc = mediaUrl(previewUrl);
 
   const industryLabel = profile?.industry || formData.customIndustry;
   const planLabel = user?.subscription_plan

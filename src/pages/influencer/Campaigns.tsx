@@ -10,6 +10,7 @@ import {
   Send,
   SlidersHorizontal,
 } from 'lucide-react';
+import { mediaUrl } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input, Textarea } from '@/components/ui/input';
@@ -487,11 +488,7 @@ const InfluencerCampaigns = () => {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex min-w-0 items-center gap-4">
                     <BrandLogo
-                      src={selectedCampaign.brand_profile?.profile_picture
-                        ? (selectedCampaign.brand_profile.profile_picture.startsWith('http')
-                          ? selectedCampaign.brand_profile.profile_picture
-                          : `${import.meta.env.VITE_API_URL.replace("/api", "")}${selectedCampaign.brand_profile.profile_picture}`)
-                        : undefined}
+                      src={mediaUrl(selectedCampaign.brand_profile?.profile_picture)}
                       name={selectedCampaign.brand_profile?.company_name || selectedCampaign.brand?.username}
                       className="size-14"
                     />
