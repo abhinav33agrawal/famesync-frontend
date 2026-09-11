@@ -1,32 +1,42 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold " +
+    "ring-offset-background transition-[background-color,border-color,transform,box-shadow] " +
+    "duration-200 ease-soft active:scale-[0.985] focus-visible:outline-none " +
+    "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 " +
+    "disabled:pointer-events-none disabled:bg-muted disabled:text-muted-foreground " +
+    "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+        // promotional / page-level actions — pill
+        default:
+          "rounded-full bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-px",
+        // creator-facing CTA only (citrus rule: one per screen)
+        accent:
+          "rounded-full bg-accent text-accent-foreground hover:-translate-y-px hover:shadow-e2",
+        secondary:
+          "rounded-full border-[1.5px] border-border bg-transparent text-foreground hover:border-primary hover:bg-muted",
+        // inside cards, dialogs, wizards — radius 12
+        form: "rounded-lg bg-primary text-primary-foreground hover:bg-primary/90",
+        outline: "rounded-lg border border-border bg-card hover:bg-muted",
+        ghost: "rounded-md hover:bg-muted",
+        destructive:
+          "rounded-lg border-[1.5px] border-destructive/30 text-destructive bg-transparent hover:bg-destructive/[0.07]",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        sm: "h-10 px-4 text-sm",
+        default: "h-12 px-6 text-[0.95rem]",
+        lg: "h-14 px-8 text-base",
+        icon: "h-11 w-11 rounded-lg",
       },
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
+    defaultVariants: { variant: "default", size: "default" },
   },
 );
 

@@ -1,8 +1,11 @@
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { FileText } from 'lucide-react';
+import { Rise } from '@/components/motion';
+
+/* Long-form reading page: one measured prose column (~68ch), hairline
+   dividers instead of a card per clause, display face on headings only.
+   The terms wording itself is unchanged. Removed: the `text-white` badge,
+   the `bg-card border border-border border-2` codemod artefact and the
+   per-section stagger. */
 
 const Terms = () => {
   const sections = [
@@ -98,7 +101,7 @@ const Terms = () => {
         <meta name="description" content="Read FameSync's terms of service to understand your rights and responsibilities when using our influencer marketing platform." />
         <meta name="keywords" content="terms of service, user agreement, terms and conditions, legal agreement" />
         <link rel="canonical" href="https://famesync.com/terms" />
-        
+
         {/* Open Graph */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://famesync.com/terms" />
@@ -106,76 +109,60 @@ const Terms = () => {
         <meta property="og:description" content="FameSync terms of service and user agreement." />
         <meta property="og:image" content="https://famesync.com/og-image.png" />
         <meta property="og:site_name" content="FameSync" />
-        
+
         {/* Twitter */}
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="Terms of Service - FameSync" />
         <meta name="twitter:description" content="FameSync terms of service and user agreement." />
       </Helmet>
 
-      <article className="min-h-screen py-20 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <motion.header
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-16"
-          >
-            <Badge className="mb-4 gradient-instagram text-white" variant="secondary">
-              <FileText className="w-4 h-4 mr-2" />
-              Last Updated: January 2025
-            </Badge>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Terms of <span className="gradient-text">Service</span>
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+      <article className="container py-16 sm:py-20">
+        <div className="max-w-[68ch]">
+          <Rise>
+            <p className="eyebrow mb-5">Last Updated: January 2025</p>
+            <h1 className="font-display text-display-2">Terms of Service</h1>
+            <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
               Please read these terms carefully before using FameSync. They govern your access to and use of our platform.
             </p>
-          </motion.header>
+          </Rise>
 
-          <div className="space-y-8">
-            {sections.map((section, index) => (
-              <motion.section
-                key={section.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Card className="glass border-2">
-                  <CardContent className="p-8">
-                    <h2 className="text-2xl font-bold mb-4">
-                      {section.title}
-                    </h2>
-                    <ul className="space-y-3">
-                      {section.content.map((item, i) => (
-                        <li key={i} className="flex items-start gap-3 text-muted-foreground">
-                          <span className="text-primary mt-1">•</span>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </motion.section>
+          <div className="mt-14 divide-y divide-border border-t border-border">
+            {sections.map((section) => (
+              <Rise key={section.title}>
+                <section className="py-10">
+                  <h2 className="font-display text-display-3">{section.title}</h2>
+                  <ul className="mt-5 space-y-3.5">
+                    {section.content.map((item, i) => (
+                      <li key={i} className="flex gap-3.5 leading-[1.7] text-muted-foreground">
+                        <span
+                          aria-hidden="true"
+                          className="mt-[0.6em] size-1.5 shrink-0 rounded-full bg-primary/45"
+                        />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </Rise>
             ))}
 
-            <motion.section
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              <Card className="glass-dark border-2">
-                <CardContent className="p-8">
-                  <h2 className="text-2xl font-bold mb-4">Contact Information</h2>
-                  <p className="text-muted-foreground mb-4">
-                    For questions about these Terms of Service, please contact:
-                  </p>
-                  <div className="space-y-2 text-muted-foreground">
-                    <p>Email: <a href="mailto:info@famesync.com" className="text-primary hover:underline">info@famesync.com</a></p>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.section>
+            <Rise>
+              <section className="py-10">
+                <h2 className="font-display text-display-3">Contact Information</h2>
+                <p className="mt-5 leading-[1.7] text-muted-foreground">
+                  For questions about these Terms of Service, please contact:
+                </p>
+                <p className="mt-4 leading-[1.7] text-muted-foreground">
+                  Email:{' '}
+                  <a
+                    href="mailto:info@famesync.com"
+                    className="font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    info@famesync.com
+                  </a>
+                </p>
+              </section>
+            </Rise>
           </div>
         </div>
       </article>

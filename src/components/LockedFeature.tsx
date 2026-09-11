@@ -5,6 +5,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
+/* Gating is a blur plus the `premium` badge — no crown, no glow. */
+
 interface LockedFeatureProps {
   children: ReactNode;
   isLocked: boolean;
@@ -12,11 +14,11 @@ interface LockedFeatureProps {
   showUpgrade?: boolean;
 }
 
-export const LockedFeature = ({ 
-  children, 
-  isLocked, 
+export const LockedFeature = ({
+  children,
+  isLocked,
   message = "Upgrade to Premium to unlock this feature",
-  showUpgrade = true 
+  showUpgrade = true
 }: LockedFeatureProps) => {
   if (!isLocked) {
     return <>{children}</>;
@@ -24,23 +26,21 @@ export const LockedFeature = ({
 
   return (
     <div className="relative">
-      <div className="blur-sm pointer-events-none select-none opacity-60">
+      <div className="pointer-events-none select-none opacity-60 blur-sm">
         {children}
       </div>
-      <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[2px] rounded-lg">
+      <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-background/45 backdrop-blur-[2px]">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Lock className="h-5 w-5 text-primary" />
-                </div>
+              <div className="flex flex-col items-center gap-2.5">
+                <span className="inline-flex size-10 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+                  <Lock className="size-4" />
+                </span>
                 {showUpgrade && (
-                  <Link to="/pricing">
-                    <Button size="sm" className="gradient-instagram text-xs">
-                      Upgrade Now
-                    </Button>
-                  </Link>
+                  <Button variant="form" size="sm" asChild>
+                    <Link to="/pricing">Upgrade</Link>
+                  </Button>
                 )}
               </div>
             </TooltipTrigger>
@@ -54,13 +54,13 @@ export const LockedFeature = ({
   );
 };
 
-export const LockedText = ({ 
-  text, 
-  isLocked, 
-  message = "Upgrade to view" 
-}: { 
-  text: string; 
-  isLocked: boolean; 
+export const LockedText = ({
+  text,
+  isLocked,
+  message = "Upgrade to view"
+}: {
+  text: string;
+  isLocked: boolean;
   message?: string;
 }) => {
   if (!isLocked) {
@@ -71,9 +71,9 @@ export const LockedText = ({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="inline-flex items-center gap-1 text-muted-foreground">
-            <Lock className="h-3 w-3" />
-            <span className="blur-sm select-none">●●●●●</span>
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <Lock className="size-3" />
+            <span className="select-none blur-[3.5px]">●●●●●</span>
           </span>
         </TooltipTrigger>
         <TooltipContent>
@@ -85,8 +85,8 @@ export const LockedText = ({
 };
 
 export const PremiumBadgeIndicator = () => (
-  <Badge variant="default" className="gradient-instagram gap-1 text-xs">
-    <Lock className="h-3 w-3" />
+  <Badge variant="premium">
+    <Lock className="size-3" />
     Premium
   </Badge>
 );

@@ -1,113 +1,59 @@
-import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 
-const FloatingOrb = ({ 
-  className, 
-  delay = 0 
-}: { 
-  className?: string; 
-  delay?: number;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.8 }}
-    animate={{ 
-      opacity: [0.2, 0.4, 0.2],
-      scale: [1, 1.1, 1],
-      y: [0, -20, 0]
-    }}
-    transition={{
-      duration: 6,
-      delay,
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
-    className={className}
-  />
-);
+/* Mirrors the campaign detail page: back link, brief header with a four-up
+   numeric strip, the tab rail and one content panel. FloatingOrb, the mesh
+   gradient and the duplicated `bg-card border border-border` classes the
+   codemod left behind are gone. */
 
-const CampaignDetailSkeleton = () => {
-  return (
-    <div className="min-h-[calc(100vh-4rem)] relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-      <FloatingOrb 
-        className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl" 
-        delay={0}
-      />
-      <FloatingOrb 
-        className="absolute bottom-40 left-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" 
-        delay={2}
-      />
-      
-      <div className="relative z-10 p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Back Button Skeleton */}
-          <Skeleton className="h-10 w-40 mb-6" />
+const CampaignDetailSkeleton = () => (
+  <div className="container py-10">
+    <Skeleton className="mb-6 h-10 w-36 rounded-full" />
 
-          {/* Header Card Skeleton */}
-          <Card className="glass border-border/50 mb-6">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Skeleton className="h-10 w-64" />
-                    <Skeleton className="h-6 w-20" />
-                  </div>
-                  <Skeleton className="h-5 w-full max-w-xl" />
-                  <Skeleton className="h-5 w-3/4 mt-2" />
-                </div>
-                <Skeleton className="h-6 w-24" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                {[1, 2, 3, 4].map((i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                  >
-                    <Card className="glass border-border/50">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <Skeleton className="w-12 h-12 rounded-xl" />
-                          <div className="flex-1">
-                            <Skeleton className="h-4 w-16 mb-2" />
-                            <Skeleton className="h-6 w-24" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-              <Skeleton className="h-12 w-full" />
-            </CardContent>
-          </Card>
-
-          {/* Tabs Skeleton */}
-          <Skeleton className="h-10 w-80 mb-6" />
-
-          {/* Content Card Skeleton */}
-          <Card className="glass border-border/50">
-            <CardHeader>
-              <Skeleton className="h-8 w-48" />
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i}>
-                  <Skeleton className="h-6 w-32 mb-3" />
-                  <Skeleton className="h-20 w-full rounded-lg" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+    {/* brief header */}
+    <Card className="mb-6 p-5 sm:p-6">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1 space-y-3">
+          <Skeleton className="h-3.5 w-24 rounded-sm" />
+          <Skeleton className="h-10 w-64 max-w-full rounded-lg" />
+          <Skeleton className="h-4 w-full max-w-xl rounded-sm" />
+          <Skeleton className="h-4 w-3/4 rounded-sm" />
         </div>
+        <Skeleton className="h-6 w-24 shrink-0 rounded-full" />
       </div>
+
+      <div className="mb-6 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border md:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="min-w-0 space-y-2 bg-card p-4">
+            <Skeleton className="h-2.5 w-14 rounded-sm" />
+            <Skeleton className="h-5 w-20 rounded-sm" />
+          </div>
+        ))}
+      </div>
+
+      <Skeleton className="h-12 w-full rounded-lg" />
+    </Card>
+
+    {/* tab rail */}
+    <div className="mb-6 flex gap-2 overflow-x-auto">
+      {[0, 1, 2].map((i) => (
+        <Skeleton key={i} className="h-10 w-28 shrink-0 rounded-full" />
+      ))}
     </div>
-  );
-};
+
+    {/* content panel */}
+    <Card className="p-5 sm:p-6">
+      <Skeleton className="mb-6 h-6 w-48 rounded-lg" />
+      <div className="space-y-6">
+        {[0, 1, 2].map((i) => (
+          <div key={i}>
+            <Skeleton className="mb-3 h-3.5 w-32 rounded-sm" />
+            <Skeleton className="h-20 w-full rounded-xl" />
+          </div>
+        ))}
+      </div>
+    </Card>
+  </div>
+);
 
 export default CampaignDetailSkeleton;

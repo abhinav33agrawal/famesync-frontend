@@ -1,6 +1,8 @@
 import { Loader2, Check, X, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+/* green-500 -> success, amber-500 -> warning. */
+
 type AvailabilityStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 
 interface AvailabilityIndicatorProps {
@@ -13,29 +15,29 @@ export function AvailabilityIndicator({ status, message, className }: Availabili
   if (status === 'idle') return null;
 
   return (
-    <div className={cn('flex items-center gap-1.5 text-sm mt-1.5', className)}>
+    <div className={cn('mt-1.5 flex items-center gap-1.5 text-sm', className)}>
       {status === 'checking' && (
         <>
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+          <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
           <span className="text-muted-foreground">{message}</span>
         </>
       )}
       {status === 'available' && (
         <>
-          <Check className="h-3.5 w-3.5 text-green-500" />
-          <span className="text-green-500">{message}</span>
+          <Check className="size-3.5 text-success" />
+          <span className="font-medium text-success">{message}</span>
         </>
       )}
       {status === 'taken' && (
         <>
-          <X className="h-3.5 w-3.5 text-destructive" />
-          <span className="text-destructive">{message}</span>
+          <X className="size-3.5 text-destructive" />
+          <span className="font-medium text-destructive">{message}</span>
         </>
       )}
       {status === 'invalid' && (
         <>
-          <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
-          <span className="text-amber-500">{message}</span>
+          <AlertCircle className="size-3.5 text-warning" />
+          <span className="font-medium text-warning">{message}</span>
         </>
       )}
     </div>

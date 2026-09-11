@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { AnimatePresence, motion } from 'framer-motion';
+import { MapPin, Search, Target, Users } from 'lucide-react';
 import api from '@/lib/api/config';
 import { InfluencerProfile } from '@/lib/api/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Search, MapPin, Target, CheckCircle2, Users, ArrowRight } from 'lucide-react';
+import { CreatorCard } from '@/components/CreatorCard';
+import { Rise, listItemMotion } from '@/components/motion';
+import { formatCompact } from '@/lib/format';
 import { ProfileViewModal } from '@/components/ProfileViewModal';
 
 interface DiscoverResponse {
@@ -18,6 +20,9 @@ interface DiscoverResponse {
   results: InfluencerProfile[];
 }
 
+/* Every creator now renders through CreatorCard — the local gradient ring
+   avatar, the blue verified tick and the muted/50 metric tiles are gone. */
+
 export default function Discover() {
   const [influencers, setInfluencers] = useState<InfluencerProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +30,7 @@ export default function Discover() {
   const [page, setPage] = useState(1);
   const [nextPage, setNextPage] = useState<string | null>(null);
   const [previousPage, setPreviousPage] = useState<string | null>(null);
-  
+
   const [selectedProfile, setSelectedProfile] = useState<InfluencerProfile | null>(null);
 
   // Filters
@@ -67,167 +72,163 @@ export default function Discover() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Discover Creators</h1>
-        <p className="text-muted-foreground">Find the perfect influencers for your next campaign.</p>
-      </div>
+    <div className="container space-y-8 py-10 md:py-14">
+      {/* ------------------------------------------------------ page header */}
+      <Rise>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="eyebrow mb-3">Find creators</p>
+            <h1 className="font-display text-display-2">Discover creators.</h1>
+            <p className="mt-3 max-w-[46ch] leading-relaxed text-muted-foreground">
+              Verified micro-creators, filtered by reach, engagement and city.
+            </p>
+          </div>
+          <Button type="submit" form="creator-filters" className="shrink-0">
+            <Search />
+            Search
+          </Button>
+        </div>
+      </Rise>
 
-      <Card className="glass overflow-hidden border-border/50">
-        <CardContent className="p-6">
-          <form onSubmit={handleSearch} className="flex flex-wrap gap-4 items-end">
-            <div className="space-y-2 flex-1 min-w-[200px]">
-              <Label>Min Followers</Label>
+      {/* ------------------------------------------------------ filter rail */}
+      <Card>
+        <CardContent className="p-5 sm:p-6">
+          <form id="creator-filters" onSubmit={handleSearch} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="min-followers">Min followers</Label>
               <div className="relative">
-                <Users className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Users className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
+                  id="min-followers"
                   type="number"
                   placeholder="e.g. 10000"
-                  className="pl-9"
+                  className="pl-11"
                   value={minFollowers}
                   onChange={(e) => setMinFollowers(e.target.value)}
                 />
               </div>
             </div>
-            
-            <div className="space-y-2 flex-1 min-w-[200px]">
-              <Label>Min Engagement Rate (%)</Label>
+
+            <div className="space-y-2">
+              <Label htmlFor="min-engagement">Min engagement rate (%)</Label>
               <div className="relative">
-                <Target className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Target className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
+                  id="min-engagement"
                   type="number"
                   step="0.1"
                   placeholder="e.g. 2.5"
-                  className="pl-9"
+                  className="pl-11"
                   value={minEngagement}
                   onChange={(e) => setMinEngagement(e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="space-y-2 flex-1 min-w-[200px]">
-              <Label>Location</Label>
+            <div className="space-y-2">
+              <Label htmlFor="creator-location">Location</Label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <MapPin className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="City or Country"
-                  className="pl-9"
+                  id="creator-location"
+                  placeholder="City or country"
+                  className="pl-11"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="space-y-2 flex items-center gap-2 pb-2">
-              <Switch
-                id="verified"
-                checked={verifiedOnly}
-                onCheckedChange={setVerifiedOnly}
-              />
-              <Label htmlFor="verified" className="cursor-pointer">Verified Only</Label>
-            </div>
-
-            <Button type="submit" className="gradient-instagram text-white shadow-lg shadow-pink-500/25">
-              <Search className="h-4 w-4 mr-2" />
-              Search
-            </Button>
+            <label
+              htmlFor="verified"
+              className="flex min-h-11 cursor-pointer items-center gap-3 self-end text-[0.9375rem] font-medium"
+            >
+              <Switch id="verified" checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
+              Verified only
+            </label>
           </form>
         </CardContent>
       </Card>
 
+      {/* ----------------------------------------------------------- results */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="h-64 p-6" />
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <Card key={i} className="overflow-hidden p-0">
+              <div className="h-[150px] bg-muted" />
+              <div className="space-y-3 p-4">
+                <div className="h-4 w-2/3 rounded-sm bg-muted" />
+                <div className="h-3 w-1/2 rounded-sm bg-muted" />
+                <div className="h-14 rounded-md bg-muted" />
+              </div>
             </Card>
           ))}
         </div>
       ) : influencers.length === 0 ? (
-        <div className="text-center py-12">
-          <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-xl font-semibold mb-2">No creators found</h3>
-          <p className="text-muted-foreground">Try adjusting your filters to see more results.</p>
-        </div>
+        <Card intent="dashed" className="mx-auto max-w-md p-10 text-center">
+          <h3 className="font-display text-display-3">No creators found</h3>
+          <p className="mx-auto mt-2 max-w-[32ch] leading-relaxed text-muted-foreground">
+            Try widening your filters — a lower follower floor usually helps.
+          </p>
+        </Card>
       ) : (
         <>
-          <div className="flex items-center justify-between">
-            <p className="text-muted-foreground font-medium">Found {totalCount} creators</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {influencers.map((profile) => {
-              const username = profile.user.username || 'Unknown';
-              const isVerified = profile.social_urls?.some(s => s.platform === 'instagram' && s.verified);
-              
-              return (
-                <Card key={profile.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm flex flex-col">
-                  <CardContent className="p-0 flex-1 flex flex-col">
-                    <div className="p-6 pb-4 flex-1 flex flex-col items-center text-center">
-                      <div className="relative mb-4">
-                        <div className="w-20 h-20 rounded-full gradient-instagram p-1">
-                          <div className="w-full h-full bg-background rounded-full flex items-center justify-center text-2xl font-bold border-2 border-background">
-                            {username.charAt(0).toUpperCase()}
-                          </div>
-                        </div>
-                        {isVerified && (
-                          <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5">
-                            <CheckCircle2 className="h-5 w-5 text-blue-500" />
-                          </div>
-                        )}
-                      </div>
-                      
-                      <h3 className="font-bold text-lg line-clamp-1">@{username}</h3>
-                      <p className="text-sm text-muted-foreground mb-3">{profile.niche || 'Creator'}</p>
-                      
-                      <div className="w-full grid grid-cols-2 gap-2 mt-auto">
-                        <div className="bg-muted/50 rounded-lg p-2 flex flex-col">
-                          <span className="text-xs text-muted-foreground">Followers</span>
-                          <span className="font-semibold">{profile.follower_count?.toLocaleString() || '0'}</span>
-                        </div>
-                        <div className="bg-muted/50 rounded-lg p-2 flex flex-col">
-                          <span className="text-xs text-muted-foreground">Engagement</span>
-                          <span className="font-semibold">
-                            {profile.engagement_rate ? `${profile.engagement_rate.toFixed(1)}%` : 'N/A'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 pt-0">
-                      <Button 
-                        variant="outline" 
-                        className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-                        onClick={() => setSelectedProfile(profile)}
-                      >
-                        View Profile
-                        <ArrowRight className="h-4 w-4 ml-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+          <p className="eyebrow">
+            <span className="num">{formatCompact(totalCount)}</span> creators match
+          </p>
+
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <AnimatePresence mode="popLayout">
+              {influencers.map((profile) => {
+                const username = profile.user.username || 'Unknown';
+                const isVerified = profile.social_urls?.some(s => s.platform === 'instagram' && s.verified);
+                const fullName = `${profile.user.first_name ?? ''} ${profile.user.last_name ?? ''}`.trim();
+
+                return (
+                  <motion.div key={profile.id} {...listItemMotion}>
+                    <CreatorCard
+                      creator={{
+                        id: profile.id,
+                        name: fullName || username,
+                        username,
+                        niches: profile.niche ? [profile.niche] : [],
+                        city: profile.location,
+                        photo: profile.profile_picture,
+                        followers: profile.follower_count,
+                        engagement: profile.engagement_rate,
+                        verified: isVerified,
+                      }}
+                      onInvite={() => setSelectedProfile(profile)}
+                      onSave={() => setSelectedProfile(profile)}
+                    />
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-center gap-4 pt-6 pb-12">
+          {/* --------------------------------------------------- pagination */}
+          <nav className="flex items-center justify-center gap-4 pt-2" aria-label="Pagination">
             <Button
               variant="outline"
+              className="h-11 px-4 text-sm"
               disabled={!previousPage}
               onClick={() => fetchInfluencers(page - 1)}
             >
               Previous
             </Button>
-            <span className="text-sm font-medium">Page {page}</span>
+            <span className="text-sm text-muted-foreground">
+              Page <span className="num text-foreground">{page}</span>
+            </span>
             <Button
               variant="outline"
+              className="h-11 px-4 text-sm"
               disabled={!nextPage}
               onClick={() => fetchInfluencers(page + 1)}
             >
               Next
             </Button>
-          </div>
+          </nav>
         </>
       )}
 

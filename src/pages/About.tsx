@@ -1,8 +1,12 @@
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Target, Users, Zap, Heart, TrendingUp, Shield } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Rise } from '@/components/motion';
+import { Users, Zap, Heart, Shield } from 'lucide-react';
+
+/* Long-form reading page. Body copy is held at a ~68ch measure, the display
+   face carries the headings only. Removed: the blurred primary glow behind
+   the facts card, the gradient icon tiles, the `border border-border
+   border-2` codemod artefact and the raw `text-white` badge. */
 
 const About = () => {
   const values = [
@@ -28,11 +32,11 @@ const About = () => {
     },
   ];
 
-  const team = [
-    { name: 'Sarah Johnson', role: 'CEO & Founder', avatar: '👩‍💼' },
-    { name: 'Mike Chen', role: 'CTO', avatar: '👨‍💻' },
-    { name: 'Emily Davis', role: 'Head of Partnerships', avatar: '👩‍💼' },
-    { name: 'James Wilson', role: 'Head of Product', avatar: '👨‍💼' },
+  const facts = [
+    { value: 'Growing', label: 'User Base' },
+    { value: 'Early', label: 'Stage Beta' },
+    { value: 'Active', label: 'Development' },
+    { value: 'India', label: 'Based' },
   ];
 
   return (
@@ -42,7 +46,7 @@ const About = () => {
         <meta name="description" content="Learn about FameSync – a simple platform connecting micro-creators with brands for authentic collaborations. Discover our mission and team." />
         <meta name="keywords" content="about famesync, influencer marketing platform, brand partnerships, creator economy, team" />
         <link rel="canonical" href="https://famesync.com/about" />
-        
+
         {/* Open Graph */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://famesync.com/about" />
@@ -50,14 +54,14 @@ const About = () => {
         <meta property="og:description" content="A simple platform connecting micro-creators with brands for authentic collaborations." />
         <meta property="og:image" content="https://famesync.com/og-image.png" />
         <meta property="og:site_name" content="FameSync" />
-        
+
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:url" content="https://famesync.com/about" />
         <meta name="twitter:title" content="About Us - FameSync" />
         <meta name="twitter:description" content="A simple platform connecting micro-creators with brands for authentic collaborations." />
         <meta name="twitter:image" content="https://famesync.com/og-image.png" />
-        
+
         {/* Structured Data */}
         <script type="application/ld+json">
           {JSON.stringify({
@@ -71,152 +75,77 @@ const About = () => {
         </script>
       </Helmet>
 
-      <article className="min-h-screen py-20 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <motion.header
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-16"
-          >
-            <Badge className="mb-4 gradient-instagram text-white" variant="secondary">
-              Our Story
-            </Badge>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              About <span className="gradient-text">FameSync</span>
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              We're building a simple way for micro-creators and brands to find each other and collaborate authentically.
+      <article className="container py-16 sm:py-20">
+        {/* ------------------------------------------------------------ head */}
+        <Rise className="max-w-[46ch]">
+          <p className="eyebrow mb-5">Our Story</p>
+          <h1 className="font-display text-display-2">About FameSync</h1>
+          <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
+            We're building a simple way for micro-creators and brands to find each other and
+            collaborate authentically.
+          </p>
+        </Rise>
+
+        {/* --------------------------------------------------------- mission */}
+        <section className="mt-16 grid items-start gap-12 border-t border-border pt-14 lg:mt-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+          <Rise>
+            <h2 className="font-display text-display-3">Our Mission</h2>
+            <div className="mt-5 max-w-[68ch] space-y-5 text-[1.0625rem] leading-[1.7] text-muted-foreground">
+              <p>
+                FameSync started because we noticed something: micro-creators struggle to find brand collaborations, and small brands struggle to find the right creators.
+              </p>
+              <p>
+                We're building a straightforward platform where both sides can connect without the complexity of traditional influencer marketing tools.
+              </p>
+              <p>
+                We're still early — actively growing our community and improving based on feedback from our first users.
+              </p>
+            </div>
+          </Rise>
+
+          <Rise delay={0.06}>
+            <Card intent="tinted" className="rounded-2xl p-8">
+              <span className="eyebrow text-secondary-foreground/70">Where we are</span>
+              <div className="mt-7 grid grid-cols-2 gap-x-6 gap-y-7">
+                {facts.map((fact) => (
+                  <div key={fact.label}>
+                    <div className="num text-[1.75rem] leading-none">{fact.value}</div>
+                    <div className="mt-2 text-sm text-secondary-foreground/70">{fact.label}</div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </Rise>
+        </section>
+
+        {/* ---------------------------------------------------------- values */}
+        <section className="mt-16 border-t border-border pt-14 lg:mt-20">
+          <Rise className="max-w-[52ch]">
+            <h2 className="font-display text-display-3">Our Values</h2>
+            <p className="mt-4 leading-relaxed text-muted-foreground">
+              These core principles guide everything we do at FameSync.
             </p>
-          </motion.header>
+          </Rise>
 
-          <section className="mb-20">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="grid md:grid-cols-2 gap-12 items-center mb-12"
-            >
-              <div>
-                <h2 className="text-4xl font-bold mb-6">
-                  Our <span className="gradient-text">Mission</span>
-                </h2>
-                <p className="text-lg text-muted-foreground leading-relaxed mb-4">
-                  FameSync started because we noticed something: micro-creators struggle to find brand collaborations, and small brands struggle to find the right creators.
-                </p>
-                <p className="text-lg text-muted-foreground leading-relaxed mb-4">
-                  We're building a straightforward platform where both sides can connect without the complexity of traditional influencer marketing tools.
-                </p>
-                <p className="text-lg text-muted-foreground leading-relaxed">
-                  We're still early — actively growing our community and improving based on feedback from our first users.
-                </p>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-0 gradient-instagram opacity-10 rounded-3xl blur-3xl"></div>
-                <Card className="glass border-2 relative">
-                  <CardContent className="p-8">
-                    <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <div className="text-4xl font-bold gradient-text mb-2">Growing</div>
-                        <div className="text-sm text-muted-foreground">User Base</div>
-                      </div>
-                      <div>
-                        <div className="text-4xl font-bold gradient-text mb-2">Early</div>
-                        <div className="text-sm text-muted-foreground">Stage Beta</div>
-                      </div>
-                      <div>
-                        <div className="text-4xl font-bold gradient-text mb-2">Active</div>
-                        <div className="text-sm text-muted-foreground">Development</div>
-                      </div>
-                      <div>
-                        <div className="text-4xl font-bold gradient-text mb-2">India</div>
-                        <div className="text-sm text-muted-foreground">Based</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </motion.div>
-          </section>
-
-          <section className="mb-20">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mb-12"
-            >
-              <h2 className="text-4xl font-bold mb-4">
-                Our <span className="gradient-text">Values</span>
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                These core principles guide everything we do at FameSync.
-              </p>
-            </motion.div>
-
-            <div className="grid md:grid-cols-2 gap-8">
-              {values.map((value, index) => {
-                const Icon = value.icon;
-                return (
-                  <motion.div
-                    key={value.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <Card className="glass border-2 hover:border-primary/50 transition-all h-full">
-                      <CardContent className="p-8">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-6">
-                          <Icon className="h-7 w-7 text-primary" />
-                        </div>
-                        <h3 className="text-2xl font-bold mb-3">{value.title}</h3>
-                        <p className="text-muted-foreground leading-relaxed">{value.description}</p>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* <section>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mb-12"
-            >
-              <h2 className="text-4xl font-bold mb-4">
-                Meet the <span className="gradient-text">Team</span>
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                A small team working to make creator-brand connections simpler.
-              </p>
-            </motion.div>
-
-            <div className="grid md:grid-cols-4 gap-8">
-              {team.map((member, index) => (
-                <motion.div
-                  key={member.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="glass border-2 hover:border-primary/50 transition-all text-center">
-                    <CardContent className="p-6">
-                      <div className="w-20 h-20 rounded-full gradient-instagram flex items-center justify-center text-4xl mx-auto mb-4">
-                        {member.avatar}
-                      </div>
-                      <h3 className="font-bold text-lg mb-1">{member.name}</h3>
-                      <p className="text-sm text-muted-foreground">{member.role}</p>
-                    </CardContent>
+          <div className="mt-10 grid gap-5 md:grid-cols-2">
+            {values.map((value) => {
+              const Icon = value.icon;
+              return (
+                <Rise key={value.title}>
+                  <Card className="h-full p-7">
+                    <span className="mb-6 inline-flex size-11 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
+                      <Icon className="size-5" />
+                    </span>
+                    <h3 className="mb-2.5 font-display text-display-3">{value.title}</h3>
+                    <p className="max-w-[52ch] leading-relaxed text-muted-foreground">
+                      {value.description}
+                    </p>
                   </Card>
-                </motion.div>
-              ))}
-            </div>
-          </section> */}
-        </div>
+                </Rise>
+              );
+            })}
+          </div>
+        </section>
       </article>
     </>
   );

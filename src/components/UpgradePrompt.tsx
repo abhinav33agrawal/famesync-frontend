@@ -1,9 +1,13 @@
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Crown, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePlans } from '@/hooks/usePlans';
 import { useAuth } from '@/context/AuthContext';
+
+/* The crown-in-a-glowing-ring header is replaced by the `premium` badge and
+   a display-face title. */
 
 interface UpgradePromptProps {
   open: boolean;
@@ -45,47 +49,44 @@ export const UpgradePrompt = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
-      <AlertDialogContent className="max-w-md">
+      <AlertDialogContent className="max-w-md rounded-2xl">
         <button
+          type="button"
+          aria-label="Close"
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity"
+          className="absolute right-3 top-3 inline-flex size-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
-          <X className="h-4 w-4" />
+          <X className="size-4" />
         </button>
 
         <AlertDialogHeader>
-          <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            <Crown className="h-6 w-6 text-primary" />
-          </div>
-          <AlertDialogTitle className="text-center text-2xl">
+          <Badge variant="premium" className="mx-auto">Pro</Badge>
+          <AlertDialogTitle className="text-center font-display text-display-3">
             {title}
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-center">
+          <AlertDialogDescription className="text-center leading-relaxed">
             {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="space-y-3 my-4">
-          <p className="text-sm font-semibold text-center">Unlock Premium Benefits:</p>
-          <ul className="space-y-2">
+        <div className="my-2 rounded-xl border border-border bg-muted/60 p-4">
+          <p className="eyebrow mb-3">What Pro adds</p>
+          <ul className="space-y-2.5">
             {benefits.map((benefit, index) => (
-              <li key={index} className="flex items-start gap-2 text-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+              <li key={index} className="flex items-start gap-3 text-sm">
+                <span className="mt-[0.4rem] size-1.5 shrink-0 rounded-full bg-primary" />
                 <span className="text-muted-foreground">{benefit}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        <AlertDialogFooter className="flex-col sm:flex-col gap-2">
-          <Link to="/pricing" className="w-full">
-            <Button className="w-full gradient-instagram">
-              <Crown className="mr-2 h-4 w-4" />
-              View Pricing Plans
-            </Button>
-          </Link>
+        <AlertDialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
+          <Button variant="form" className="w-full" asChild>
+            <Link to="/pricing">View pricing plans</Link>
+          </Button>
           <Button variant="ghost" onClick={onClose} className="w-full">
-            Maybe Later
+            Maybe later
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

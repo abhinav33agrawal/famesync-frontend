@@ -4,6 +4,10 @@ import { Progress } from '@/components/ui/progress';
 import { CheckCircle2, Sparkles, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+/* Trust markers ride the Badge variants: `success` for verified, the lilac
+   default tint for new members, and success/warning/destructive on the
+   completion meter. No green-500/blue-500 tints, no dark: variants. */
+
 interface TrustBadgeProps {
   className?: string;
   size?: 'sm' | 'md';
@@ -11,23 +15,14 @@ interface TrustBadgeProps {
 
 // Email Verified Badge
 export const EmailVerifiedBadge = ({ className, size = 'md' }: TrustBadgeProps) => {
-  const iconSize = size === 'sm' ? 'h-3 w-3' : 'h-3.5 w-3.5';
-  const textSize = size === 'sm' ? 'text-[10px]' : 'text-xs';
-  const padding = size === 'sm' ? 'px-1.5 py-0.5' : 'px-2 py-0.5';
-  
+  const iconSize = size === 'sm' ? 'size-3' : 'size-3.5';
+  const sizing = size === 'sm' ? 'px-2 py-0.5 text-[11px]' : '';
+
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge 
-            variant="outline" 
-            className={cn(
-              "gap-1 border-green-500/50 bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20",
-              padding,
-              textSize,
-              className
-            )}
-          >
+          <Badge variant="success" className={cn(sizing, className)}>
             <CheckCircle2 className={iconSize} />
             Verified
           </Badge>
@@ -42,23 +37,14 @@ export const EmailVerifiedBadge = ({ className, size = 'md' }: TrustBadgeProps) 
 
 // New on FameSync Badge (accounts < 30 days old)
 export const NewMemberBadge = ({ className, size = 'md' }: TrustBadgeProps) => {
-  const iconSize = size === 'sm' ? 'h-3 w-3' : 'h-3.5 w-3.5';
-  const textSize = size === 'sm' ? 'text-[10px]' : 'text-xs';
-  const padding = size === 'sm' ? 'px-1.5 py-0.5' : 'px-2 py-0.5';
-  
+  const iconSize = size === 'sm' ? 'size-3' : 'size-3.5';
+  const sizing = size === 'sm' ? 'px-2 py-0.5 text-[11px]' : '';
+
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge 
-            variant="outline" 
-            className={cn(
-              "gap-1 border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20",
-              padding,
-              textSize,
-              className
-            )}
-          >
+          <Badge variant="secondary" className={cn(sizing, className)}>
             <Sparkles className={iconSize} />
             New
           </Badge>
@@ -84,20 +70,20 @@ export const ProfileCompletionBadge = ({
   showLabel = true 
 }: ProfileCompletionProps) => {
   const getColor = () => {
-    if (percentage >= 80) return 'text-green-600 dark:text-green-400';
-    if (percentage >= 50) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-orange-600 dark:text-orange-400';
+    if (percentage >= 80) return 'text-success';
+    if (percentage >= 50) return 'text-warning';
+    return 'text-destructive';
   };
 
   const getProgressColor = () => {
-    if (percentage >= 80) return 'bg-green-500';
-    if (percentage >= 50) return 'bg-yellow-500';
-    return 'bg-orange-500';
+    if (percentage >= 80) return 'bg-success';
+    if (percentage >= 50) return 'bg-warning';
+    return 'bg-destructive';
   };
 
-  const iconSize = size === 'sm' ? 'h-3 w-3' : 'h-3.5 w-3.5';
-  const textSize = size === 'sm' ? 'text-[10px]' : 'text-xs';
-  
+  const iconSize = size === 'sm' ? 'size-3' : 'size-3.5';
+  const textSize = size === 'sm' ? 'text-[11px]' : 'text-xs';
+
   return (
     <TooltipProvider>
       <Tooltip>
@@ -106,14 +92,14 @@ export const ProfileCompletionBadge = ({
             <div className="flex items-center gap-1.5">
               <Clock className={cn(iconSize, getColor())} />
               {showLabel && (
-                <span className={cn("font-medium", textSize, getColor())}>
-                  {percentage}% Complete
+                <span className={cn("num", textSize, getColor())}>
+                  {percentage}% complete
                 </span>
               )}
             </div>
-            <Progress 
-              value={percentage} 
-              className={cn("h-1.5 w-16", size === 'sm' && "w-12 h-1")}
+            <Progress
+              value={percentage}
+              className={cn("h-1.5 w-16 bg-muted", size === 'sm' && "h-1 w-12")}
               indicatorClassName={getProgressColor()}
             />
           </div>

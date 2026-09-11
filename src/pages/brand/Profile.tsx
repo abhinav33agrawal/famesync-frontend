@@ -1,117 +1,71 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Input, Textarea } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Edit,
   Save,
-  Building2,
   Globe,
-  Mail,
   Phone,
-  CreditCard,
-  Crown,
   Camera,
   X,
-  Sparkles,
-  Target,
-  FileCheck,
   Instagram,
   Youtube,
   ArrowRight,
-  Plus,
-  Users,
 } from 'lucide-react';
 import { useBrandProfile, useUpdateBrandProfile, useBrandDashboard } from '@/hooks/useProfile';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PremiumBadge } from '@/components/PremiumBadge';
 import { TrustLayer } from '@/components/TrustBadges';
+import { Stat } from '@/components/Stat';
+import { BrandLogo } from '@/components/Avatar';
+import { Rise } from '@/components/motion';
+import { formatCompact } from '@/lib/format';
 import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
 import { ImageCropper } from '@/components/ui/image-cropper';
 
-const FloatingOrb = ({ className, delay = 0 }: { className?: string; delay?: number }) => (
-  <motion.div
-    className={`absolute rounded-full blur-3xl opacity-20 ${className}`}
-    animate={{
-      y: [0, -30, 0],
-      scale: [1, 1.1, 1],
-      opacity: [0.2, 0.3, 0.2],
-    }}
-    transition={{
-      duration: 8,
-      repeat: Infinity,
-      delay,
-      ease: "easeInOut",
-    }}
-  />
-);
+/* Removed from the old Profile.tsx: FloatingOrb, the mesh/radial gradient
+   background stack, the gradient StatCard tiles, the gradient-text plan
+   values, the rotate-on-hover icon squares and every `dark:` variant. */
 
-const StatCard = ({ icon: Icon, label, value, color, delay }: { icon: any; label: string; value: string | number; color: string; delay: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay }}
-    whileHover={{ scale: 1.02, y: -2 }}
-    className="relative group"
-  >
-    <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-    <Card className="relative bg-card/50 backdrop-blur-sm border-border/50 overflow-hidden">
-      <CardContent className="p-6">
-        <div className="flex items-center gap-4">
-          <motion.div
-            className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center`}
-            whileHover={{ rotate: [0, -10, 10, 0] }}
-            transition={{ duration: 0.5 }}
-          >
-            <Icon className="h-6 w-6 text-white" />
-          </motion.div>
-          <div>
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="text-2xl font-bold">{value}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  </motion.div>
-);
+const FIELD_INPUT = 'disabled:opacity-100 disabled:text-muted-foreground';
+const SELECT_INPUT =
+  'h-12 rounded-lg border-input bg-card px-4 text-[0.95rem] disabled:opacity-100';
 
 const ProfileSkeleton = () => (
-  <div className="min-h-[calc(100vh-4rem)] relative overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-    <FloatingOrb className="w-96 h-96 bg-primary -top-48 -left-48" delay={0} />
-    <FloatingOrb className="w-80 h-80 bg-secondary top-1/3 -right-40" delay={2} />
-    <FloatingOrb className="w-64 h-64 bg-accent bottom-20 left-1/4" delay={4} />
-
-    <div className="relative z-10 p-6">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div className="space-y-2">
-            <div className="h-10 w-48 bg-muted/50 rounded-lg animate-pulse" />
-            <div className="h-5 w-64 bg-muted/30 rounded-lg animate-pulse" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-24 bg-card/50 rounded-2xl animate-pulse" style={{ animationDelay: `${i * 100}ms` }} />
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="h-96 bg-card/50 rounded-2xl animate-pulse" />
-          <div className="lg:col-span-2 h-96 bg-card/50 rounded-2xl animate-pulse" />
-        </div>
+  <div className="container py-10">
+    <div className="mb-9 flex items-center gap-4">
+      <div className="size-[46px] animate-pulse rounded-md bg-muted" />
+      <div className="space-y-2">
+        <div className="h-9 w-52 animate-pulse rounded-lg bg-muted" />
+        <div className="h-4 w-64 animate-pulse rounded-md bg-muted" />
+      </div>
+    </div>
+    <div className="grid gap-5 lg:grid-cols-3">
+      <div className="space-y-5">
+        <div className="h-32 animate-pulse rounded-xl bg-muted" />
+        <div className="h-32 animate-pulse rounded-xl bg-muted" />
+        <div className="h-64 animate-pulse rounded-xl bg-muted" />
+      </div>
+      <div className="space-y-5 lg:col-span-2">
+        <div className="h-52 animate-pulse rounded-xl bg-muted" />
+        <div className="h-96 animate-pulse rounded-xl bg-muted" />
       </div>
     </div>
   </div>
 );
+
+const platformIcon = (platform: string) => {
+  const p = platform.toLowerCase();
+  if (p.includes('instagram')) return <Instagram className="size-4" />;
+  if (p.includes('youtube')) return <Youtube className="size-4" />;
+  return <Globe className="size-4" />;
+};
 
 const Profile = () => {
   const { user } = useAuth();
@@ -227,395 +181,335 @@ const Profile = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] relative overflow-hidden flex items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-        <p className="relative z-10 text-destructive">Failed to load profile. Please try again.</p>
+      <div className="container flex min-h-[60vh] items-center justify-center py-16">
+        <Card className="max-w-md p-8 text-center">
+          <h1 className="mb-2 font-display text-display-3">Profile unavailable</h1>
+          <p className="text-sm text-muted-foreground">
+            We couldn&apos;t load your brand profile. Please refresh and try again.
+          </p>
+        </Card>
       </div>
     );
   }
 
+  // Uploaded pictures come back as a server-relative path; blob: previews and
+  // Instagram URLs are already absolute.
+  const logoSrc = (() => {
+    if (!previewUrl) return undefined;
+    if (previewUrl.startsWith('http') || previewUrl.startsWith('blob:')) return previewUrl;
+    return `${import.meta.env.VITE_API_URL?.replace('/api', '') ?? ''}${previewUrl}`;
+  })();
+
+  const industryLabel = profile?.industry || formData.customIndustry;
+  const planLabel = user?.subscription_plan
+    ? user.subscription_plan.charAt(0).toUpperCase() + user.subscription_plan.slice(1)
+    : 'Free';
+
   return (
-    <div className="min-h-[calc(100vh-4rem)] relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
+    <div className="container py-10 sm:py-12">
+      {/* ------------------------------------------------------ page header */}
+      <Rise>
+        <header className="mb-9 flex flex-col gap-5 sm:flex-row sm:items-center">
+          <div className="relative shrink-0">
+            <BrandLogo
+              src={logoSrc}
+              name={formData.company_name || user?.username}
+              className="size-[72px] rounded-xl text-2xl"
+            />
+            <input
+              ref={fileInputRef}
+              id="brand_logo"
+              type="file"
+              accept="image/png,image/jpeg,image/jpg"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            {isEditing && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Change brand logo"
+                className="absolute -bottom-2 -right-2 inline-flex size-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-e1 transition-colors hover:bg-muted"
+              >
+                <Camera className="size-4" />
+              </button>
+            )}
+          </div>
 
-      {/* Floating Orbs */}
-      <FloatingOrb className="w-96 h-96 bg-primary -top-48 -left-48" delay={0} />
-      <FloatingOrb className="w-80 h-80 bg-secondary top-1/3 -right-40" delay={2} />
-      <FloatingOrb className="w-64 h-64 bg-accent bottom-20 left-1/4" delay={4} />
+          <div className="min-w-0">
+            <p className="eyebrow mb-2">Brand profile</p>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="font-display text-[2rem] leading-none sm:text-[2.375rem]">
+                {formData.company_name || 'Brand name'}
+              </h1>
+              {user?.subscription_plan && <PremiumBadge plan={user.subscription_plan} size="sm" />}
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">@{user?.username}</p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {industryLabel && (
+                <Badge className="capitalize">{industryLabel.toLowerCase()}</Badge>
+              )}
+              <TrustLayer
+                emailVerified={user?.is_approved}
+                isNewMember={user?.is_new_member}
+                profileCompletion={profile?.profile_completion}
+                size="sm"
+              />
+            </div>
+          </div>
+        </header>
+      </Rise>
 
-      {/* Mesh Pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.1)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.1)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      <div className="grid gap-5 lg:grid-cols-3">
+        {/* ------------------------------------------------- left: overview */}
+        <div className="space-y-5">
+          <Rise>
+            <Stat label="Total applications" value={formatCompact(stats?.total_applications || 0)} />
+          </Rise>
 
-      <div className="relative z-10 p-6">
-        <div className="max-w-5xl mx-auto">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <motion.div
-                  className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center"
-                  whileHover={{ rotate: [0, -10, 10, 0] }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Building2 className="h-6 w-6 text-white" />
-                </motion.div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-2xl md:text-3xl font-bold">
-                      {formData.company_name || 'Brand Name'}
-                    </h1>
+          <Rise delay={0.06}>
+            <Stat
+              label="Credits available"
+              value={user?.credits ?? 0}
+              tone="feature"
+              note={
+                subscription
+                  ? `Resets in ${Math.ceil(
+                      (new Date(subscription.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+                    )} days`
+                  : undefined
+              }
+            />
+          </Rise>
+
+          <Rise delay={0.12}>
+            <Card>
+              <CardHeader>
+                <span className="eyebrow">Plan</span>
+                <CardTitle>Subscription</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="rounded-lg border border-border p-4">
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <p className="text-sm text-muted-foreground">Current plan</p>
                     {user?.subscription_plan && (
                       <PremiumBadge plan={user.subscription_plan} size="sm" />
                     )}
                   </div>
-                  <p className="text-muted-foreground mb-2">
-                    @{user?.username}
+                  <p className="num text-[1.375rem] leading-none">{planLabel}</p>
+                </div>
+                <Button variant="form" className="w-full" asChild>
+                  <Link to="/subscription">Manage subscription</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </Rise>
+        </div>
+
+        {/* --------------------------------------- right: socials + details */}
+        <div className="space-y-5 lg:col-span-2">
+          <Rise>
+            <Card>
+              <CardHeader>
+                <span className="eyebrow">Presence</span>
+                <CardTitle>Social platforms</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {profile?.social_urls && profile.social_urls.length > 0 ? (
+                  <ul className="grid gap-2.5">
+                    {profile.social_urls.map((social: any, index: number) => (
+                      <li key={index}>
+                        <a
+                          href={social.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group flex min-h-[44px] items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:border-primary/40 hover:bg-muted"
+                        >
+                          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                            {platformIcon(social.platform)}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold capitalize">
+                              {social.platform}
+                            </span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {social.link}
+                            </span>
+                          </span>
+                          <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No social media links added yet. You can add them during signup.
                   </p>
-                  {/* Category Badge and Trust Layer */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {(profile?.industry || formData.customIndustry) && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                      >
-                        <span className="px-3 py-1 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30 text-primary text-sm font-medium capitalize">
-                          {(profile?.industry || formData.customIndustry || 'edtech').charAt(0).toUpperCase() + (profile?.industry || formData.customIndustry || 'edtech').slice(1).toLowerCase()}
-                        </span>
-                      </motion.div>
+                )}
+              </CardContent>
+            </Card>
+          </Rise>
+
+          <Rise delay={0.06}>
+            <Card>
+              <CardHeader>
+                <span className="eyebrow">Details</span>
+                <CardTitle>Brand information</CardTitle>
+                <CardDescription>Your public brand profile information</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="full_name">Full name</Label>
+                    <Input
+                      id="full_name"
+                      value={`${user?.first_name || ''} ${user?.last_name || ''}`.trim()}
+                      disabled
+                      className={FIELD_INPUT}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" value={user?.email || ''} disabled className={FIELD_INPUT} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone_number" className="flex items-center gap-2">
+                      <Phone className="size-4 text-muted-foreground" />
+                      WhatsApp number (optional)
+                    </Label>
+                    <Input
+                      id="phone_number"
+                      type="tel"
+                      value={formData.phone_number}
+                      onChange={(e) => {
+                        let value = e.target.value;
+
+                        // Remove +91 prefix if present to get just the digits
+                        if (value.startsWith('+91 ')) {
+                          value = value.substring(4);
+                        } else if (value.startsWith('+91')) {
+                          value = value.substring(3);
+                        }
+
+                        // Allow only digits
+                        const digits = value.replace(/\D/g, '');
+
+                        // Limit to 10 digits
+                        if (digits.length <= 10) {
+                          // Auto-prefix with +91 if there are digits
+                          const formatted = digits ? `+91 ${digits}` : '';
+                          handleInputChange('phone_number', formatted);
+                        }
+                      }}
+                      disabled={!isEditing}
+                      placeholder="+91 XXXXXXXXXX"
+                      className={FIELD_INPUT}
+                    />
+                    {isEditing && (
+                      <p className="text-xs text-muted-foreground">
+                        Enter 10-digit mobile number (e.g., 9876543210)
+                      </p>
                     )}
-                    <TrustLayer
-                      emailVerified={user?.is_approved}
-                      isNewMember={user?.is_new_member}
-                      profileCompletion={profile?.profile_completion}
-                      size="sm"
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="company_name">Company name</Label>
+                    <Input
+                      id="company_name"
+                      value={formData.company_name}
+                      onChange={(e) => handleInputChange('company_name', e.target.value)}
+                      disabled={!isEditing}
+                      className={FIELD_INPUT}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="website">Website</Label>
+                    <Input
+                      id="website"
+                      value={formData.website}
+                      onChange={(e) => handleInputChange('website', e.target.value)}
+                      disabled={!isEditing}
+                      className={FIELD_INPUT}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="industry">Industry</Label>
+                    <Select
+                      value={formData.industry}
+                      onValueChange={(value) => handleInputChange('industry', value)}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger id="industry" className={SELECT_INPUT}>
+                        <SelectValue placeholder="Select industry" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {industries.map((ind) => (
+                          <SelectItem key={ind.value} value={ind.value}>
+                            <span className="flex items-center gap-2">
+                              <span>{ind.icon}</span>
+                              <span>{ind.label}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="customIndustry">Specify your industry</Label>
+                    <Input
+                      id="customIndustry"
+                      value={formData.customIndustry}
+                      onChange={(e) => handleInputChange('customIndustry', e.target.value)}
+                      disabled={!isEditing}
+                      placeholder="Enter your industry"
+                      className={FIELD_INPUT}
                     />
                   </div>
                 </div>
-              </div>
-            </div>
-          </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Stats Cards */}
-            <div className="space-y-4">
-              <StatCard
-                icon={FileCheck}
-                label="Total Applications"
-                value={stats?.total_applications || 0}
-                color="bg-gradient-to-br from-secondary to-secondary/80"
-                delay={0.1}
-              />
-              <StatCard
-                icon={CreditCard}
-                label="Credits Available"
-                value={user?.credits || 0}
-                color="bg-gradient-to-br from-green-500 to-green-600"
-                delay={0.2}
-              />
+                <div className="space-y-2">
+                  <Label htmlFor="description">About your brand</Label>
+                  <Textarea
+                    id="description"
+                    rows={4}
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    disabled={!isEditing}
+                    className={FIELD_INPUT}
+                  />
+                </div>
 
-              {/* Subscription Card */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.25 }}
-              >
-                <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Crown className="h-5 w-5 text-yellow-500" />
-                      Subscription
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="p-3 rounded-xl bg-background/50 border border-border/50">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-sm text-muted-foreground">Current Plan</p>
-                        {user?.subscription_plan && (
-                          <PremiumBadge plan={user.subscription_plan} size="sm" />
-                        )}
-                      </div>
-                      <p className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                        {user?.subscription_plan ? user.subscription_plan.charAt(0).toUpperCase() + user.subscription_plan.slice(1) : 'Free'}
-                      </p>
-                    </div>
-                    <div className="p-3 rounded-xl bg-background/50 border border-border/50">
-                      <div className="flex items-center gap-2 mb-1">
-                        <CreditCard className="h-4 w-4 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">Credits Remaining</p>
-                      </div>
-                      <p className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                        {user?.credits || 0}
-                      </p>
-                      {subscription && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Resets in {Math.ceil((new Date(subscription.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days
-                        </p>
-                      )}
-                    </div>
-                    <Link to="/subscription">
-                      <Button variant="outline" className="w-full mt-2">
-                        Manage Subscription
+                {/* Edit Profile Buttons */}
+                <div className="flex flex-col gap-2.5 border-t border-border pt-5 sm:flex-row sm:justify-end">
+                  {!isEditing ? (
+                    <Button variant="form" onClick={() => setIsEditing(true)}>
+                      <Edit />
+                      Edit profile
+                    </Button>
+                  ) : (
+                    <>
+                      <Button variant="outline" onClick={() => setIsEditing(false)}>
+                        <X />
+                        Cancel
                       </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
-
-            {/* Right Column - Social Media Links & Brand Information */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Social Media Links Card - Display Only */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" />
-                      Social Media Platforms
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {profile?.social_urls && profile.social_urls.length > 0 ? (
-                      <div className="grid grid-cols-1 gap-3">
-                        {profile.social_urls.map((social: any, index: number) => {
-                          const getPlatformIcon = (platform: string) => {
-                            const platformLower = platform.toLowerCase();
-                            if (platformLower.includes('instagram')) return <Instagram className="h-4 w-4" />;
-                            if (platformLower.includes('youtube')) return <Youtube className="h-4 w-4" />;
-                            return <Globe className="h-4 w-4" />;
-                          };
-
-                          const getPlatformColor = (platform: string) => {
-                            const platformLower = platform.toLowerCase();
-                            if (platformLower.includes('instagram')) return 'from-pink-500 to-purple-600';
-                            if (platformLower.includes('youtube')) return 'from-red-500 to-red-600';
-                            return 'from-primary to-secondary';
-                          };
-
-                          return (
-                            <motion.a
-                              key={index}
-                              href={social.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.1 }}
-                              whileHover={{ scale: 1.02, x: 4 }}
-                              className="group relative flex items-center gap-3 p-3 rounded-xl bg-background/50 border border-border/50 hover:border-primary/50 transition-all"
-                            >
-                              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${getPlatformColor(social.platform)} flex items-center justify-center text-white flex-shrink-0`}>
-                                {getPlatformIcon(social.platform)}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium capitalize">{social.platform}</p>
-                                <p className="text-xs text-muted-foreground truncate">{social.link}</p>
-                              </div>
-                              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors opacity-0 group-hover:opacity-100" />
-                            </motion.a>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        No social media links added yet. You can add them during signup.
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Brand Information Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Building2 className="h-5 w-5" />
-                      Brand Information
-                    </CardTitle>
-                    <CardDescription>
-                      Your public brand profile information
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="full_name">Full Name</Label>
-                        <Input
-                          id="full_name"
-                          value={`${user?.first_name || ''} ${user?.last_name || ''}`.trim()}
-                          disabled
-                          className="bg-background/50"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          value={user?.email || ''}
-                          disabled
-                          className="bg-background/50"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="phone_number">
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4" />
-                            WhatsApp Number (Optional)
-                          </div>
-                        </Label>
-                        <Input
-                          id="phone_number"
-                          type="tel"
-                          value={formData.phone_number}
-                          onChange={(e) => {
-                            let value = e.target.value;
-
-                            // Remove +91 prefix if present to get just the digits
-                            if (value.startsWith('+91 ')) {
-                              value = value.substring(4);
-                            } else if (value.startsWith('+91')) {
-                              value = value.substring(3);
-                            }
-
-                            // Allow only digits
-                            const digits = value.replace(/\D/g, '');
-
-                            // Limit to 10 digits
-                            if (digits.length <= 10) {
-                              // Auto-prefix with +91 if there are digits
-                              const formatted = digits ? `+91 ${digits}` : '';
-                              handleInputChange('phone_number', formatted);
-                            }
-                          }}
-                          disabled={!isEditing}
-                          placeholder="+91 XXXXXXXXXX"
-                          className="bg-background/50"
-                        />
-                        {isEditing && (
-                          <p className="text-xs text-muted-foreground">
-                            Enter 10-digit mobile number (e.g., 9876543210)
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="company_name">Company Name</Label>
-                        <Input
-                          id="company_name"
-                          value={formData.company_name}
-                          onChange={(e) => handleInputChange('company_name', e.target.value)}
-                          disabled={!isEditing}
-                          className="bg-background/50"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="website">Website</Label>
-                        <Input
-                          id="website"
-                          value={formData.website}
-                          onChange={(e) => handleInputChange('website', e.target.value)}
-                          disabled={!isEditing}
-                          className="bg-background/50"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="industry">Industry</Label>
-                        <Select
-                          value={formData.industry}
-                          onValueChange={(value) => handleInputChange('industry', value)}
-                          disabled={!isEditing}
-                        >
-                          <SelectTrigger className="bg-background/50">
-                            <SelectValue placeholder="Select industry" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {industries.map((ind) => (
-                              <SelectItem key={ind.value} value={ind.value}>
-                                <span className="flex items-center gap-2">
-                                  <span>{ind.icon}</span>
-                                  <span>{ind.label}</span>
-                                </span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="customIndustry">Specify Your Industry</Label>
-                        <Input
-                          id="customIndustry"
-                          value={formData.customIndustry}
-                          onChange={(e) => handleInputChange('customIndustry', e.target.value)}
-                          disabled={!isEditing}
-                          placeholder="Enter your industry"
-                          className="bg-background/50"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="description">About Your Brand</Label>
-                      <Textarea
-                        id="description"
-                        rows={4}
-                        value={formData.description}
-                        onChange={(e) => handleInputChange('description', e.target.value)}
-                        disabled={!isEditing}
-                        className="bg-background/50"
-                      />
-                    </div>
-
-                    {/* Edit Profile Buttons */}
-                    <div className="flex justify-end gap-2 pt-4 border-t border-border/50">
-                      {!isEditing ? (
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                          <Button onClick={() => setIsEditing(true)} className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white">
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Profile
-                          </Button>
-                        </motion.div>
-                      ) : (
-                        <>
-                          <Button variant="outline" onClick={() => setIsEditing(false)}>
-                            <X className="h-4 w-4 mr-2" />
-                            Cancel
-                          </Button>
-                          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                            <Button onClick={handleSave} className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white">
-                              <Save className="h-4 w-4 mr-2" />
-                              Save Changes
-                            </Button>
-                          </motion.div>
-                        </>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
-          </div>
+                      <Button variant="form" onClick={handleSave}>
+                        <Save />
+                        Save changes
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </Rise>
         </div>
       </div>
+
       <ImageCropper
         imageSrc={tempImageSrc}
         open={cropperOpen}

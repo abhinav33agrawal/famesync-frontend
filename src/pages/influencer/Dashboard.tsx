@@ -1,110 +1,21 @@
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Stat, StatusBadge } from '@/components/Stat';
+import { BrandLogo } from '@/components/Avatar';
+import { Rise } from '@/components/motion';
+import { formatINR } from '@/lib/format';
 import { useAuth } from '@/context/AuthContext';
 import { useInfluencerDashboard } from '@/hooks/useProfile';
 import { useInfluencerApplications } from '@/hooks/useApplications';
 import DashboardSkeleton from '@/components/DashboardSkeleton';
-import {
-  CreditCard,
-  Target,
-  Clock,
-  TrendingUp,
-  Calendar,
-  Eye,
-  BarChart,
-  Sparkles,
-  ArrowRight,
-  Zap,
-  Crown,
-  Bell,
-  CheckCircle2,
-  XCircle,
-  AlertCircle
-} from 'lucide-react';
 
-// Floating Orb Component
-const FloatingOrb = ({
-  className,
-  delay = 0
-}: {
-  className?: string;
-  delay?: number;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.8 }}
-    animate={{
-      opacity: [0.3, 0.6, 0.3],
-      scale: [1, 1.1, 1],
-      y: [0, -20, 0]
-    }}
-    transition={{
-      duration: 6,
-      delay,
-      repeat: Infinity,
-      ease: "easeInOut"
-    }}
-    className={className}
-  />
-);
-
-// Stat Card Component
-const StatCard = ({
-  stat,
-  index
-}: {
-  stat: {
-    title: string;
-    value: string | number;
-    icon: React.ElementType;
-    change: string;
-    gradient: string;
-    iconBg: string;
-  };
-  index: number;
-}) => {
-  const Icon = stat.icon;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1 + index * 0.1, duration: 0.5 }}
-      whileHover={{ y: -5, transition: { duration: 0.2 } }}
-    >
-      <Card className="relative overflow-hidden group border-border/50 hover:border-primary/30 transition-all duration-300">
-        <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${stat.gradient}`} />
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/5 to-transparent rounded-bl-full" />
-        <CardContent className="p-6 relative">
-          <div className="flex items-center justify-between mb-4">
-            <motion.div
-              className={`p-3 rounded-xl ${stat.iconBg} shadow-lg`}
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              transition={{ type: "spring", stiffness: 400 }}
-            >
-              <Icon className="h-6 w-6 text-white" />
-            </motion.div>
-            <Badge variant="secondary" className="text-xs font-medium bg-[hsl(240_65%_25%)] text-white">
-              {stat.change}
-            </Badge>
-          </div>
-          <motion.h3
-            className="text-3xl font-bold mb-1 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 + index * 0.1 }}
-          >
-            {stat.value}
-          </motion.h3>
-          <p className="text-sm text-muted-foreground font-medium">{stat.title}</p>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-};
+/* Removed from the old dashboard: FloatingOrb, the mesh-grid overlay, the
+   gradient StatCard tiles, getStatusIcon()'s colour map, the rotating crown
+   and every gradient/glow surface. Metrics are `Stat`, statuses are
+   `StatusBadge`, entrances are `Rise`. */
 
 const InfluencerDashboard = () => {
   const navigate = useNavigate();
@@ -118,52 +29,6 @@ const InfluencerDashboard = () => {
 
   const stats = dashboardData?.stats;
   const acceptedApplications = applications.filter(app => app.status === 'accepted').slice(0, 3);
-
-  const dashboardStats = [
-    {
-      title: 'Credits Remaining',
-      value: user?.credits || 0,
-      icon: CreditCard,
-      change: 'Application credits',
-      gradient: 'bg-gradient-to-br from-primary/10 to-transparent',
-      iconBg: 'bg-gradient-to-br from-primary to-primary/80',
-    },
-    {
-      title: 'Applications Sent',
-      value: stats?.total_applications || 0,
-      icon: Target,
-      change: `${stats?.accepted_applications || 0} accepted`,
-      gradient: 'bg-gradient-to-br from-secondary/10 to-transparent',
-      iconBg: 'bg-gradient-to-br from-secondary to-secondary/80',
-    },
-    {
-      title: 'Accepted Campaigns',
-      value: stats?.accepted_applications || 0,
-      icon: Clock,
-      change: 'Active collaborations',
-      gradient: 'bg-gradient-to-br from-accent/10 to-transparent',
-      iconBg: 'bg-gradient-to-br from-accent to-accent/80',
-    },
-    {
-      title: 'Pending Applications',
-      value: stats?.pending_applications || 0,
-      icon: BarChart,
-      change: 'Awaiting response',
-      gradient: 'bg-gradient-to-br from-green-500/10 to-transparent',
-      iconBg: 'bg-gradient-to-br from-green-500 to-green-600',
-    },
-  ];
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'accepted':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case 'rejected':
-        return <XCircle className="h-4 w-4 text-destructive" />;
-      default:
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-    }
-  };
 
   const recentUpdates = applications
     .slice(0, 4)
@@ -184,299 +49,179 @@ const InfluencerDashboard = () => {
         <meta name="description" content="Track your applications, manage collaborations, and discover new campaign opportunities from your FameSync dashboard." />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
-      <div className="min-h-screen relative overflow-hidden">
-        {/* Background Elements */}
-        <div className="fixed inset-0 -z-10">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
-          <FloatingOrb
-            className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl"
-            delay={0}
+
+      <div className="container py-10 md:py-14">
+        {/* ------------------------------------------------------ page header */}
+        <Rise>
+          <header className="mb-10 flex flex-col gap-5 md:mb-12 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="eyebrow mb-3">Creator home</p>
+              <h1 className="font-display text-display-2">
+                Welcome back, {user?.first_name || user?.username}.
+              </h1>
+              <p className="mt-3 max-w-[46ch] text-muted-foreground">
+                Your applications and opportunities at a glance.
+              </p>
+            </div>
+            <Button className="self-start md:self-auto" onClick={() => navigate('/influencer/campaigns')}>
+              Browse campaigns
+              <ArrowRight />
+            </Button>
+          </header>
+        </Rise>
+
+        {/* ------------------------------------------------------------ stats */}
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat
+            tone="feature"
+            label="Credits remaining"
+            value={user?.credits ?? 0}
+            note="Application credits"
           />
-          <FloatingOrb
-            className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl"
-            delay={2}
+          <Stat
+            label="Applications sent"
+            value={stats?.total_applications ?? 0}
+            note={`${stats?.accepted_applications ?? 0} accepted`}
           />
-          <FloatingOrb
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/10 rounded-full blur-3xl"
-            delay={4}
+          <Stat
+            label="Accepted campaigns"
+            value={stats?.accepted_applications ?? 0}
+            note="Active collaborations"
+            noteTone={stats?.accepted_applications ? 'success' : 'muted'}
+          />
+          <Stat
+            label="Pending applications"
+            value={stats?.pending_applications ?? 0}
+            note="Awaiting response"
           />
         </div>
 
-        {/* Mesh Pattern */}
-        <div className="fixed inset-0 -z-10 opacity-30">
-          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="dashboard-grid" width="60" height="60" patternUnits="userSpaceOnUse">
-                <path d="M 60 0 L 0 0 0 60" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-border" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#dashboard-grid)" />
-          </svg>
-        </div>
-
-        <div className="p-6 md:p-8 relative">
-          <div className="max-w-7xl mx-auto space-y-8">
-            {/* Header */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* -------------------------------------------- active collaborations */}
+          <section className="lg:col-span-2">
+            <Card className="h-full p-5 sm:p-6">
+              <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                    Welcome back,{' '}
-                    <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                      {user?.first_name || user?.username}
-                    </span>
-                  </h1>
-                  <p className="text-muted-foreground">
-                    Your applications and opportunities at a glance.
-                  </p>
+                  <p className="eyebrow">Live work</p>
+                  <h2 className="mt-1.5 font-display text-display-3">Active campaigns</h2>
                 </div>
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <Button
-                    onClick={() => navigate('/influencer/campaigns')}
-                    className="group relative overflow-hidden bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all shadow-lg shadow-primary/25"
-                  >
-                    <span className="relative z-10 flex items-center gap-2">
-                      <Eye className="h-4 w-4" />
-                      Browse Campaigns
-                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </span>
-                  </Button>
-                </motion.div>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/influencer/campaigns')}>
+                  View all
+                  <ArrowRight />
+                </Button>
               </div>
-            </motion.div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {dashboardStats.map((stat, index) => (
-                <StatCard key={stat.title} stat={stat} index={index} />
-              ))}
-            </div>
-
-            <div className="grid lg:grid-cols-3 gap-6">
-              {/* Active Campaigns */}
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-                className="lg:col-span-2"
-              >
-                <Card className="border-border/50 overflow-hidden">
-                  <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-primary/5 to-transparent rounded-bl-full" />
-                  <CardHeader className="flex flex-row items-center justify-between relative">
-                    <CardTitle className="flex items-center gap-2">
-                      <Zap className="h-5 w-5 text-primary" />
-                      Active Campaigns
-                    </CardTitle>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate('/influencer/campaigns')}
-                      className="group"
-                    >
-                      View All
-                      <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {acceptedApplications.length === 0 ? (
-                      <motion.div
-                        className="text-center py-12"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
+              {acceptedApplications.length === 0 ? (
+                <Card intent="dashed" className="p-8 text-center">
+                  <p className="font-display text-display-3">No active campaigns yet</p>
+                  <p className="mx-auto mb-6 mt-2 max-w-[34ch] text-sm text-muted-foreground">
+                    Apply to a brief and your accepted collaborations will show up here.
+                  </p>
+                  <Button variant="outline" onClick={() => navigate('/influencer/campaigns')}>
+                    Discover campaigns
+                  </Button>
+                </Card>
+              ) : (
+                <ul className="grid gap-3">
+                  {acceptedApplications.map((application) => (
+                    <li key={application.id}>
+                      <Card
+                        intent="interactive"
+                        className="p-4"
+                        onClick={() => navigate('/influencer/applications')}
                       >
-                        <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                          <Target className="h-8 w-8 text-muted-foreground" />
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <BrandLogo
+                              src={application.campaign.brand_profile?.logo}
+                              name={application.campaign.brand_profile?.company_name || application.campaign.brand.username}
+                              className="size-[42px]"
+                            />
+                            <div className="min-w-0">
+                              <h3 className="truncate font-display text-[1.0625rem] font-semibold tracking-[-0.02em]">
+                                {application.campaign.title}
+                              </h3>
+                              <p className="truncate text-xs text-muted-foreground">
+                                @{application.campaign.brand.username}
+                              </p>
+                            </div>
+                          </div>
+                          <StatusBadge status={application.status} />
                         </div>
-                        <p className="text-muted-foreground mb-4">No active campaigns yet</p>
-                        <Button variant="outline" onClick={() => navigate('/influencer/campaigns')}>
-                          Discover Campaigns
-                        </Button>
-                      </motion.div>
-                    ) : (
-                      acceptedApplications.map((application, index) => (
-                        <motion.div
-                          key={application.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.5 + index * 0.1 }}
-                          whileHover={{ scale: 1.01, transition: { duration: 0.2 } }}
-                          className="p-4 rounded-xl border border-border/50 hover:border-primary/30 hover:bg-muted/30 transition-all cursor-pointer group"
-                          onClick={() => navigate('/influencer/applications')}
-                        >
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-lg font-bold shadow-lg">
-                                {application.campaign.category.charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <h4 className="font-semibold group-hover:text-primary transition-colors">
-                                  {application.campaign.title}
-                                </h4>
-                                <p className="text-sm text-muted-foreground">
-                                  @{application.campaign.brand.username}
-                                </p>
-                              </div>
-                            </div>
-                            <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                              {application.status}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <span className="font-medium text-foreground">
-                                ₹{application.campaign.budget.toLocaleString('en-IN')}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              Status: Ongoing
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))
-                    )}
-                  </CardContent>
+                        <div className="mt-3 flex items-center gap-3 border-t border-border pt-3">
+                          <span className="num text-[0.9375rem]">{formatINR(application.campaign.budget)}</span>
+                          <span className="text-xs text-muted-foreground">{application.campaign.category}</span>
+                        </div>
+                      </Card>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          </section>
+
+          {/* ------------------------------------------------------ updates rail */}
+          <section className="grid content-start gap-6">
+            <Card className="p-5 sm:p-6">
+              <p className="eyebrow">Activity</p>
+              <h2 className="mb-4 mt-1.5 font-display text-display-3">Recent updates</h2>
+
+              {recentUpdates.length === 0 ? (
+                <Card intent="dashed" className="p-6 text-center text-sm text-muted-foreground">
+                  No updates yet
                 </Card>
-              </motion.div>
+              ) : (
+                <ul className="grid gap-2.5">
+                  {recentUpdates.map((update, index) => (
+                    <li key={index} className="rounded-lg bg-muted px-3.5 py-3">
+                      <div className="mb-1.5">
+                        <StatusBadge status={update.status} />
+                      </div>
+                      <p className="line-clamp-2 text-sm font-medium">{update.message}</p>
+                      <p className="num mt-1 text-xs text-muted-foreground">{update.time}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
 
-              {/* Updates Feed */}
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-                className="space-y-6"
-              >
-                <Card className="border-border/50">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Bell className="h-5 w-5 text-secondary" />
-                      Recent Updates
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {recentUpdates.length === 0 ? (
-                      <p className="text-muted-foreground text-center py-4">No updates yet</p>
-                    ) : (
-                      recentUpdates.map((update, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.6 + index * 0.1 }}
-                          className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="flex items-start gap-2">
-                            {getStatusIcon(update.status)}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium line-clamp-2">{update.message}</p>
-                              <p className="text-xs text-muted-foreground mt-1">{update.time}</p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-
-                {user?.subscription_plan !== 'pro' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.7 }}
-                  >
-                    <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5">
-                      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-primary/20 to-transparent rounded-bl-full" />
-                      <CardContent className="p-6 text-center relative">
-                        <motion.div
-                          animate={{
-                            rotate: [0, 10, -10, 0],
-                            scale: [1, 1.1, 1]
-                          }}
-                          transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                        >
-                          <Crown className="w-12 h-12 mx-auto mb-4 text-primary" />
-                        </motion.div>
-                        <h3 className="font-semibold mb-2">Get More Applications</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Upgrade to Pro for more monthly applications and full campaign details
-                        </p>
-                        <Button
-                          className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 shadow-lg shadow-primary/25"
-                          onClick={() => navigate('/subscription')}
-                        >
-                          Upgrade Now
-                          <Sparkles className="ml-2 h-4 w-4" />
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )}
-              </motion.div>
-            </div>
-
-            {/* Quick Actions CTA */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 0.5 }}
-            >
-              <Card className="relative overflow-hidden border-0 bg-gradient-to-r from-primary via-secondary to-accent">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent" />
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
-                <CardContent className="p-8 relative">
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="text-white text-center md:text-left">
-                      <motion.h3
-                        className="text-2xl md:text-3xl font-bold mb-2"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.9 }}
-                      >
-                        Ready to find your next campaign?
-                      </motion.h3>
-                      <motion.p
-                        className="opacity-90 text-white/80"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 1 }}
-                      >
-                        Browse through hundreds of campaigns and find the perfect match for your brand.
-                      </motion.p>
-                    </div>
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 1.1 }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button
-                        size="lg"
-                        variant="secondary"
-                        className="shrink-0 shadow-xl group bg-white text-primary hover:bg-white/90"
-                        onClick={() => navigate('/influencer/campaigns')}
-                      >
-                        <Eye className="mr-2 h-5 w-5" />
-                        Discover Campaigns
-                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                      </Button>
-                    </motion.div>
-                  </div>
-                </CardContent>
+            {user?.subscription_plan !== 'pro' && (
+              <Card intent="tinted" className="p-6">
+                <p className="eyebrow text-secondary-foreground/70">Pro plan</p>
+                <h2 className="mb-2 mt-1.5 font-display text-display-3">Get more applications</h2>
+                <p className="mb-5 text-sm leading-relaxed text-secondary-foreground/80">
+                  Upgrade to Pro for more monthly applications and full campaign details.
+                </p>
+                <Button variant="form" className="w-full" onClick={() => navigate('/subscription')}>
+                  Upgrade now
+                </Button>
               </Card>
-            </motion.div>
-          </div>
+            )}
+          </section>
         </div>
+
+        {/* --------------------------------------------------------- closing CTA */}
+        <Rise>
+          <Card intent="feature" className="mt-6 flex flex-col gap-6 rounded-2xl p-8 md:flex-row md:items-center md:justify-between md:p-11">
+            <div>
+              <h2 className="max-w-[26ch] font-display text-[2rem] leading-tight tracking-[-0.03em]">
+                Ready to find your next campaign?
+              </h2>
+              <p className="mt-3 max-w-[46ch] leading-relaxed text-primary-foreground/75">
+                Browse briefs from reviewed brands and apply to the ones that fit what you already make.
+              </p>
+            </div>
+            <Button
+              variant="accent"
+              size="lg"
+              className="shrink-0 self-start md:self-auto"
+              onClick={() => navigate('/influencer/campaigns')}
+            >
+              Discover campaigns
+              <ArrowRight />
+            </Button>
+          </Card>
+        </Rise>
       </div>
     </>
   );

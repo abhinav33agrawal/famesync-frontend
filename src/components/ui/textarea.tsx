@@ -1,21 +1,4 @@
-import * as React from "react";
-
-import { cn } from "@/lib/utils";
-
-export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
-
-const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, ...props }, ref) => {
-  return (
-    <textarea
-      className={cn(
-        "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        className,
-      )}
-      ref={ref}
-      {...props}
-    />
-  );
-});
-Textarea.displayName = "Textarea";
-
-export { Textarea };
+/* The Textarea lives with the Input so the two share one border, radius and
+   focus treatment. Kept as its own module because the app imports it from
+   here in nine places. */
+export { Textarea } from "@/components/ui/input";
