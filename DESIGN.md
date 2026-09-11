@@ -4,6 +4,9 @@ Single light theme. Aubergine is the brand, citrus is rationed, paper is the
 ground. If a screen needs a colour, a radius or a shadow that isn't listed
 here, it's wrong — reach for the token, not a new value.
 
+Run `node scripts/design-check.mjs` to check the mechanical rules below
+(dead utilities, dark-mode variants, raw palette colours, looping animation).
+
 ## Palette
 
 Semantic tokens only. **Never** use a raw Tailwind palette colour
@@ -70,6 +73,12 @@ dialogs, wizards — radius 12) · `outline` · `ghost` · `destructive` · `lin
 
 `Card` intents: `default` · `interactive` (adds `lift`) · `tinted` (lilac) ·
 `feature` (aubergine) · `dashed` (empty states).
+
+**A note on `accent` in the Radix primitives.** Stock shadcn treats `accent` as
+a quiet neutral hover tint, but here `accent` is the loud citrus — so the
+primitives in `components/ui/` were rewired to highlight with `secondary`
+(the lilac selection surface, matching the Navbar's active pill). If you pull
+in a new shadcn component, do the same to it, or its menu rows will hover lime.
 
 ## Motion
 
