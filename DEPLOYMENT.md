@@ -23,15 +23,15 @@ Add these under **Settings → Environment Variables**. There are only two.
 
 | Name | Environments | Value |
 |---|---|---|
-| `VITE_API_URL` | Production | `https://api.famesync.com/api` |
-| `VITE_API_URL` | Preview, Development | `https://staging-api.famesync.com/api` (or the production URL if you have no staging API) |
+| `VITE_API_URL` | Production | `https://backend.famesync.com/api` |
+| `VITE_API_URL` | Preview, Development | `https://backend.famesync.com/api` (there is no separate staging API; point previews at production, or at a staging host if you add one later) |
 | `VITE_GOOGLE_CLIENT_ID` | Production, Preview, Development | the Web client ID from Google Cloud → Credentials, ending in `.apps.googleusercontent.com` |
 
 Notes that matter:
 
 - **Include the `/api` suffix and nothing after it.** The app derives the
-  media origin by stripping a trailing `/api`, so `https://api.famesync.com/api`
-  yields `https://api.famesync.com/media/...` for uploaded pictures. A value
+  media origin by stripping a trailing `/api`, so `https://backend.famesync.com/api`
+  yields `https://backend.famesync.com/media/...` for uploaded pictures. A value
   without `/api`, or with a trailing path, breaks image URLs.
 - **No trailing slash** — `.../api`, not `.../api/`.
 - **HTTPS only.** The Vercel site is HTTPS, so a plain-HTTP API URL is blocked
@@ -99,7 +99,7 @@ After the first deploy:
 - [ ] Landing page renders with fonts and images.
 - [ ] Hard-refresh a deep link such as `/pricing` — it must load, not 404.
       (That is the `vercel.json` rewrite doing its job.)
-- [ ] Sign in. The Network tab should show calls to `api.famesync.com`
+- [ ] Sign in. The Network tab should show calls to `backend.famesync.com`
       returning 200, not CORS errors.
 - [ ] Upload a profile picture and confirm it renders — that exercises the
       media URL derived from `VITE_API_URL`.
