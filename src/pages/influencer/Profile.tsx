@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/context/AuthContext';
 import {
   Instagram,
@@ -393,460 +394,490 @@ const InfluencerProfile = () => {
         </div>
 
         {/* ------------------------------- right: platforms + profile */}
-        <div className="space-y-5 lg:col-span-2">
-          {profile?.social_urls && profile.social_urls.length > 0 && (
-            <Rise>
+        <div className="lg:col-span-2">
+          {/* Tabs rather than one long scroll: the Instagram card alone
+              is longer than the rest of the page put together, and it
+              pushed the editable profile form below the fold. */}
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList className="mb-5 h-auto w-full justify-start gap-1 overflow-x-auto p-1">
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              {INSTAGRAM_LOGIN_ENABLED && (
+                <TabsTrigger value="instagram">Instagram</TabsTrigger>
+              )}
+              <TabsTrigger value="social">Social links</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="profile" className="mt-0 space-y-5">
+              {/* Profile Information Card */}
               <Card>
-                <CardHeader className="pb-4">
+                <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Users className="size-[1.125rem] text-primary" />
-                    Social platforms
+                    <User className="size-[1.125rem] text-primary" />
+                    Profile information
                   </CardTitle>
+                  <CardDescription>Your public creator profile information</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 gap-3">
-                    {profile.social_urls.map((social: any, index) => {
-                      /* Entries are not guaranteed to be {platform, link}
-                         objects -- apply_to_profile() in the backend guards
-                         the same array with isinstance(s, dict) because older
-                         rows can hold bare URL strings. Reading .platform off
-                         one of those yields undefined, and .toLowerCase() on
-                         undefined throws hard enough to blank the page. */
-                      const entry =
-                        social && typeof social === 'object' ? social : { link: social };
-                      const platform = `${entry.platform || ''}`.trim();
-                      const link = `${entry.link || ''}`.trim();
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Full name</Label>
+                      <Input id="name" value={fullName} disabled />
+                    </div>
 
-                      const getPlatformIcon = () => {
-                        const haystack = `${platform} ${link}`.toLowerCase();
-                        if (haystack.includes('instagram')) return <Instagram className="size-4" />;
-                        if (haystack.includes('youtube')) return <Youtube className="size-4" />;
-                        return <Globe className="size-4" />;
-                      };
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" type="email" value={displayEmail || ''} disabled />
+                      <p className="text-xs text-muted-foreground">
+                        {hasStableEmail
+                          ? 'Primary linked email'
+                          : 'Temporary Instagram email detected. Link Google to use your Gmail here.'}
+                      </p>
+                      {shouldShowGoogleLink && (
+                        <div className="rounded-lg bg-muted p-4">
+                          <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+                            Link your Google account to make Gmail your primary login and contact email.
+                          </p>
+                          <LinkGoogleAccountButton
+                            role={accountRole}
+                            label="Continue with Google to Link"
+                          />
+                        </div>
+                      )}
+                    </div>
 
-                      return (
-                        <a
-                          key={index}
-                          href={link || undefined}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:border-primary/40 hover:bg-muted"
-                        >
-                          <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-md bg-secondary text-secondary-foreground">
-                            {getPlatformIcon()}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="mb-0.5 flex items-center gap-1.5">
-                              <p className="text-sm font-semibold capitalize">
-                                {platform || 'Profile'}
-                              </p>
-                              {entry.verified && <CheckCircle2 className="size-3.5 text-success" />}
-                            </div>
-                            <p className="truncate text-xs text-muted-foreground">{link}</p>
-                          </div>
-                          <div className="shrink-0 text-right">
-                            <p className="num text-[1.0625rem] leading-none">
-                              {formatCompact(entry.followers)}
-                            </p>
-                            <p className="eyebrow mt-1 text-[10px]">Followers</p>
-                          </div>
-                          <ArrowRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                        </a>
-                      );
-                    })}
+                    <div className="space-y-2">
+                      <Label htmlFor="phone_number">
+                        <span className="flex items-center gap-2">
+                          <Phone className="size-4" />
+                          WhatsApp number (optional)
+                        </span>
+                      </Label>
+                      <Input
+                        id="phone_number"
+                        type="tel"
+                        value={profileData.phone_number}
+                        onChange={(e) => {
+                          let value = e.target.value;
+
+                          // Remove +91 prefix if present to get just the digits
+                          if (value.startsWith('+91 ')) {
+                            value = value.substring(4);
+                          } else if (value.startsWith('+91')) {
+                            value = value.substring(3);
+                          }
+
+                          // Allow only digits
+                          const digits = value.replace(/\D/g, '');
+
+                          // Limit to 10 digits
+                          if (digits.length <= 10) {
+                            // Auto-prefix with +91 if there are digits
+                            const formatted = digits ? `+91 ${digits}` : '';
+                            setProfileData({ ...profileData, phone_number: formatted });
+                          }
+                        }}
+                        disabled={!isEditing}
+                        placeholder="+91 XXXXXXXXXX"
+                      />
+                      {isEditing && (
+                        <p className="text-xs text-muted-foreground">
+                          Enter 10-digit mobile number (e.g., 9876543210)
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Category</Label>
+                      <Select
+                        value={profileData.category}
+                        onValueChange={(value) => setProfileData({ ...profileData, category: value })}
+                        disabled={!isEditing}
+                      >
+                        <SelectTrigger className="h-12 rounded-lg border-input bg-card px-4 text-[0.95rem]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fashion">Fashion</SelectItem>
+                          <SelectItem value="beauty">Beauty</SelectItem>
+                          <SelectItem value="fitness">Fitness</SelectItem>
+                          <SelectItem value="tech">Technology</SelectItem>
+                          <SelectItem value="food">Food</SelectItem>
+                          <SelectItem value="travel">Travel</SelectItem>
+                          <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                          <SelectItem value="gaming">Gaming</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Custom Category Field - Only show when "other" is selected */}
+                    {profileData.category === 'other' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="customCategory">Specify your category</Label>
+                        <Input
+                          id="customCategory"
+                          value={profileData.customCategory}
+                          onChange={(e) => setProfileData({ ...profileData, customCategory: e.target.value })}
+                          disabled={!isEditing}
+                          placeholder="Enter your category"
+                        />
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="niche">Niche</Label>
+                      <Input
+                        id="niche"
+                        value={profileData.niche}
+                        onChange={(e) => setProfileData({ ...profileData, niche: e.target.value })}
+                        disabled={!isEditing}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="location">Location</Label>
+                      <Input
+                        id="location"
+                        value={profileData.location}
+                        onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
+                        disabled={!isEditing}
+                        placeholder="e.g. New York, USA"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Textarea
+                      id="bio"
+                      value={profileData.bio}
+                      onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
+                      disabled={!isEditing}
+                      rows={4}
+                    />
+                  </div>
+
+                  {/* Edit Profile Buttons */}
+                  <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-5">
+                    {!isEditing ? (
+                      <Button
+                        variant="form"
+                        onClick={() => setIsEditing(true)}
+                        disabled={!user}
+                      >
+                        <Edit />
+                        Edit profile
+                      </Button>
+                    ) : (
+                      <>
+                        <Button variant="outline" onClick={() => setIsEditing(false)}>
+                          <X />
+                          Cancel
+                        </Button>
+                        <Button variant="form" onClick={handleSave}>
+                          <Save />
+                          Save changes
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </CardContent>
               </Card>
-            </Rise>
-          )}
+            </TabsContent>
 
-          {INSTAGRAM_LOGIN_ENABLED && (
-          <Rise delay={0.06}>
-            <Card>
-              <CardHeader>
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <span className="eyebrow">Connected account</span>
-                    <CardTitle className="mt-2 flex items-center gap-2">
-                      <Instagram className="size-[1.125rem] text-primary" />
-                      Instagram insights
-                    </CardTitle>
-                    <CardDescription className="mt-1.5">
-                      Sync your Instagram professional account to show audience and performance metrics.
-                    </CardDescription>
-                  </div>
-                  {instagramAccount && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleInstagramSync}
-                      disabled={instagramSyncing || instagramLoading}
-                      className="shrink-0"
-                    >
-                      <RefreshCw className={instagramSyncing ? 'animate-spin' : ''} />
-                      {instagramSyncing ? 'Syncing...' : 'Sync'}
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                {!instagramConfigured && (
-                  <div className="rounded-lg bg-muted p-4 text-sm leading-relaxed text-muted-foreground">
-                    Instagram sign-in isn&apos;t switched on for this environment yet. Connect and
-                    sync will light up once it is.
-                  </div>
-                )}
+            {INSTAGRAM_LOGIN_ENABLED && (
+              <TabsContent value="instagram" className="mt-0 space-y-5">
+              <Rise delay={0.06}>
+                <Card>
+                  <CardHeader>
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div>
+                        <span className="eyebrow">Connected account</span>
+                        <CardTitle className="mt-2 flex items-center gap-2">
+                          <Instagram className="size-[1.125rem] text-primary" />
+                          Instagram insights
+                        </CardTitle>
+                        <CardDescription className="mt-1.5">
+                          Sync your Instagram professional account to show audience and performance metrics.
+                        </CardDescription>
+                      </div>
+                      {instagramAccount && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleInstagramSync}
+                          disabled={instagramSyncing || instagramLoading}
+                          className="shrink-0"
+                        >
+                          <RefreshCw className={instagramSyncing ? 'animate-spin' : ''} />
+                          {instagramSyncing ? 'Syncing...' : 'Sync'}
+                        </Button>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-5">
+                    {!instagramConfigured && (
+                      <div className="rounded-lg bg-muted p-4 text-sm leading-relaxed text-muted-foreground">
+                        Instagram sign-in isn&apos;t switched on for this environment yet. Connect and
+                        sync will light up once it is.
+                      </div>
+                    )}
 
-                {!instagramAccount && (
-                  <div className="rounded-lg border border-dashed border-muted-foreground/35 p-5">
-                    <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-                      Connect Instagram to show followers, insights, and recent posts on your profile.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="form"
-                      onClick={handleConnectInstagram}
-                      disabled={!instagramConfigured}
-                    >
-                      <Instagram />
-                      Continue with Instagram
-                    </Button>
-                  </div>
-                )}
+                    {!instagramAccount && (
+                      <div className="rounded-lg border border-dashed border-muted-foreground/35 p-5">
+                        <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+                          Connect Instagram to show followers, insights, and recent posts on your profile.
+                        </p>
+                        <Button
+                          type="button"
+                          variant="form"
+                          onClick={handleConnectInstagram}
+                          disabled={!instagramConfigured}
+                        >
+                          <Instagram />
+                          Continue with Instagram
+                        </Button>
+                      </div>
+                    )}
 
-                {instagramLoading && !instagramAccount && (
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    {[...Array(3)].map((_, index) => (
-                      <div key={index} className="h-20 animate-pulse rounded-lg bg-muted" />
-                    ))}
-                  </div>
-                )}
+                    {instagramLoading && !instagramAccount && (
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        {[...Array(3)].map((_, index) => (
+                          <div key={index} className="h-20 animate-pulse rounded-lg bg-muted" />
+                        ))}
+                      </div>
+                    )}
 
-                {instagramError && (
-                  <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-                    {instagramError}
-                  </div>
-                )}
+                    {instagramError && (
+                      <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+                        {instagramError}
+                      </div>
+                    )}
 
-                {instagramAccount && (
-                  <>
-                    <div className="flex flex-col justify-between gap-4 rounded-lg border border-border p-4 md:flex-row md:items-center">
-                      <div className="flex items-center gap-3">
-                        <Avatar
-                          src={instagramAccount.picture || ''}
-                          name={instagramAccount.username || user?.username || 'IG'}
-                          size={48}
-                        />
-                        <div className="min-w-0">
-                          <p className="font-semibold">@{instagramAccount.username || 'instagram'}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {instagramAccount.accountType || 'Professional account'}
-                          </p>
-                          {instagramSyncLabel && (
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              Last synced {instagramSyncLabel}
+                    {instagramAccount && (
+                      <>
+                        <div className="flex flex-col justify-between gap-4 rounded-lg border border-border p-4 md:flex-row md:items-center">
+                          <div className="flex items-center gap-3">
+                            <Avatar
+                              src={instagramAccount.picture || ''}
+                              name={instagramAccount.username || user?.username || 'IG'}
+                              size={48}
+                            />
+                            <div className="min-w-0">
+                              <p className="font-semibold">@{instagramAccount.username || 'instagram'}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {instagramAccount.accountType || 'Professional account'}
+                              </p>
+                              {instagramSyncLabel && (
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                  Last synced {instagramSyncLabel}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleInstagramSync}
+                            disabled={instagramSyncing}
+                            className="shrink-0"
+                          >
+                            <RefreshCw className={instagramSyncing ? 'animate-spin' : ''} />
+                            {instagramSyncing ? 'Syncing...' : 'Refresh data'}
+                          </Button>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                          <Stat
+                            className="p-5"
+                            label="Followers"
+                            value={toInstagramDisplayCount(instagramAccount.followersCount)}
+                          />
+                          <Stat
+                            className="p-5"
+                            label="Following"
+                            value={toInstagramDisplayCount(instagramAccount.followingCount)}
+                          />
+                          <Stat
+                            className="p-5"
+                            label="Posts"
+                            value={toInstagramDisplayCount(instagramAccount.postsCount)}
+                          />
+                        </div>
+
+                        <div>
+                          <p className="eyebrow mb-3">Insights</p>
+                          {instagramInsightCards.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                              {instagramInsightCards.map((metric) => (
+                                <div key={metric.key} className="rounded-lg bg-muted p-4">
+                                  <p className="eyebrow">{metric.label}</p>
+                                  <p className="num mt-2 text-[1.375rem] leading-none">
+                                    {toInstagramDisplayCount(metric.value)}
+                                  </p>
+                                  <p className="mt-1.5 text-xs text-muted-foreground">{metric.hint}</p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm leading-relaxed text-muted-foreground">
+                              No insight metrics available yet. Sync after connecting a Creator/Business account.
                             </p>
                           )}
                         </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleInstagramSync}
-                        disabled={instagramSyncing}
-                        className="shrink-0"
-                      >
-                        <RefreshCw className={instagramSyncing ? 'animate-spin' : ''} />
-                        {instagramSyncing ? 'Syncing...' : 'Refresh data'}
-                      </Button>
-                    </div>
 
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                      <Stat
-                        className="p-5"
-                        label="Followers"
-                        value={toInstagramDisplayCount(instagramAccount.followersCount)}
-                      />
-                      <Stat
-                        className="p-5"
-                        label="Following"
-                        value={toInstagramDisplayCount(instagramAccount.followingCount)}
-                      />
-                      <Stat
-                        className="p-5"
-                        label="Posts"
-                        value={toInstagramDisplayCount(instagramAccount.postsCount)}
-                      />
-                    </div>
-
-                    <div>
-                      <p className="eyebrow mb-3">Insights</p>
-                      {instagramInsightCards.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          {instagramInsightCards.map((metric) => (
-                            <div key={metric.key} className="rounded-lg bg-muted p-4">
-                              <p className="eyebrow">{metric.label}</p>
-                              <p className="num mt-2 text-[1.375rem] leading-none">
-                                {toInstagramDisplayCount(metric.value)}
-                              </p>
-                              <p className="mt-1.5 text-xs text-muted-foreground">{metric.hint}</p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm leading-relaxed text-muted-foreground">
-                          No insight metrics available yet. Sync after connecting a Creator/Business account.
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <p className="eyebrow mb-3">Recent posts</p>
-                      {instagramRecentPosts.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          {instagramRecentPosts.map((post) => (
-                            <article
-                              key={post.id}
-                              className="overflow-hidden rounded-lg border border-border"
-                            >
-                              <div className="relative aspect-square overflow-hidden bg-muted">
-                                {post.thumbnailUrl || post.mediaUrl ? (
-                                  <img
-                                    src={post.thumbnailUrl || post.mediaUrl}
-                                    alt={post.caption || 'Instagram post'}
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                                    {post.mediaType || 'POST'}
+                        <div>
+                          <p className="eyebrow mb-3">Recent posts</p>
+                          {instagramRecentPosts.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                              {instagramRecentPosts.map((post) => (
+                                <article
+                                  key={post.id}
+                                  className="overflow-hidden rounded-lg border border-border"
+                                >
+                                  <div className="relative aspect-square overflow-hidden bg-muted">
+                                    {post.thumbnailUrl || post.mediaUrl ? (
+                                      <img
+                                        src={post.thumbnailUrl || post.mediaUrl}
+                                        alt={post.caption || 'Instagram post'}
+                                        className="h-full w-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                                        {post.mediaType || 'POST'}
+                                      </div>
+                                    )}
+                                    <span className="absolute right-2 top-2 rounded-sm bg-primary px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
+                                      {post.mediaProductType || post.mediaType || 'POST'}
+                                    </span>
                                   </div>
-                                )}
-                                <span className="absolute right-2 top-2 rounded-sm bg-primary px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
-                                  {post.mediaProductType || post.mediaType || 'POST'}
-                                </span>
-                              </div>
-                              <div className="space-y-2 p-3">
-                                <p className="max-h-16 overflow-hidden text-sm leading-relaxed">
-                                  {post.caption || 'No caption available for this post.'}
-                                </p>
-                                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                  <span>{formatInstagramPostDate(post.timestamp) || 'Recently synced'}</span>
-                                  {post.permalink ? (
-                                    <a
-                                      href={post.permalink}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="inline-flex items-center gap-1 font-medium hover:text-primary"
-                                    >
-                                      Open
-                                      <ExternalLink className="size-3" />
-                                    </a>
-                                  ) : (
-                                    <span>Private preview</span>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                  <span className="inline-flex items-center gap-1">
-                                    <Heart className="size-3" />
-                                    {toInstagramDisplayCount(post.likeCount)}
-                                  </span>
-                                  <span className="inline-flex items-center gap-1">
-                                    <MessageCircle className="size-3" />
-                                    {toInstagramDisplayCount(post.commentsCount)}
-                                  </span>
-                                </div>
-                              </div>
-                            </article>
-                          ))}
+                                  <div className="space-y-2 p-3">
+                                    <p className="max-h-16 overflow-hidden text-sm leading-relaxed">
+                                      {post.caption || 'No caption available for this post.'}
+                                    </p>
+                                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                      <span>{formatInstagramPostDate(post.timestamp) || 'Recently synced'}</span>
+                                      {post.permalink ? (
+                                        <a
+                                          href={post.permalink}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="inline-flex items-center gap-1 font-medium hover:text-primary"
+                                        >
+                                          Open
+                                          <ExternalLink className="size-3" />
+                                        </a>
+                                      ) : (
+                                        <span>Private preview</span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                      <span className="inline-flex items-center gap-1">
+                                        <Heart className="size-3" />
+                                        {toInstagramDisplayCount(post.likeCount)}
+                                      </span>
+                                      <span className="inline-flex items-center gap-1">
+                                        <MessageCircle className="size-3" />
+                                        {toInstagramDisplayCount(post.commentsCount)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </article>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm leading-relaxed text-muted-foreground">
+                              No recent posts synced yet. Use the sync button after connecting Instagram.
+                            </p>
+                          )}
                         </div>
-                      ) : (
-                        <p className="text-sm leading-relaxed text-muted-foreground">
-                          No recent posts synced yet. Use the sync button after connecting Instagram.
-                        </p>
-                      )}
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </Rise>
-          )}
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </Rise>
+              </TabsContent>
+            )}
 
-          {/* Profile Information Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="size-[1.125rem] text-primary" />
-                Profile information
-              </CardTitle>
-              <CardDescription>Your public creator profile information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full name</Label>
-                  <Input id="name" value={fullName} disabled />
-                </div>
+            <TabsContent value="social" className="mt-0 space-y-5">
+              {profile?.social_urls && profile.social_urls.length > 0 && (
+                <Rise>
+                  <Card>
+                    <CardHeader className="pb-4">
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="size-[1.125rem] text-primary" />
+                        Social platforms
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 gap-3">
+                        {profile.social_urls.map((social: any, index) => {
+                          /* Entries are not guaranteed to be {platform, link}
+                             objects -- apply_to_profile() in the backend guards
+                             the same array with isinstance(s, dict) because older
+                             rows can hold bare URL strings. Reading .platform off
+                             one of those yields undefined, and .toLowerCase() on
+                             undefined throws hard enough to blank the page. */
+                          const entry =
+                            social && typeof social === 'object' ? social : { link: social };
+                          const platform = `${entry.platform || ''}`.trim();
+                          const link = `${entry.link || ''}`.trim();
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={displayEmail || ''} disabled />
-                  <p className="text-xs text-muted-foreground">
-                    {hasStableEmail
-                      ? 'Primary linked email'
-                      : 'Temporary Instagram email detected. Link Google to use your Gmail here.'}
-                  </p>
-                  {shouldShowGoogleLink && (
-                    <div className="rounded-lg bg-muted p-4">
-                      <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
-                        Link your Google account to make Gmail your primary login and contact email.
-                      </p>
-                      <LinkGoogleAccountButton
-                        role={accountRole}
-                        label="Continue with Google to Link"
-                      />
-                    </div>
-                  )}
-                </div>
+                          const getPlatformIcon = () => {
+                            const haystack = `${platform} ${link}`.toLowerCase();
+                            if (haystack.includes('instagram')) return <Instagram className="size-4" />;
+                            if (haystack.includes('youtube')) return <Youtube className="size-4" />;
+                            return <Globe className="size-4" />;
+                          };
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone_number">
-                    <span className="flex items-center gap-2">
-                      <Phone className="size-4" />
-                      WhatsApp number (optional)
-                    </span>
-                  </Label>
-                  <Input
-                    id="phone_number"
-                    type="tel"
-                    value={profileData.phone_number}
-                    onChange={(e) => {
-                      let value = e.target.value;
-
-                      // Remove +91 prefix if present to get just the digits
-                      if (value.startsWith('+91 ')) {
-                        value = value.substring(4);
-                      } else if (value.startsWith('+91')) {
-                        value = value.substring(3);
-                      }
-
-                      // Allow only digits
-                      const digits = value.replace(/\D/g, '');
-
-                      // Limit to 10 digits
-                      if (digits.length <= 10) {
-                        // Auto-prefix with +91 if there are digits
-                        const formatted = digits ? `+91 ${digits}` : '';
-                        setProfileData({ ...profileData, phone_number: formatted });
-                      }
-                    }}
-                    disabled={!isEditing}
-                    placeholder="+91 XXXXXXXXXX"
-                  />
-                  {isEditing && (
-                    <p className="text-xs text-muted-foreground">
-                      Enter 10-digit mobile number (e.g., 9876543210)
+                          return (
+                            <a
+                              key={index}
+                              href={link || undefined}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:border-primary/40 hover:bg-muted"
+                            >
+                              <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-md bg-secondary text-secondary-foreground">
+                                {getPlatformIcon()}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <div className="mb-0.5 flex items-center gap-1.5">
+                                  <p className="text-sm font-semibold capitalize">
+                                    {platform || 'Profile'}
+                                  </p>
+                                  {entry.verified && <CheckCircle2 className="size-3.5 text-success" />}
+                                </div>
+                                <p className="truncate text-xs text-muted-foreground">{link}</p>
+                              </div>
+                              <div className="shrink-0 text-right">
+                                <p className="num text-[1.0625rem] leading-none">
+                                  {formatCompact(entry.followers)}
+                                </p>
+                                <p className="eyebrow mt-1 text-[10px]">Followers</p>
+                              </div>
+                              <ArrowRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                            </a>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Rise>
+              )}
+              {(!profile?.social_urls || profile.social_urls.length === 0) && (
+                <Card>
+                  <CardContent className="py-14 text-center">
+                    <p className="text-sm font-medium">No social links yet</p>
+                    <p className="mt-1.5 text-sm text-muted-foreground">
+                      Add them from Profile, or connect Instagram to have yours
+                      filled in and verified automatically.
                     </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select
-                    value={profileData.category}
-                    onValueChange={(value) => setProfileData({ ...profileData, category: value })}
-                    disabled={!isEditing}
-                  >
-                    <SelectTrigger className="h-12 rounded-lg border-input bg-card px-4 text-[0.95rem]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fashion">Fashion</SelectItem>
-                      <SelectItem value="beauty">Beauty</SelectItem>
-                      <SelectItem value="fitness">Fitness</SelectItem>
-                      <SelectItem value="tech">Technology</SelectItem>
-                      <SelectItem value="food">Food</SelectItem>
-                      <SelectItem value="travel">Travel</SelectItem>
-                      <SelectItem value="lifestyle">Lifestyle</SelectItem>
-                      <SelectItem value="gaming">Gaming</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Custom Category Field - Only show when "other" is selected */}
-                {profileData.category === 'other' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="customCategory">Specify your category</Label>
-                    <Input
-                      id="customCategory"
-                      value={profileData.customCategory}
-                      onChange={(e) => setProfileData({ ...profileData, customCategory: e.target.value })}
-                      disabled={!isEditing}
-                      placeholder="Enter your category"
-                    />
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="niche">Niche</Label>
-                  <Input
-                    id="niche"
-                    value={profileData.niche}
-                    onChange={(e) => setProfileData({ ...profileData, niche: e.target.value })}
-                    disabled={!isEditing}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={profileData.location}
-                    onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
-                    disabled={!isEditing}
-                    placeholder="e.g. New York, USA"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  value={profileData.bio}
-                  onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-                  disabled={!isEditing}
-                  rows={4}
-                />
-              </div>
-
-              {/* Edit Profile Buttons */}
-              <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-5">
-                {!isEditing ? (
-                  <Button
-                    variant="form"
-                    onClick={() => setIsEditing(true)}
-                    disabled={!user}
-                  >
-                    <Edit />
-                    Edit profile
-                  </Button>
-                ) : (
-                  <>
-                    <Button variant="outline" onClick={() => setIsEditing(false)}>
-                      <X />
-                      Cancel
-                    </Button>
-                    <Button variant="form" onClick={handleSave}>
-                      <Save />
-                      Save changes
-                    </Button>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
 
