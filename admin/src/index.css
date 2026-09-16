@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tokens copied from the main site (frontend/src/index.css) so the admin
+   panel is visibly the same product. Single light theme by design. */
+@layer base {
+  :root {
+    --background: 40 33% 96%;
+    --foreground: 30 9% 9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 30 9% 9%;
+
+    /* aubergine - the only brand colour */
+    --primary: 288 42% 20%;
+    --primary-foreground: 40 33% 96%;
+
+    /* lilac tint - nav-active, tinted surfaces */
+    --secondary: 288 18% 93%;
+    --secondary-foreground: 288 42% 20%;
+
+    /* citrus - rationed to one accent per screen */
+    --accent: 72 88% 60%;
+    --accent-foreground: 288 45% 12%;
+
+    --muted: 40 25% 93%;
+    --muted-foreground: 30 7% 40%;
+
+    --success: 156 46% 33%;
+    --success-foreground: 40 33% 96%;
+    --warning: 33 86% 38%;
+    --warning-foreground: 40 33% 96%;
+    --destructive: 7 61% 43%;
+    --destructive-foreground: 40 33% 96%;
+
+    --border: 38 22% 89%;
+    --input: 38 22% 89%;
+    --ring: 288 42% 20%;
+
+    --radius: 0.75rem;
+
+    --elevation-1: 0 1px 2px -1px hsl(30 9% 9% / 0.08);
+    --elevation-2: 0 8px 18px -12px hsl(288 42% 20% / 0.22), 0 1px 2px -1px hsl(30 9% 9% / 0.06);
+    --elevation-3: 0 24px 48px -28px hsl(288 42% 20% / 0.28), 0 2px 6px -2px hsl(30 9% 9% / 0.06);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3 {
+    @apply font-display tracking-tight;
+  }
+}
+
+/* Tabular figures keep numeric columns from jittering as data refreshes. */
+@layer utilities {
+  .nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
