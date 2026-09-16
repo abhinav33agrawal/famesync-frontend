@@ -404,35 +404,48 @@ const InfluencerProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 gap-3">
-                    {profile.social_urls.map((social, index) => {
-                      const getPlatformIcon = (platform: string) => {
-                        const platformLower = platform.toLowerCase();
-                        if (platformLower.includes('instagram')) return <Instagram className="size-4" />;
-                        if (platformLower.includes('youtube')) return <Youtube className="size-4" />;
+                    {profile.social_urls.map((social: any, index) => {
+                      /* Entries are not guaranteed to be {platform, link}
+                         objects -- apply_to_profile() in the backend guards
+                         the same array with isinstance(s, dict) because older
+                         rows can hold bare URL strings. Reading .platform off
+                         one of those yields undefined, and .toLowerCase() on
+                         undefined throws hard enough to blank the page. */
+                      const entry =
+                        social && typeof social === 'object' ? social : { link: social };
+                      const platform = `${entry.platform || ''}`.trim();
+                      const link = `${entry.link || ''}`.trim();
+
+                      const getPlatformIcon = () => {
+                        const haystack = `${platform} ${link}`.toLowerCase();
+                        if (haystack.includes('instagram')) return <Instagram className="size-4" />;
+                        if (haystack.includes('youtube')) return <Youtube className="size-4" />;
                         return <Globe className="size-4" />;
                       };
 
                       return (
                         <a
                           key={index}
-                          href={social.link}
+                          href={link || undefined}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="group flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:border-primary/40 hover:bg-muted"
                         >
                           <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-md bg-secondary text-secondary-foreground">
-                            {getPlatformIcon(social.platform)}
+                            {getPlatformIcon()}
                           </span>
                           <div className="min-w-0 flex-1">
                             <div className="mb-0.5 flex items-center gap-1.5">
-                              <p className="text-sm font-semibold capitalize">{social.platform}</p>
-                              {social.verified && <CheckCircle2 className="size-3.5 text-success" />}
+                              <p className="text-sm font-semibold capitalize">
+                                {platform || 'Profile'}
+                              </p>
+                              {entry.verified && <CheckCircle2 className="size-3.5 text-success" />}
                             </div>
-                            <p className="truncate text-xs text-muted-foreground">{social.link}</p>
+                            <p className="truncate text-xs text-muted-foreground">{link}</p>
                           </div>
                           <div className="shrink-0 text-right">
                             <p className="num text-[1.0625rem] leading-none">
-                              {formatCompact(social.followers)}
+                              {formatCompact(entry.followers)}
                             </p>
                             <p className="eyebrow mt-1 text-[10px]">Followers</p>
                           </div>
