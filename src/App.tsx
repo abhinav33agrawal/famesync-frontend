@@ -44,6 +44,7 @@ import BrandDiscover from "./pages/brand/Discover";
 // Shared pages
 import Subscription from "./pages/Subscription";
 import Settings from "./pages/Settings";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -111,6 +112,9 @@ const AppContent = () => {
       {!hideChrome && <Navbar />}
 
       <main className="flex-1">
+        {/* Keyed on pathname so navigating away clears a caught error --
+            without the key the boundary stays in its failed state forever. */}
+        <ErrorBoundary key={pathname}>
         <Routes>
           <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
           <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
@@ -254,6 +258,7 @@ const AppContent = () => {
           {/* 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </ErrorBoundary>
       </main>
 
       {!hideChrome && !isAppSurface && <Footer />}
