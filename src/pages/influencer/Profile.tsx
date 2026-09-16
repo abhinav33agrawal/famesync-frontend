@@ -51,6 +51,7 @@ import {
   syncInstagram,
   type InstagramAccountData,
 } from '@/lib/instagram';
+import { INSTAGRAM_LOGIN_ENABLED } from '@/lib/features';
 
 /* Removed from the old page: FloatingOrb (looping animation), the unused
    gradient StatCard, the mesh/radial page backgrounds, every gradient
@@ -445,6 +446,7 @@ const InfluencerProfile = () => {
             </Rise>
           )}
 
+          {INSTAGRAM_LOGIN_ENABLED && (
           <Rise delay={0.06}>
             <Card>
               <CardHeader>
@@ -654,6 +656,7 @@ const InfluencerProfile = () => {
               </CardContent>
             </Card>
           </Rise>
+          )}
 
           {/* Profile Information Card */}
           <Card>

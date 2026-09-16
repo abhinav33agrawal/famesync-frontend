@@ -93,8 +93,8 @@ export const VALUE_POINTS = [
 
 export const STEPS = [
   {
-    title: "Connect Instagram",
-    body: "One tap to verify your account. We read your public reach — never your DMs or password.",
+    title: "Create your profile",
+    body: "Add your niche, city and Instagram handle. Every profile is reviewed by hand before it goes live.",
   },
   {
     title: "Apply to briefs",

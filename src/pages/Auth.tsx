@@ -28,6 +28,7 @@ import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from '@react-oau
 import { useAvailabilityCheck } from '@/hooks/useAvailabilityCheck';
 import { AvailabilityIndicator } from '@/components/AvailabilityIndicator';
 import { getInstagramErrorMessage, startInstagramAuth } from '@/lib/instagram';
+import { INSTAGRAM_LOGIN_ENABLED } from '@/lib/features';
 
 /* Removed from the old Auth.tsx: the floating-orb blobs, the AnimatedInput
    slide wrapper, the spring tab indicator, the ping ring behind the mail
@@ -611,7 +612,7 @@ const Auth = () => {
                           {divider}
 
                           <div className="space-y-3">
-                            <InstagramLoginButton />
+                            {INSTAGRAM_LOGIN_ENABLED && <InstagramLoginButton />}
                             <GoogleLoginButton />
                           </div>
                         </form>
@@ -762,7 +763,7 @@ const Auth = () => {
                           {divider}
 
                           <div className="space-y-3">
-                            <InstagramLoginButton />
+                            {INSTAGRAM_LOGIN_ENABLED && <InstagramLoginButton />}
                             <GoogleLoginButton />
                           </div>
                         </form>
