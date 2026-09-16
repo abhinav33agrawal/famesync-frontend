@@ -7,15 +7,18 @@
 
 /** Instagram sign-in and the profile "connect Instagram" card.
  *
- *  Off until the Meta app clears App Review. The backend side is finished --
- *  /api/auth/instagram/* all work, and the server answers 503 with
- *  "Instagram login is not configured" until INSTAGRAM_APP_ID and
- *  INSTAGRAM_APP_SECRET are set. The problem is that Instagram only lets
- *  accounts with a role on the Meta app complete the flow while it is in
- *  Development mode, so shipping the button would show every visitor a
- *  control that fails for all but a handful of testers.
+ *  ON since 2026-09-17, for Meta App Review. Reviewers test against the live
+ *  site, so the button has to be reachable at famesync.com/auth or the
+ *  submission is rejected as "unable to reproduce the login flow".
  *
- *  To turn it back on: set this to true. Nothing else needs changing -- the
- *  components, routes and API client are all still wired up.
+ *  Caveat while review is pending: instagram_business_basic and
+ *  instagram_business_manage_insights only have *standard* access, which
+ *  covers accounts holding a role on the Meta app. Everyone else gets an
+ *  error from Instagram at the consent step. That resolves the moment
+ *  advanced access is granted; until then the button is knowingly live and
+ *  knowingly limited.
+ *
+ *  Set back to false to pull it, if review drags on and the dead button
+ *  starts costing more than it is worth.
  */
-export const INSTAGRAM_LOGIN_ENABLED: boolean = false;
+export const INSTAGRAM_LOGIN_ENABLED: boolean = true;
