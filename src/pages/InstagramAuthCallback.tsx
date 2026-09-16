@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Loader2, Instagram, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -22,6 +22,7 @@ const InstagramAuthCallback = () => {
   const [emailInput, setEmailInput] = useState("");
   const [code, setCode] = useState("");
   const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
+  const [emailError, setEmailError] = useState("");
   const role = (localStorage.getItem("famee_instagram_role") as "influencer" | "brand") || "influencer";
 
   useEffect(() => {
@@ -71,6 +72,7 @@ const InstagramAuthCallback = () => {
     }
 
     setIsSubmittingEmail(true);
+    setEmailError("");
     try {
       const result = await completeInstagramLogin(code, { email: emailInput, role });
       if (result !== "needs_email") {
@@ -78,8 +80,12 @@ const InstagramAuthCallback = () => {
         toast.success("Account created and Instagram connected successfully.");
         navigate(`/${result}/dashboard?instagram=connected`, { replace: true });
       }
-    } catch {
-      // Error is handled in context
+    } catch (error) {
+      /* The context already raises a toast, but the common failure here is
+         "that email belongs to an existing account, sign in and link from
+         Settings" -- an instruction the user has to act on. A toast that
+         disappears after a few seconds is the wrong place for it. */
+      setEmailError(`${(error as { message?: string })?.message || ""}`.trim());
       setIsSubmittingEmail(false);
     }
   };
@@ -115,6 +121,22 @@ const InstagramAuthCallback = () => {
                       required
                     />
                   </div>
+
+                  {emailError && (
+                    <div
+                      role="alert"
+                      className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm leading-relaxed text-destructive"
+                    >
+                      {emailError}
+                      <Link
+                        to="/auth?mode=login"
+                        className="mt-2 block font-semibold underline underline-offset-4"
+                      >
+                        Go to sign in
+                      </Link>
+                    </div>
+                  )}
+
                   <Button type="submit" variant="form" className="w-full" disabled={isSubmittingEmail}>
                     {isSubmittingEmail ? <Loader2 className="animate-spin" /> : null}
                     {isSubmittingEmail ? "Completing…" : "Complete registration"}
