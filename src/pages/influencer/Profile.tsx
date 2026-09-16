@@ -49,6 +49,7 @@ import {
   getInstagramErrorStatus,
   startInstagramAuth,
   syncInstagram,
+  toInstagramDisplayCount,
   type InstagramAccountData,
 } from '@/lib/instagram';
 import { INSTAGRAM_LOGIN_ENABLED } from '@/lib/features';
