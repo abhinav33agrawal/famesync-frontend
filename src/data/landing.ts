@@ -2,28 +2,15 @@ import type { Campaign } from "@/lib/api/types";
 
 /* Landing-page content.
  *
- * PLACEHOLDER DATA — the creator row and the showcase campaign below are
- * illustrative, not real accounts or live briefs. Swap FEATURED_CREATORS for
- * reviewed creators (with their permission and real follower counts) and
- * SHOWCASE_CAMPAIGN for a live campaign fetched from the API before this
- * page is presented as social proof.
+ * The named-creator row was removed on 2026-09-18: those accounts were
+ * invented, and presenting them as "creators already on the platform" is a
+ * claim about real people. Bring it back only with reviewed creators who
+ * have agreed, showing their real follower counts.
+ *
+ * SHOWCASE_CAMPAIGN below is still PLACEHOLDER — it illustrates what a brief
+ * looks like rather than advertising a live one. Swap it for a campaign
+ * fetched from the API before the hero is read as a real listing.
  */
-
-export type FeaturedCreator = {
-  name: string;
-  username: string;
-  /** null renders the aubergine-on-lilac initials fallback. */
-  photo: string | null;
-  followersLabel: string;
-  niche: string;
-};
-
-export const FEATURED_CREATORS: FeaturedCreator[] = [
-  { name: "Aarohi Mehta", username: "aarohi.eats", photo: null, followersLabel: "24.1K", niche: "Food" },
-  { name: "Dev Raichand", username: "devlifts", photo: null, followersLabel: "18.6K", niche: "Fitness" },
-  { name: "Simran Kaur", username: "simranstyles", photo: null, followersLabel: "41.3K", niche: "Fashion" },
-  { name: "Neel Bhatt", username: "neelshoots", photo: null, followersLabel: "12.9K", niche: "Travel" },
-];
 
 /** Shaped as a real Campaign so the landing hero renders the exact card
  *  creators see in Discover — one component, no marketing-only variant. */

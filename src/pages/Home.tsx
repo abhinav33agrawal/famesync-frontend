@@ -3,10 +3,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Avatar } from "@/components/Avatar";
 import { CampaignCard } from "@/components/CampaignCard";
 import { Rise } from "@/components/motion";
-import { FEATURED_CREATORS, SHOWCASE_CAMPAIGN, VALUE_POINTS, STEPS, BENTO } from "@/data/landing";
+import { SHOWCASE_CAMPAIGN, VALUE_POINTS, STEPS, BENTO } from "@/data/landing";
 
 /* Removed from the old Home.tsx: FloatingOrb, SplitText, AnimatedCounter,
    the marquee strip, the mesh-gradient hero, the four soft stat tiles,
@@ -57,23 +56,6 @@ const Home = () => {
                 I&apos;m a brand
               </Button>
             </div>
-
-            <div className="mt-10 flex items-center gap-4">
-              <div className="flex">
-                {FEATURED_CREATORS.slice(0, 4).map((c, i) => (
-                  <Avatar
-                    key={c.username}
-                    src={c.photo}
-                    name={c.name}
-                    size={40}
-                    className={i > 0 ? "-ml-3 ring-2 ring-background" : "ring-2 ring-background"}
-                  />
-                ))}
-              </div>
-              <p className="max-w-[26ch] text-sm leading-snug text-muted-foreground">
-                Every creator profile is Instagram-verified and manually reviewed.
-              </p>
-            </div>
           </Rise>
 
           {/* one sized block — a video can replace the card later without
@@ -84,26 +66,8 @@ const Home = () => {
           </Rise>
         </section>
 
-        {/* --------------------------------------------- creator proof row */}
-        <section className="container flex flex-wrap items-center justify-between gap-4 border-t border-border py-7 pb-24">
-          <p className="eyebrow">Creators already on the platform</p>
-          <div className="flex flex-wrap gap-7">
-            {FEATURED_CREATORS.map((c) => (
-              <div key={c.username} className="flex items-center gap-3">
-                <Avatar src={c.photo} name={c.name} size={38} />
-                <div>
-                  <div className="text-sm font-semibold">@{c.username}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {c.followersLabel} · {c.niche}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         {/* --------------------------------------------- value proposition */}
-        <section id="value" className="container grid items-start gap-16 pb-26 lg:grid-cols-[0.9fr_1.1fr]">
+        <section id="value" className="container grid items-start gap-16 border-t border-border pt-24 pb-26 lg:grid-cols-[0.9fr_1.1fr]">
           <Rise>
             <p className="eyebrow mb-5">Why we built it</p>
             <h2 className="font-display text-display-2">
