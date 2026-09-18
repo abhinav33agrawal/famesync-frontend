@@ -8,6 +8,7 @@ import { Rise } from '@/components/motion';
 import { Mail, MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import api from '@/lib/api/config';
 
 /* Removed: the gradient icon tiles, the gradient form panel, the
    `whileHover` scale/lift motions, the `text-white` badge and the
@@ -41,18 +42,42 @@ const Contact = () => {
     }
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  /* This used to wait a second and claim "Message Sent!" without sending
+     anything, so every enquiry since launch was dropped on the floor. It now
+     posts to /api/contact/, which emails the team inbox with the sender's
+     address in Reply-To. */
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    const form = e.target as HTMLFormElement;
+    const data = new FormData(form);
 
-    setTimeout(() => {
-      toast({
-        title: 'Message Sent!',
-        description: 'We\'ll get back to you within 24 hours.',
+    setIsSubmitting(true);
+    try {
+      await api.post('/contact/', {
+        name: data.get('name'),
+        email: data.get('email'),
+        subject: data.get('subject'),
+        message: data.get('message'),
       });
+      toast({
+        title: 'Message sent',
+        description: 'Thanks — we usually reply within 24 hours.',
+      });
+      form.reset();
+    } catch (error: any) {
+      const status = error?.response?.status;
+      toast({
+        title: 'Could not send your message',
+        description:
+          status === 429
+            ? 'Too many messages from this connection. Please try again shortly, or email info@famesync.com.'
+            : error?.response?.data?.error ||
+              'Something went wrong. Please email info@famesync.com directly.',
+        variant: 'destructive',
+      });
+    } finally {
       setIsSubmitting(false);
-      (e.target as HTMLFormElement).reset();
-    }, 1000);
+    }
   };
 
   return (
@@ -148,23 +173,23 @@ const Contact = () => {
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name *</Label>
-                  <Input id="name" placeholder="Your name" required />
+                  <Input id="name" name="name" placeholder="Your name" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email *</Label>
-                  <Input id="email" type="email" placeholder="your@email.com" required />
+                  <Input id="email" name="email" type="email" placeholder="your@email.com" required />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="subject">Subject *</Label>
-                <Input id="subject" placeholder="How can we help?" required />
+                <Input id="subject" name="subject" placeholder="How can we help?" required />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="message">Message *</Label>
                 <Textarea
-                  id="message"
+                  id="message" name="message"
                   placeholder="Tell us more about your inquiry..."
                   required
                   rows={6}

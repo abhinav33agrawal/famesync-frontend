@@ -15,7 +15,7 @@ import { Card, CardHead, ErrorNote, Spinner } from "@/components/ui";
 
 interface FinancialMetrics {
   mrr: number;
-  lifetime_revenue: number;
+  lifetime_revenue: number | null;
   plan_distribution: { pro: number; free: number };
   credits: { total_issued: number; total_consumed: number };
 }
@@ -43,7 +43,12 @@ export const Financial = () => {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
           ["Monthly recurring revenue", inr(data.mrr)],
-          ["Lifetime revenue", inr(data.lifetime_revenue)],
+          // null on purpose: settled payments live in Razorpay and are never
+          // written to our database, so there is nothing to total.
+          [
+            "Lifetime revenue",
+            data.lifetime_revenue == null ? "Not tracked" : inr(data.lifetime_revenue),
+          ],
           ["Credits issued", num(data.credits.total_issued)],
           ["Credits consumed", num(data.credits.total_consumed)],
         ].map(([label, value]) => (
@@ -91,11 +96,11 @@ export const Financial = () => {
       </Card>
 
       <p className="mt-6 text-xs text-muted-foreground">
-        Revenue figures are computed in{" "}
-        <code className="rounded bg-muted px-1">admin_api/views.py</code> as a
-        flat &#8377;2,500 per active subscription. They are a placeholder, not
-        settled Razorpay revenue — treat them as a subscription count, not an
-        accounting figure.
+        MRR sums the real plan price for each active Pro subscription (&#8377;400
+        a month, from <code className="rounded bg-muted px-1">subscriptions/constants.py</code>).
+        Lifetime revenue reads "Not tracked" because settled payments live in
+        Razorpay and are never recorded here — reconcile in the Razorpay
+        dashboard, not from this page.
       </p>
     </>
   );

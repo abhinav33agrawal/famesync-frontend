@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import api from '@/lib/api/config';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -70,23 +71,32 @@ const ManageCollaborationArea = ({
   );
   const [isSending, setIsSending] = useState(false);
 
+  /* This used to sleep for a second and report "Onboarding info has been
+     sent" while sending nothing at all -- the brand believed it had briefed a
+     creator who had heard nothing, and neither side found out until the
+     collaboration stalled. The endpoint writes an in-app notification (the
+     source of truth) and emails the same text on top, so a mail outage
+     degrades to "delivered in FameSync" rather than to a lie. */
   const handleSendOnboarding = async () => {
     setIsSending(true);
     try {
-      // TODO: Replace with actual API call to send email
-      // For now, simulate sending
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data } = await api.post(
+        `/campaigns/applications/${application.id}/onboarding/`,
+        { message: onboardingMessage },
+      );
 
       toast({
-        title: 'Message Sent',
-        description: `Onboarding info has been sent to ${influencerEmail}`,
+        title: data.emailed ? 'Onboarding sent' : 'Delivered in FameSync',
+        description: data.message,
       });
 
       setIsOnboardingDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: 'Error',
-        description: 'Failed to send onboarding message. Please try again.',
+        title: 'Could not send',
+        description:
+          error?.response?.data?.error ||
+          'Failed to send the onboarding message. Please try again.',
         variant: 'destructive',
       });
     } finally {
