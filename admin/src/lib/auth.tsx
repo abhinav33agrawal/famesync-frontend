@@ -73,24 +73,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = useCallback(async (identifier: string, password: string) => {
-    /* The login serializer accepts a username or an email in the username
-       field (core/serializers.py CustomTokenObtainPairSerializer). */
-    const res = await api.post("/auth/login/", {
-      username: identifier,
-      password,
-    });
+    /* Everything below throws an Error carrying a message fit to show the
+       user. The screen used to fall back to "check your connection" for any
+       failure it did not recognise, which is actively misleading: a 500 from
+       the admin API rendered as a network problem and cost a real debugging
+       session an hour of chasing CORS. Name the status instead. */
+    let res;
+    try {
+      /* The login serializer accepts a username or an email in the username
+         field (core/serializers.py CustomTokenObtainPairSerializer). */
+      res = await api.post("/auth/login/", { username: identifier, password });
+    } catch (err: any) {
+      const code = err?.response?.status;
+      if (code === 401) throw new Error("Wrong username or password.");
+      if (code)
+        throw new Error(
+          err?.response?.data?.detail || `Sign-in failed (HTTP ${code}).`
+        );
+      throw new Error(
+        "No response from the server. Check your connection and try again."
+      );
+    }
     writeTokens({ access: res.data.access, refresh: res.data.refresh });
 
     try {
       await assertStaff();
     } catch (err: any) {
       clearTokens();
-      if (err?.response?.status === 403 || err?.response?.status === 401) {
+      const code = err?.response?.status;
+      if (code === 403 || code === 401) {
         throw new Error(
           "That account is not an administrator. Ask a superuser to grant staff access."
         );
       }
-      throw err;
+      if (code) {
+        throw new Error(
+          `Your password was accepted, but the admin API returned HTTP ${code}. ` +
+            "That is a server fault, not your account."
+        );
+      }
+      throw new Error(
+        "Signed in, but the admin API did not respond. Check your connection."
+      );
     }
 
     const identity: AdminIdentity = res.data.user ?? {

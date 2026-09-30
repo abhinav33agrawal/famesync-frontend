@@ -33,18 +33,19 @@ const ProtectedRoute = ({ children, allowedRoles, requireProfile = true }: Prote
     return <Navigate to={`/${user.role}/setup`} replace />;
   }
 
-  // 2. Check for admin approval
-  // Only redirect to waiting page IF profile is already completed
-  const isWaitingPage = location.pathname.includes('/waiting-for-approval');
-  const isUserBrand = user?.role === 'brand';
-
-  if (user && user.is_approved === false && !isWaitingPage && !isSetupPage && !isUserBrand) {
-    return <Navigate to="/waiting-for-approval" replace />;
-  }
-
-  if (isWaitingPage && isUserBrand) {
-    return <Navigate to="/brand/dashboard" replace />;
-  }
+  /* 2. Approval is deliberately NOT a gate on reaching the app.
+   *
+   * The backend's rule is that approval gates the transaction, not access:
+   * it blocks publishing a campaign and applying to one (campaigns/views.py),
+   * and nothing else. This file used to lock unapproved *influencers* out of
+   * every page while letting unapproved *brands* straight through -- the
+   * exact inverse of the backend, which auto-approved influencers and held
+   * brands. Three signup paths, three different answers.
+   *
+   * Now there is one rule everywhere: nobody is auto-approved, everybody can
+   * use the app, and the two actions that matter stay blocked until an admin
+   * approves. ApprovalBanner (rendered in App.tsx whenever is_approved is
+   * false) is what tells them, on every page, for both roles. */
 
   return <>{children}</>;
 };

@@ -22,15 +22,9 @@ export const Login = () => {
       await login(identifier.trim(), password);
       navigate("/", { replace: true });
     } catch (err: any) {
-      const status = err?.response?.status;
-      setError(
-        err?.message?.startsWith("That account is not")
-          ? err.message
-          : status === 401
-            ? "Wrong username or password."
-            : err?.response?.data?.detail ??
-              "Could not sign in. Check your connection and try again."
-      );
+      // login() in lib/auth.tsx already turns every failure into a message
+      // worth reading, including the HTTP status when the server is at fault.
+      setError(err?.message || "Could not sign in. Please try again.");
     } finally {
       setBusy(false);
     }
