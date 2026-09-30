@@ -503,7 +503,7 @@ const ActivityTab = ({ user }: { user: AdminUserDetail }) => {
                   <Badge tone={STATUS_TONE[c.status] ?? "neutral"}>{c.status}</Badge>
                 </Td>
                 <Td className="nums text-right">{c.budget ? inr(Number(c.budget)) : "—"}</Td>
-                <Td className="nums text-right">{num(c.applications_count)}</Td>
+                <Td className="nums text-right">{num((c.applications_count as any)?.total ?? 0)}</Td>
                 <Td className="nums whitespace-nowrap text-muted-foreground">{date(c.created_at)}</Td>
               </tr>
             ))}

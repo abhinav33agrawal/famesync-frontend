@@ -159,7 +159,7 @@ export const Campaigns = () => {
                         : "—"}
                     </Td>
                     <Td className="nums text-right text-muted-foreground">
-                      {num(c.applications_count ?? 0)}
+                      {num((c.applications_count as any)?.total ?? 0)}
                     </Td>
                     <Td className="nums whitespace-nowrap text-muted-foreground">
                       {date(c.created_at)}
