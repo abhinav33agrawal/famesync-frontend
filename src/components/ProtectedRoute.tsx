@@ -33,19 +33,31 @@ const ProtectedRoute = ({ children, allowedRoles, requireProfile = true }: Prote
     return <Navigate to={`/${user.role}/setup`} replace />;
   }
 
-  /* 2. Approval is deliberately NOT a gate on reaching the app.
+  /* 2. Approval gate -- influencers only, deliberately.
    *
-   * The backend's rule is that approval gates the transaction, not access:
-   * it blocks publishing a campaign and applying to one (campaigns/views.py),
-   * and nothing else. This file used to lock unapproved *influencers* out of
-   * every page while letting unapproved *brands* straight through -- the
-   * exact inverse of the backend, which auto-approved influencers and held
-   * brands. Three signup paths, three different answers.
+   * Nobody is auto-approved on any signup path (see
+   * instagram/views.py _create_or_attach_user). What differs by role is how
+   * much of the app an unapproved account can reach:
    *
-   * Now there is one rule everywhere: nobody is auto-approved, everybody can
-   * use the app, and the two actions that matter stay blocked until an admin
-   * approves. ApprovalBanner (rendered in App.tsx whenever is_approved is
-   * false) is what tells them, on every page, for both roles. */
+   *   influencer  held on /waiting-for-approval until an admin approves
+   *   brand       uses the app freely; the backend refuses to *publish* a
+   *               campaign until approved (campaigns/views.py), and
+   *               ApprovalBanner says so on every page
+   *
+   * The asymmetry is a product choice: creator supply is reviewed before it
+   * is visible at all, while brands are allowed in to explore before they
+   * spend. Setup is exempt so either role can finish its profile first. */
+  const isWaitingPage = location.pathname.includes('/waiting-for-approval');
+  const isUserBrand = user?.role === 'brand';
+
+  if (user && user.is_approved === false && !isWaitingPage && !isSetupPage && !isUserBrand) {
+    return <Navigate to="/waiting-for-approval" replace />;
+  }
+
+  // Brands never belong on the waiting page -- send them to work instead.
+  if (isWaitingPage && isUserBrand) {
+    return <Navigate to="/brand/dashboard" replace />;
+  }
 
   return <>{children}</>;
 };
