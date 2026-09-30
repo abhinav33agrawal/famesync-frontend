@@ -25,7 +25,7 @@ const NAV = [
   { to: "/users", label: "Users", icon: Users },
   { to: "/campaigns", label: "Campaigns", icon: Megaphone },
   { to: "/financial", label: "Financial", icon: CreditCard },
-  { to: "/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/insights", label: "Insights", icon: BarChart3 },
   { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/audit", label: "Audit log", icon: ScrollText },
 ];

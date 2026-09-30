@@ -105,7 +105,7 @@ export const Notifications = () => {
           </div>
 
           {sent && (
-            <p className="rounded-md border border-success/30 bg-success/8 px-3 py-2 text-sm text-success">
+            <p className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
               {sent}
             </p>
           )}
@@ -118,7 +118,7 @@ export const Notifications = () => {
               Continue
             </Button>
           ) : (
-            <div className="rounded-md border border-warning/40 bg-warning/8 p-4">
+            <div className="rounded-md border border-warning/40 bg-warning/10 p-4">
               <p className="text-sm font-medium">
                 Send to {num(recipients)}{" "}
                 {target === "all" ? "users" : target}?

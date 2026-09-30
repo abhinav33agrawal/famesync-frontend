@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, X } from "lucide-react";
 import api, { type PendingApproval } from "@/lib/api";
@@ -20,6 +21,7 @@ import {
 
 export const Approvals = () => {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [role, setRole] = useState("");
   const [picked, setPicked] = useState<number[]>([]);
   const [reason, setReason] = useState("Profile incomplete");
@@ -107,7 +109,7 @@ export const Approvals = () => {
           </div>
 
           {confirmReject && (
-            <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/8 p-4">
+            <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/10 p-4">
               <p className="text-sm font-medium text-destructive">
                 Rejecting also deactivates these accounts.
               </p>
@@ -178,14 +180,22 @@ export const Approvals = () => {
             </thead>
             <tbody>
               {rows.map((u) => (
-                <tr key={u.id} className="hover:bg-muted/40">
-                  <Td>
+                <tr
+                  key={u.id}
+                  className="cursor-pointer hover:bg-muted/40"
+                  onClick={() => navigate(`/users/${u.id}`)}
+                >
+                  {/* The checkbox and Approve button live inside a clickable
+                      row; they must act without also opening the user. */}
+                  <Td className="cursor-default" >
+                    <span onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       aria-label={`Select ${u.username}`}
                       checked={picked.includes(u.id)}
                       onChange={() => toggle(u.id)}
                     />
+                    </span>
                   </Td>
                   <Td>
                     <p className="font-medium">{u.username}</p>
@@ -199,7 +209,7 @@ export const Approvals = () => {
                   <Td className="nums">
                     {u.total_followers != null ? num(u.total_followers) : "—"}
                   </Td>
-                  <Td className="nums text-muted-foreground">
+                  <Td className="nums whitespace-nowrap text-muted-foreground">
                     {date(u.created_at)}
                   </Td>
                   <Td className="text-right">
@@ -207,7 +217,10 @@ export const Approvals = () => {
                       size="sm"
                       variant="outline"
                       busy={approve.isPending}
-                      onClick={() => approve.mutate([u.id])}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        approve.mutate([u.id]);
+                      }}
                     >
                       Approve
                     </Button>

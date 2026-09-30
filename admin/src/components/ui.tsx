@@ -102,9 +102,9 @@ type Tone = "neutral" | "success" | "warning" | "danger" | "brand";
 
 const TONES: Record<Tone, string> = {
   neutral: "bg-muted text-muted-foreground",
-  success: "bg-success/12 text-success",
-  warning: "bg-warning/12 text-warning",
-  danger: "bg-destructive/12 text-destructive",
+  success: "bg-success/10 text-success",
+  warning: "bg-warning/10 text-warning",
+  danger: "bg-destructive/10 text-destructive",
   brand: "bg-secondary text-secondary-foreground",
 };
 
@@ -209,7 +209,7 @@ export const ErrorNote = ({ error }: { error: unknown }) => {
     e?.message ??
     "Something went wrong.";
   return (
-    <div className="m-5 rounded-md border border-destructive/30 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+    <div className="m-5 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
       {status ? `${status} — ` : ""}
       {String(detail)}
     </div>

@@ -161,7 +161,7 @@ export const Campaigns = () => {
                     <Td className="nums text-right text-muted-foreground">
                       {num(c.applications_count ?? 0)}
                     </Td>
-                    <Td className="nums text-muted-foreground">
+                    <Td className="nums whitespace-nowrap text-muted-foreground">
                       {date(c.created_at)}
                     </Td>
                     <Td className="text-right">

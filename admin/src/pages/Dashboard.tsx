@@ -34,7 +34,7 @@ const Stat = ({
       <div
         className={
           tone === "warn"
-            ? "rounded-md bg-warning/12 p-2 text-warning"
+            ? "rounded-md bg-warning/10 p-2 text-warning"
             : "rounded-md bg-secondary p-2 text-secondary-foreground"
         }
       >
@@ -73,7 +73,7 @@ export const Dashboard = () => {
       />
 
       {pending > 0 && (
-        <Card className="mb-6 border-warning/40 bg-warning/8 p-4">
+        <Card className="mb-6 border-warning/40 bg-warning/10 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <UserCheck className="h-5 w-5 text-warning" />

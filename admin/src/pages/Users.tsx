@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Coins, Search, ShieldCheck, ShieldOff, UserCheck } from "lucide-react";
 import api, {
@@ -102,23 +103,30 @@ export const Users = () => {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("");
-  const [status, setStatus] = useState("");
+  // "state" rather than the old approval "status": this page is already
+  // scoped to approved accounts, so the only thing left to narrow by is
+  // whether an approved account is currently active or suspended.
+  const [state, setState] = useState("");
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [creditsFor, setCreditsFor] = useState<number | null>(null);
 
   const q = useDebounced(search);
 
   /* Any filter change invalidates the current page number. */
-  useEffect(() => setPage(1), [q, role, status]);
+  useEffect(() => setPage(1), [q, role, state]);
 
   const params = useMemo(
     () => ({
       ...(q ? { search: q } : {}),
+      // Every account that has ever been approved -- suspended ones
+      // included. Pending and rejected accounts live on Approvals.
+      scope: "approved",
       ...(role ? { role } : {}),
-      ...(status ? { status } : {}),
+      ...(state ? { state } : {}),
       page,
     }),
-    [q, role, status, page]
+    [q, role, state, page]
   );
 
   const { data, isLoading, isFetching, error } = useQuery({
@@ -169,7 +177,11 @@ export const Users = () => {
     <>
       <PageHead
         title="Users"
-        sub={total ? `${num(total)} accounts` : "All accounts on the platform."}
+        sub={
+          total
+            ? `${num(total)} approved accounts, including any suspended since`
+            : "Every account that has been approved. Pending sign-ups are under Approvals."
+        }
       />
 
       <Card className="mb-4 p-4">
@@ -194,11 +206,10 @@ export const Users = () => {
               <option value="brand">Brand</option>
             </Select>
           </Field>
-          <Field label="Status">
-            <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <Field label="State">
+            <Select value={state} onChange={(e) => setState(e.target.value)}>
               <option value="">All</option>
-              <option value="pending">Pending approval</option>
-              <option value="approved">Approved</option>
+              <option value="active">Active</option>
               <option value="suspended">Suspended</option>
             </Select>
           </Field>
@@ -233,7 +244,10 @@ export const Users = () => {
                 <tbody>
                   {rows.map((u) => (
                     <Fragment key={u.id}>
-                      <tr className="hover:bg-muted/40">
+                      <tr
+                        className="cursor-pointer hover:bg-muted/40"
+                        onClick={() => navigate(`/users/${u.id}`)}
+                      >
                         <Td>
                           <p className="font-medium">
                             {u.username}
@@ -270,11 +284,14 @@ export const Users = () => {
                         <Td className="nums text-right text-muted-foreground">
                           {num(u.total_campaigns)}
                         </Td>
-                        <Td className="nums text-muted-foreground">
+                        <Td className="nums whitespace-nowrap text-muted-foreground">
                           {date(u.created_at)}
                         </Td>
                         <Td>
-                          <div className="flex justify-end gap-1.5">
+                          <div
+                            className="flex justify-end gap-1.5"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             {!u.is_approved && (
                               <Button
                                 size="sm"
@@ -321,7 +338,7 @@ export const Users = () => {
                         </Td>
                       </tr>
                       {creditsFor === u.id && (
-                        <tr>
+                        <tr onClick={(e) => e.stopPropagation()}>
                           <td colSpan={7} className="p-0">
                             <CreditPanel user={u} onDone={refresh} />
                           </td>
