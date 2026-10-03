@@ -1,97 +1,143 @@
+import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Rise } from '@/components/motion';
 
 /* Long-form reading page: one measured prose column (~68ch), hairline
    dividers instead of a card per clause, display face on headings only.
-   The policy wording itself is unchanged. Removed: the `text-white` badge,
-   the `bg-card border border-border border-2` codemod artefact and the
-   per-section stagger. */
+
+   Keep this wording in step with the code and with the Meta App Review
+   answers (data processors, Instagram fields, deletion). Reviewers compare
+   them. Instagram fields: backend/instagram/services.py. Processors: AWS
+   ap-south-1 (EC2, RDS, S3) and Sentry. Payments: Razorpay. */
 
 const Privacy = () => {
+  // The browser jumps to a #hash before React has rendered the target, so
+  // do it ourselves -- after the web fonts land, because the fallback font
+  // wraps taller and scrolling earlier overshoots by several hundred pixels.
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+    let live = true;
+    document.fonts.ready.then(() => {
+      if (live) document.getElementById(id)?.scrollIntoView();
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+
   const sections = [
     {
+      id: 'information-we-collect',
       title: 'Information We Collect',
       paragraphs: [],
       content: [
-        'Personal information you provide (name, email, profile details)',
-        'Instagram Business account data (profile information, media/posts, and insights such as reach, impressions, and engagement), collected only after user authorization via Instagram Login',
-        'Campaign and collaboration data between brands and influencers',
-        'Payment and billing information',
-        'Usage data and analytics',
+        'Information you give us: your name, email address, password (stored only as a one-way hash), and the profile details you add, such as bio, niche, location, company and social links',
+        'Instagram professional account data, collected only after you choose to connect Instagram and approve access (see “Instagram Data” below)',
+        'Campaigns, applications and messages exchanged between brands and creators on FameSync',
+        'Subscription and payment records, such as your plan, renewal date and payment reference. Card and bank details are entered with our payment provider, Razorpay, and never reach our servers',
+        'Basic technical data needed to run the service, such as your IP address, browser type and error reports',
       ],
     },
     {
+      id: 'how-we-use-information',
       title: 'How We Use Your Information',
       paragraphs: [],
       content: [
-        'To provide and improve our platform services',
-        'To connect brands and influencers for collaborations',
-        'To display influencer profiles and performance insights',
-        'To process payments and manage subscriptions',
-        'To send important updates and notifications',
-        'To analyze usage patterns and improve user experience',
+        'To create and secure your account and sign you in',
+        'To show creator profiles to brands, and campaigns to creators',
+        'To review new creator accounts before they are listed',
+        'To process subscriptions and track credit usage',
+        'To send account emails, such as verification, password reset and application updates',
+        'To find and fix errors and keep the service secure',
       ],
     },
     {
-      title: 'Instagram Data Usage',
+      id: 'instagram-data',
+      title: 'Instagram Data',
       paragraphs: [
-        'FameSync uses Instagram APIs to access data from Instagram Business accounts that explicitly authorize our application.',
-        'This data is used solely to provide analytics and collaboration features within the FameSync platform.',
-        'We do not access Instagram data without user consent and do not use this data for advertising or resale purposes.',
+        'If you are a creator, you can sign in with Instagram or connect your Instagram professional account. We only receive data after you approve access on Instagram, and only for your own account. We read:',
       ],
       content: [
-        'Profile information',
-        'Media content (posts)',
-        'Insights data (reach, impressions, engagement)',
+        'Account details: Instagram user ID, username, account type, bio, profile picture, and follower, following and post counts',
+        'Recent posts: caption, media type, image or thumbnail link, permalink, date, and like and comment counts',
+        'Account insights for the last 30 days: reach, accounts engaged, total interactions and profile views',
+        'An access token, which we store securely and use only to refresh the data above',
       ],
     },
     {
-      title: 'Information Sharing',
+      id: 'instagram-data-use',
+      title: 'How We Use Instagram Data',
+      paragraphs: [
+        'We use Instagram data only to verify that you own the account you list, to fill in blank fields on your FameSync profile, and to show your profile, recent posts and insights to brands on FameSync and to our review team.',
+        'We never post, comment or send messages on Instagram for you. We do not use Instagram data for advertising, and we never sell it or share it with anyone outside FameSync except the service providers listed below, who process it only on our behalf.',
+      ],
+      content: [],
+    },
+    {
+      id: 'service-providers',
+      title: 'Service Providers',
+      paragraphs: [
+        'We do not sell your personal information. These companies process data on our behalf to run FameSync:',
+      ],
+      content: [
+        'Amazon Web Services: hosts our servers, database and file storage in India (Mumbai region). This includes Instagram data',
+        'Sentry (Functional Software, Inc.): error monitoring. Error reports can include details of the request that failed',
+        'Razorpay: payment processing for subscriptions',
+        'Hostinger: delivers our account emails',
+        'Vercel: hosts the FameSync website',
+        'OpenAI: generates campaign suggestions from a brand’s own profile. Creator and Instagram data are never sent to OpenAI',
+        'Google: only if you choose to sign in with Google',
+      ],
+    },
+    {
+      id: 'sharing',
+      title: 'Other Sharing',
       paragraphs: [],
       content: [
-        'We do not sell your personal information to third parties',
-        'Profile and Instagram data may be shared with brands or collaboration partners within the platform to enable campaign collaborations, only after the user has connected their account and consented',
-        'Payment processing is handled by secure third-party providers (e.g., Stripe)',
-        'Analytics data may be processed by service providers to improve functionality',
-        'Legal disclosures may be made if required by law',
+        'Brands on FameSync can see creator profiles, including connected Instagram data, so they can choose who to work with',
+        'Creators can see the campaigns that brands publish',
+        'We may disclose information if the law requires it, after reviewing whether the request is lawful',
       ],
     },
     {
+      id: 'data-security',
       title: 'Data Security',
       paragraphs: [],
       content: [
-        'Industry-standard encryption for data transmission',
-        'Secure storage of personal and financial information',
-        'Access controls and authentication measures',
-        'Regular security audits and updates',
+        'All traffic to FameSync is encrypted with HTTPS',
+        'Passwords are stored only as one-way hashes',
+        'Access to our servers and database is restricted to FameSync systems and authorised staff',
+        'Only authorised FameSync staff can open the admin tools, and admin actions are logged',
       ],
     },
     {
+      id: 'your-rights',
       title: 'Your Rights',
       paragraphs: [],
       content: [
-        'Access your personal data',
-        'Request correction of inaccurate information',
-        'Delete your account and associated data',
-        'Opt-out of marketing communications',
+        'See and edit your profile at any time in FameSync',
+        'Ask us for a copy of your personal data',
+        'Ask us to correct or delete your data',
+        'Disconnect Instagram at any time',
       ],
     },
     {
+      id: 'data-deletion',
       title: 'Data Deletion',
-      paragraphs: ['Users can delete their data at any time by:'],
+      paragraphs: ['You can remove your data in either of these ways:'],
       content: [
-        'Disconnecting their Instagram account from the FameSync dashboard, which removes Instagram data and revokes access',
-        'Deleting their FameSync account, which permanently removes all associated data',
-        'Contacting us at info@famesync.com with a deletion request',
+        'Disconnect Instagram in FameSync. We delete your stored Instagram access token and account record straight away and stop reading from your account. You can also remove FameSync under Settings → Apps and websites in Instagram',
+        'Email info@famesync.com from your account’s email address and ask us to delete your account. We will delete your account and all associated data, including Instagram data, within 30 days and confirm by email. Records we must keep by law, such as payment records, are kept only as long as required',
       ],
     },
     {
-      title: 'Cookies and Tracking',
+      id: 'cookies',
+      title: 'Cookies and Local Storage',
       paragraphs: [],
       content: [
-        'Essential cookies for platform functionality',
-        'Analytics cookies to improve user experience',
-        'Preference cookies to remember your settings',
+        'We do not use advertising or third-party tracking cookies',
+        'Your browser’s local storage keeps you signed in, and one small cookie remembers your layout preferences',
       ],
     },
   ];
@@ -133,7 +179,7 @@ const Privacy = () => {
       <article className="container py-16 sm:py-20">
         <div className="max-w-[68ch]">
           <Rise>
-            <p className="eyebrow mb-5">Last Updated: March 2026</p>
+            <p className="eyebrow mb-5">Last Updated: October 2026</p>
             <h1 className="font-display text-display-2">Privacy Policy</h1>
             <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
               Your privacy is important to us. This Privacy Policy explains how
@@ -143,8 +189,10 @@ const Privacy = () => {
 
           <div className="mt-14 divide-y divide-border border-t border-border">
             {sections.map((section) => (
-              <Rise key={section.title}>
-                <section className="py-10">
+              <Rise key={section.id}>
+                {/* The id makes /privacy#data-deletion a stable link for
+                    Meta's "Data deletion instructions URL" field. */}
+                <section id={section.id} className="scroll-mt-24 py-10">
                   <h2 className="font-display text-display-3">{section.title}</h2>
 
                   {section.paragraphs.length > 0 && (
@@ -155,17 +203,19 @@ const Privacy = () => {
                     </div>
                   )}
 
-                  <ul className="mt-5 space-y-3.5">
-                    {section.content.map((item, i) => (
-                      <li key={i} className="flex gap-3.5 leading-[1.7] text-muted-foreground">
-                        <span
-                          aria-hidden="true"
-                          className="mt-[0.6em] size-1.5 shrink-0 rounded-full bg-primary/45"
-                        />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  {section.content.length > 0 && (
+                    <ul className="mt-5 space-y-3.5">
+                      {section.content.map((item, i) => (
+                        <li key={i} className="flex gap-3.5 leading-[1.7] text-muted-foreground">
+                          <span
+                            aria-hidden="true"
+                            className="mt-[0.6em] size-1.5 shrink-0 rounded-full bg-primary/45"
+                          />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </section>
               </Rise>
             ))}
