@@ -27,7 +27,9 @@ import {
   ExternalLink,
   Heart,
   MessageCircle,
+  Unlink,
 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useInfluencerProfile, useUpdateInfluencerProfile, useInfluencerDashboard } from '@/hooks/useProfile';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -43,6 +45,7 @@ import { formatCompact } from '@/lib/format';
 import { hasUsableAccountEmail } from '@/lib/accountEmail';
 import {
   buildInstagramInsightCards,
+  disconnectInstagram,
   fetchInstagramStatus,
   formatInstagramPostDate,
   formatInstagramSyncTimestamp,
@@ -113,6 +116,8 @@ const InfluencerProfile = () => {
   const [instagramAccountData, setInstagramAccountData] = useState<InstagramAccountData | null>(null);
   const [instagramLoading, setInstagramLoading] = useState(false);
   const [instagramSyncing, setInstagramSyncing] = useState(false);
+  const [instagramDisconnecting, setInstagramDisconnecting] = useState(false);
+  const queryClient = useQueryClient();
   const [instagramError, setInstagramError] = useState('');
   const [instagramConfigured, setInstagramServiceReady] = useState(true);
 
@@ -197,6 +202,33 @@ const InfluencerProfile = () => {
       toast.error(message);
     } finally {
       setInstagramSyncing(false);
+    }
+  };
+
+  const handleInstagramDisconnect = async () => {
+    if (
+      !confirm(
+        'Disconnect Instagram? Your insights, recent posts and verified badge will be removed from your FameSync profile. You can reconnect at any time.',
+      )
+    ) {
+      return;
+    }
+    setInstagramDisconnecting(true);
+    setInstagramError('');
+
+    try {
+      await disconnectInstagram();
+      setInstagramAccountData(null);
+      // The profile row held a copy of the Instagram data; refetch so the
+      // verified badge and follower count go too.
+      await queryClient.invalidateQueries({ queryKey: ['profile', 'influencer'] });
+      toast.success('Instagram disconnected and its data removed from your profile.');
+    } catch (error) {
+      const message = getInstagramErrorMessage(error, 'Failed to disconnect Instagram.');
+      setInstagramError(message);
+      toast.error(message);
+    } finally {
+      setInstagramDisconnecting(false);
     }
   };
 
@@ -675,16 +707,27 @@ const InfluencerProfile = () => {
                               )}
                             </div>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleInstagramSync}
-                            disabled={instagramSyncing}
-                            className="shrink-0"
-                          >
-                            <RefreshCw className={instagramSyncing ? 'animate-spin' : ''} />
-                            {instagramSyncing ? 'Syncing...' : 'Refresh data'}
-                          </Button>
+                          <div className="flex shrink-0 gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleInstagramSync}
+                              disabled={instagramSyncing || instagramDisconnecting}
+                            >
+                              <RefreshCw className={instagramSyncing ? 'animate-spin' : ''} />
+                              {instagramSyncing ? 'Syncing...' : 'Refresh data'}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleInstagramDisconnect}
+                              disabled={instagramSyncing || instagramDisconnecting}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Unlink />
+                              {instagramDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+                            </Button>
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
