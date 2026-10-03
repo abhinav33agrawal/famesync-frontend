@@ -1,5 +1,15 @@
 import { Helmet } from 'react-helmet-async';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +23,13 @@ import { toast } from 'sonner';
 import { Bell, Lock, Trash2, Mail } from 'lucide-react';
 import LinkGoogleAccountButton from '@/components/auth/LinkGoogleAccountButton';
 import { hasUsableAccountEmail } from '@/lib/accountEmail';
+import { authApi } from '@/lib/api';
+
+/** The API's own message when it sent one, else the fallback. */
+const apiError = (error: unknown, fallback: string): string => {
+  const data = (error as { response?: { data?: { error?: string; detail?: string } } })?.response?.data;
+  return data?.error || data?.detail || fallback;
+};
 
 /* Signed-in app surface: the Navbar is the only chrome, no footer, no
    sidebar. Removed: FloatingOrb (looping animation), the mesh/radial
@@ -39,7 +56,8 @@ const NOTIFICATION_ROWS = [
 ] as const;
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, endSession } = useAuth();
+  const navigate = useNavigate();
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [campaignUpdates, setCampaignUpdates] = useState(true);
@@ -61,20 +79,85 @@ const Settings = () => {
   } as const;
 
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [setupLinkSending, setSetupLinkSending] = useState(false);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteSecret, setDeleteSecret] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canChangePassword) {
-      toast.error('Link Google first to enable password updates.');
+    setPasswordError('');
+    if (newPassword.length < 8) {
+      setPasswordError('Your new password must be at least 8 characters.');
       return;
     }
-    toast.success('Password changed successfully!');
-  };
+    if (newPassword !== confirmPassword) {
+      setPasswordError('The new passwords don’t match.');
+      return;
+    }
 
-  const handleDeleteAccount = () => {
-    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      toast.error('Account deletion requested. We\'ll send you a confirmation email.');
+    setPasswordSaving(true);
+    try {
+      await authApi.changePassword(currentPassword, newPassword);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      toast.success('Password updated.');
+    } catch (error) {
+      setPasswordError(apiError(error, 'Could not update your password. Please try again.'));
+    } finally {
+      setPasswordSaving(false);
     }
   };
+
+  // Instagram and Google signups have no password. The reset email sets
+  // one, and proves the inbox is theirs on the way.
+  const handleSendSetupLink = async () => {
+    setSetupLinkSending(true);
+    try {
+      await authApi.forgotPassword(linkedEmail);
+      toast.success(`We’ve emailed a link to ${linkedEmail} to set your password.`);
+    } catch (error) {
+      toast.error(apiError(error, 'Could not send the email. Please try again.'));
+    } finally {
+      setSetupLinkSending(false);
+    }
+  };
+
+  const openDelete = () => {
+    setDeleteSecret('');
+    setDeleteError('');
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteError('');
+    setDeleting(true);
+    try {
+      await authApi.deleteAccount(
+        canChangePassword ? { password: deleteSecret } : { confirm: deleteSecret },
+      );
+      setDeleteOpen(false);
+      endSession();
+      toast.success('Your account and its data have been deleted.');
+      navigate('/', { replace: true });
+    } catch (error) {
+      setDeleteError(apiError(error, 'Could not delete your account. Please try again.'));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const deleteReady = canChangePassword
+    ? deleteSecret.length > 0
+    : deleteSecret.trim().toUpperCase() === 'DELETE';
 
   return (
     <>
@@ -167,33 +250,80 @@ const Settings = () => {
                 <CardDescription>Update your password to keep your account secure</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleChangePassword} className="space-y-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="current-password">Current Password</Label>
-                    <Input id="current-password" type="password" disabled={!canChangePassword} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new-password">New Password</Label>
-                    <Input id="new-password" type="password" disabled={!canChangePassword} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirm New Password</Label>
-                    <Input id="confirm-password" type="password" disabled={!canChangePassword} />
-                  </div>
-                  {!canChangePassword && (
-                    <p className="text-xs leading-relaxed text-muted-foreground">
-                      Link Google first to enable password-based account recovery and password updates.
+                {canChangePassword ? (
+                  <form onSubmit={handleChangePassword} className="space-y-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="current-password">Current Password</Label>
+                      <Input
+                        id="current-password"
+                        type="password"
+                        autoComplete="current-password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="new-password">New Password</Label>
+                      <Input
+                        id="new-password"
+                        type="password"
+                        autoComplete="new-password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        At least 8 characters, not all numbers, and not too close to your name or email.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password">Confirm New Password</Label>
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        autoComplete="new-password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    {passwordError && (
+                      <p role="alert" className="text-sm text-destructive">
+                        {passwordError}
+                      </p>
+                    )}
+                    <Button
+                      type="submit"
+                      variant="form"
+                      className="w-full sm:w-auto"
+                      disabled={passwordSaving}
+                    >
+                      {passwordSaving ? 'Updating…' : 'Update Password'}
+                    </Button>
+                  </form>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      You sign in with Instagram or Google, so your account doesn&apos;t have a
+                      password yet.
+                      {hasStableEmail
+                        ? ` We can email a link to ${linkedEmail} to set one, so you can also sign in with your email.`
+                        : ' Link Google under Account Information to add a real email first, then you can set one.'}
                     </p>
-                  )}
-                  <Button
-                    type="submit"
-                    variant="form"
-                    className="w-full sm:w-auto"
-                    disabled={!canChangePassword}
-                  >
-                    Update Password
-                  </Button>
-                </form>
+                    {hasStableEmail && (
+                      <Button
+                        type="button"
+                        variant="form"
+                        className="w-full sm:w-auto"
+                        onClick={handleSendSetupLink}
+                        disabled={setupLinkSending}
+                      >
+                        {setupLinkSending ? 'Sending…' : 'Email me a link'}
+                      </Button>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </Rise>
@@ -249,7 +379,7 @@ const Settings = () => {
                   </p>
                   <Button
                     variant="destructive"
-                    onClick={handleDeleteAccount}
+                    onClick={openDelete}
                     className="w-full shrink-0 sm:w-auto"
                   >
                     <Trash2 />
@@ -261,6 +391,62 @@ const Settings = () => {
           </Rise>
         </div>
       </div>
+
+      <AlertDialog open={deleteOpen} onOpenChange={(open) => !deleting && setDeleteOpen(open)}>
+        <AlertDialogContent>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (deleteReady && !deleting) handleDeleteAccount();
+            }}
+            className="space-y-4"
+          >
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This permanently deletes your profile, credits, notifications and connected
+                Instagram data,{' '}
+                {accountRole === 'brand'
+                  ? 'and every campaign you created along with the applications creators sent to them.'
+                  : 'and every campaign application you have sent.'}{' '}
+                It can&apos;t be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <div className="space-y-2">
+              <Label htmlFor="delete-secret">
+                {canChangePassword ? 'Enter your password to confirm' : 'Type DELETE to confirm'}
+              </Label>
+              <Input
+                id="delete-secret"
+                type={canChangePassword ? 'password' : 'text'}
+                autoComplete={canChangePassword ? 'current-password' : 'off'}
+                value={deleteSecret}
+                onChange={(e) => setDeleteSecret(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            {deleteError && (
+              <p role="alert" className="text-sm text-destructive">
+                {deleteError}
+              </p>
+            )}
+
+            <AlertDialogFooter>
+              <AlertDialogCancel type="button" disabled={deleting}>
+                Cancel
+              </AlertDialogCancel>
+              {/* A plain button, not AlertDialogAction: that closes the dialog
+                  on click, before we know whether the delete worked. */}
+              <Button type="submit" variant="destructive" disabled={!deleteReady || deleting}>
+                <Trash2 />
+                {deleting ? 'Deleting…' : 'Delete my account'}
+              </Button>
+            </AlertDialogFooter>
+          </form>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

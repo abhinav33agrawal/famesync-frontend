@@ -23,6 +23,9 @@ interface AuthContextType {
     role: 'influencer' | 'brand'
   ) => Promise<void>;
   logout: () => Promise<void>;
+  /** Drop the local session without calling the API -- for after the
+   *  account itself is gone, when /auth/logout/ can only fail. */
+  endSession: () => void;
   refreshUser: () => Promise<void>;
   loginWithGoogle: (idToken: string, role: 'influencer' | 'brand') => Promise<'influencer' | 'brand'>;
   completeInstagramLogin: (
@@ -244,6 +247,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     window.location.href = '/';
   };
 
+  const endSession = () => {
+    clearSession();
+    queryClient.clear();
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -251,6 +259,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         signup,
         logout,
+        endSession,
         refreshUser,
         loginWithGoogle,
         completeInstagramLogin,

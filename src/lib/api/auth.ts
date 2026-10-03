@@ -54,4 +54,18 @@ export const authApi = {
     const response = await api.post('/auth/reset-password/', { token, password });
     return response.data;
   },
+
+  // Change password while signed in
+  changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
+    await api.post('/auth/change-password/', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
+  },
+
+  // Permanently delete the signed-in account. Accounts with a password send
+  // it; password-less (Instagram/Google) accounts send confirm: 'DELETE'.
+  deleteAccount: async (body: { password: string } | { confirm: string }): Promise<void> => {
+    await api.post('/auth/delete-account/', body);
+  },
 };

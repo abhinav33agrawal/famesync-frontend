@@ -125,10 +125,11 @@ const Privacy = () => {
     {
       id: 'data-deletion',
       title: 'Data Deletion',
-      paragraphs: ['You can remove your data in either of these ways:'],
+      paragraphs: ['You can remove your data in any of these ways:'],
       content: [
         'Disconnect Instagram from the Instagram tab of your FameSync profile. We immediately delete your access token, recent posts, insights, follower counts and verified badge, and stop reading from your account. We keep your Instagram user ID so you can still sign in with Instagram later; your Instagram handle and any bio copied into your profile stay there as editable text until you change them. You can also remove FameSync under Settings → Apps and websites in Instagram',
-        'Email info@famesync.com from your account’s email address and ask us to delete your account. We will delete your account and all associated data, including Instagram data, within 30 days and confirm by email. Records we must keep by law, such as payment records, are kept only as long as required',
+        'Delete your account under Settings → Delete Account. Your account and all associated data, including Instagram data and uploaded pictures, are deleted immediately. If you have an active Pro subscription, email us to cancel it first so you are not charged again',
+        'Or email info@famesync.com from your account’s email address and ask us to delete your account. We will delete it within 30 days and confirm by email. Records we must keep by law, such as payment records, are kept only as long as required',
       ],
     },
     {
