@@ -1,3 +1,6 @@
+import { parseDateOnly } from "@/lib/utils";
+import type { Campaign } from "@/lib/api/types";
+
 /** INR formatting used on every campaign surface. Whole rupees, no decimals. */
 export const formatINR = (value?: number | string | null) => {
   const n = typeof value === "string" ? Number(value.replace(/[^0-9.]/g, "")) : value;
@@ -21,8 +24,16 @@ export const formatCompact = (n?: number | null) => {
 /** "2 days left" / "Closes today" / "Closed" — the card eyebrow. */
 export const daysLeftLabel = (deadline?: string | null) => {
   if (!deadline) return "Open";
-  const ms = new Date(deadline).getTime() - Date.now();
-  const days = Math.ceil(ms / 86400000);
+  const day = parseDateOnly(deadline);
+  let days: number;
+  if (day) {
+    // Count calendar days, so the deadline day itself reads "Closes today".
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    days = Math.round((day.getTime() - today.getTime()) / 86400000);
+  } else {
+    days = Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000);
+  }
   if (days < 0) return "Closed";
   if (days === 0) return "Closes today";
   if (days === 1) return "1 day left";
@@ -78,3 +89,11 @@ export const deliverableChips = (d: unknown): string[] => {
   if (typeof d === "string" && d.trim()) return [plural(label(d), 1)];
   return [];
 };
+
+/** The date content is due: the deadline, else the (Pro) preferred post date. */
+export const campaignDueDate = (campaign: Pick<Campaign, "deadline" | "post_date">) =>
+  campaign.deadline || campaign.post_date || null;
+
+/** Published but still inside its edit window: influencers can't see it yet. */
+export const isGoingLive = (campaign: Pick<Campaign, "status" | "live_at">, now = Date.now()) =>
+  campaign.status === "active" && !!campaign.live_at && new Date(campaign.live_at).getTime() > now;

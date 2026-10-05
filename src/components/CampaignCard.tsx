@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/Stat";
 import { BrandLogo } from "@/components/Avatar";
-import { formatINR, daysLeftLabel, deliverableChips } from "@/lib/format";
+import { formatINR, daysLeftLabel, deliverableChips, campaignDueDate, isGoingLive } from "@/lib/format";
 import { formatDateDMY } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { Campaign } from "@/lib/api/types";
@@ -38,12 +38,13 @@ export const CampaignCard = ({
 }: CampaignCardProps) => {
   const locked = state === "locked";
   const brandName = campaign.brand_profile?.company_name ?? "Brand";
+  const dueDate = campaignDueDate(campaign);
 
   return (
     <Card intent="interactive" className={cn("p-5", className)}>
       <header className="mb-4 flex items-center justify-between gap-3">
-        <span className="eyebrow">{locked ? "Locked" : daysLeftLabel(campaign.post_date)}</span>
-        <StatusBadge status={locked ? "locked" : campaign.status} />
+        <span className="eyebrow">{locked ? "Locked" : daysLeftLabel(dueDate)}</span>
+        <StatusBadge status={locked ? "locked" : isGoingLive(campaign) ? "going_live" : campaign.status} />
       </header>
 
       <div className="mb-4 flex items-center gap-3">
@@ -79,7 +80,7 @@ export const CampaignCard = ({
         </div>
         <div className="min-w-0 bg-card p-3">
           <dt className="eyebrow whitespace-nowrap text-[10.5px]">Post by</dt>
-          <dd className="num mt-0.5 text-[1.0625rem]">{formatDateDMY(campaign.post_date) || "Flexible"}</dd>
+          <dd className="num mt-0.5 text-[1.0625rem]">{formatDateDMY(dueDate) || "Flexible"}</dd>
         </div>
       </dl>
 

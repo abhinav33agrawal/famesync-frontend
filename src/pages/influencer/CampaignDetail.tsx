@@ -27,7 +27,7 @@ import { formatDateDMY } from '@/lib/utils';
 import { Rise } from '@/components/motion';
 import { Stat, StatusBadge } from '@/components/Stat';
 import { BrandLogo } from '@/components/Avatar';
-import { formatINR, formatCompact, daysLeftLabel, deliverableChips } from '@/lib/format';
+import { formatINR, formatCompact, daysLeftLabel, deliverableChips, campaignDueDate } from '@/lib/format';
 import { useInfluencerCampaign, useApplyToCampaign } from '@/hooks/useCampaigns';
 import { useInfluencerApplications } from '@/hooks/useApplications';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -207,7 +207,7 @@ const InfluencerCampaignDetail = () => {
               className="size-14 text-xl"
             />
             <div className="min-w-0">
-              <span className="eyebrow">{daysLeftLabel(campaign.post_date)}</span>
+              <span className="eyebrow">{daysLeftLabel(campaignDueDate(campaign))}</span>
               <h1 className="mt-2 font-display text-display-2">{campaign.title}</h1>
               <p className="mt-4 max-w-[58ch] leading-relaxed text-muted-foreground">
                 {campaign.description}
@@ -464,7 +464,7 @@ const InfluencerCampaignDetail = () => {
               <CardContent>
                 <dl className="divide-y divide-border">
                   <OverviewRow label="Post by">
-                    <span className="num">{formatDateDMY(campaign.post_date) || 'Flexible'}</span>
+                    <span className="num">{formatDateDMY(campaignDueDate(campaign)) || 'Flexible'}</span>
                   </OverviewRow>
                   <OverviewRow label="Objective">
                     <span className="capitalize">{campaign.objective || 'Awareness'}</span>

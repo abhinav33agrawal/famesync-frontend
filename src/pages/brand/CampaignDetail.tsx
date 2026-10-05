@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api/config';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +26,7 @@ import {
   Trash2,
   Send,
   Loader2,
+  Clock,
   X
 } from 'lucide-react';
 import { useBrandCampaign, useUpdateApplicationStatus, useUpdateCampaignStatus, useDeleteCampaign } from '@/hooks/useCampaigns';
@@ -36,7 +38,7 @@ import { InfluencerQuickStats } from '@/components/InfluencerQuickStats';
 import { Stat, StatusBadge } from '@/components/Stat';
 import { Avatar } from '@/components/Avatar';
 import { Rise } from '@/components/motion';
-import { formatINR, formatCompact, deliverableChips, daysLeftLabel } from '@/lib/format';
+import { formatINR, formatCompact, deliverableChips, daysLeftLabel, campaignDueDate, isGoingLive } from '@/lib/format';
 import { formatLabel, formatDateDMY } from '@/lib/utils';
 import type { InfluencerProfile, Application } from '@/lib/api/types';
 import CampaignDetailSkeleton from '@/components/CampaignDetailSkeleton';
@@ -45,6 +47,53 @@ import CampaignDetailSkeleton from '@/components/CampaignDetailSkeleton';
    tiles, the local renderDeliverables()/DELIVERABLE_LABELS map, the
    getStatusBadgeClasses() colour map, the pulsing status dot and every
    green/blue/orange raw palette colour. */
+
+/** Shown while a published campaign is inside its edit window. Ticks every
+ *  second and refetches the campaign when the window closes, so the Edit
+ *  actions disappear exactly when the server stops accepting edits. */
+const GoingLiveBanner = ({ liveAt, onEdit, onLive }: { liveAt: string; onEdit: () => void; onLive: () => void }) => {
+  const target = new Date(liveAt).getTime();
+  const [now, setNow] = useState(() => Date.now());
+  const onLiveRef = useRef(onLive);
+  onLiveRef.current = onLive;
+
+  useEffect(() => {
+    if (now >= target) {
+      onLiveRef.current();
+      return;
+    }
+    const id = window.setTimeout(() => setNow(Date.now()), 1000);
+    return () => window.clearTimeout(id);
+  }, [now, target]);
+
+  const left = Math.max(0, Math.ceil((target - now) / 1000));
+  const mm = Math.floor(left / 60);
+  const ss = String(left % 60).padStart(2, '0');
+
+  return (
+    <Card intent="tinted" className="mb-8 p-5">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex min-w-0 items-start gap-3.5">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-card text-primary">
+            <Clock className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="font-display text-[1.0625rem] font-semibold tracking-[-0.02em]">
+              Goes live in <span className="num">{mm}:{ss}</span>
+            </p>
+            <p className="mt-1 text-sm text-secondary-foreground/80">
+              Creators can't see this campaign yet. You can edit it until it goes live — after that it's locked.
+            </p>
+          </div>
+        </div>
+        <Button variant="form" onClick={onEdit}>
+          <Pencil />
+          Edit campaign
+        </Button>
+      </div>
+    </Card>
+  );
+};
 
 // Manage Collaboration Action Area for Accepted Applications
 const ManageCollaborationArea = ({
@@ -211,6 +260,7 @@ const CampaignDetail = () => {
   }>({ open: false, application: null });
 
   const { data: campaign, isLoading: campaignLoading } = useBrandCampaign(slug || '');
+  const queryClient = useQueryClient();
   const { mutate: updateApplicationStatus, isPending: isUpdating } = useUpdateApplicationStatus();
   const { mutate: updateCampaignStatus, isPending: isUpdatingStatus } = useUpdateCampaignStatus();
   const { mutate: deleteCampaign, isPending: isDeleting } = useDeleteCampaign();
@@ -304,6 +354,11 @@ const CampaignDetail = () => {
   const pendingCount = applications.filter(a => a.status === 'pending').length;
   const acceptedCount = applications.filter(a => a.status === 'accepted').length;
   const chips = deliverableChips(campaign.deliverables_required as unknown);
+  const dueDate = campaignDueDate(campaign);
+  const goingLive = isGoingLive(campaign);
+  const editPath = `/brand/campaigns/${campaign.slug}/edit`;
+  const refetchCampaign = () =>
+    queryClient.invalidateQueries({ queryKey: ['campaign', 'brand', campaign.slug] });
 
   return (
     <div className="container py-8 sm:py-10">
@@ -322,15 +377,15 @@ const CampaignDetail = () => {
         <header className="mb-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <p className="eyebrow mb-2.5">{daysLeftLabel(campaign.post_date)}</p>
+              <p className="eyebrow mb-2.5">{daysLeftLabel(dueDate)}</p>
               <h1 className="font-display text-[2rem] leading-tight sm:text-display-2">
                 {campaign.title}
               </h1>
               <div className="mt-3.5 flex flex-wrap items-center gap-2">
-                <StatusBadge status={campaign.status} />
+                <StatusBadge status={goingLive ? 'going_live' : campaign.status} />
                 {campaign.category && <Badge variant="neutral">{formatLabel(campaign.category)}</Badge>}
-                {campaign.post_date && (
-                  <Badge variant="outline">Post by {formatDateDMY(campaign.post_date)}</Badge>
+                {dueDate && (
+                  <Badge variant="outline">Post by {formatDateDMY(dueDate)}</Badge>
                 )}
               </div>
             </div>
@@ -349,7 +404,7 @@ const CampaignDetail = () => {
                       <Rocket className="mr-2 size-4" />
                       Publish campaign
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate(`/brand/campaigns/${campaign.slug}/edit`)}>
+                    <DropdownMenuItem onClick={() => navigate(editPath)}>
                       <Pencil className="mr-2 size-4" />
                       Edit draft
                     </DropdownMenuItem>
@@ -365,6 +420,12 @@ const CampaignDetail = () => {
                 )}
                 {campaign.status === 'active' && (
                   <>
+                    {campaign.is_editable && (
+                      <DropdownMenuItem onClick={() => navigate(editPath)}>
+                        <Pencil className="mr-2 size-4" />
+                        Edit campaign
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => setDialogState({ open: true, action: 'complete' })}>
                       <CheckCircle className="mr-2 size-4" />
                       Mark as completed
@@ -395,6 +456,10 @@ const CampaignDetail = () => {
           )}
         </header>
       </Rise>
+
+      {goingLive && campaign.is_editable && campaign.live_at && (
+        <GoingLiveBanner liveAt={campaign.live_at} onEdit={() => navigate(editPath)} onLive={refetchCampaign} />
+      )}
 
       {/* ------------------------------------------------------------ stats */}
       <div className="mb-8 grid gap-4 sm:grid-cols-3">

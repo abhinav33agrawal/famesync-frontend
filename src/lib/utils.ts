@@ -6,9 +6,20 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Format date as DD-MM-YYYY (e.g., 16-01-2026)
+const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** "2026-11-05" -> local midnight on that day. `new Date("2026-11-05")` is UTC
+ *  midnight instead, which is still the previous evening west of Greenwich
+ *  and already 05:30 on the day in India -- enough to show the wrong date or
+ *  call a deadline "Closed" on the day itself. */
+export function parseDateOnly(value: string): Date | null {
+  const m = DATE_ONLY.exec(value);
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;
+}
+
 export function formatDateDMY(date?: string | null) {
   if (!date) return '';
-  const d = new Date(date);
+  const d = parseDateOnly(date) ?? new Date(date);
   if (isNaN(d.getTime())) return '';
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');

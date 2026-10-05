@@ -41,6 +41,7 @@ const STATUS = {
   accepted: { label: "Accepted", variant: "success" },
   approved: { label: "Approved", variant: "success" },
   active: { label: "Live", variant: "success" },
+  going_live: { label: "Going live", variant: "warning" },
   open: { label: "Accepting", variant: "success" },
   pending: { label: "In review", variant: "warning" },
   in_review: { label: "In review", variant: "warning" },

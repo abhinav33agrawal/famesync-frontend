@@ -117,6 +117,8 @@ export interface Campaign {
   requirements: string;
   deliverables_required: string | string[] | { type: string; count: number }[];
   post_date?: string;
+  /** "YYYY-MM-DD": content must be posted by this date. */
+  deadline?: string | null;
 
   // Campaign type and location
   campaign_type?: 'online' | 'onfield';
@@ -144,6 +146,10 @@ export interface Campaign {
   status: 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
   created_at: string;
   updated_at: string;
+  /** When influencers can first see it (publish + 5 min). Null while a draft. */
+  live_at?: string | null;
+  /** Server's verdict: a draft, or published and still inside the edit window. */
+  is_editable?: boolean;
   applications_count?: number;
   has_applied?: boolean;
   applications?: Application[];

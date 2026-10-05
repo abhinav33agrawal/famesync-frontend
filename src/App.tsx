@@ -224,7 +224,15 @@ const AppContent = () => {
             path="/brand/create-campaign"
             element={
               <ProtectedRoute allowedRoles={['brand']}>
-                <BrandCreateCampaign />
+                <BrandCreateCampaign key="create" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/brand/campaigns/:slug/edit"
+            element={
+              <ProtectedRoute allowedRoles={['brand']}>
+                <BrandCreateCampaign key="edit" />
               </ProtectedRoute>
             }
           />

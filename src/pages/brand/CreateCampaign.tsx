@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -187,6 +188,40 @@ const InfoTooltip = ({ title, description }: { title: string; description: strin
   </Tooltip>
 );
 
+/** A saved campaign's deliverables, in the form's {type, count} shape. Older
+ *  rows hold a JSON string or a list of plain labels. */
+const toDeliverables = (raw: Campaign['deliverables_required']) => {
+  let value: unknown = raw;
+  if (typeof value === 'string') {
+    try {
+      value = JSON.parse(value);
+    } catch {
+      value = value ? [value] : [];
+    }
+  }
+  if (!Array.isArray(value)) return [];
+  return value.map((d: string | { type?: unknown; count?: unknown }) =>
+    typeof d === 'string' ? { type: d, count: 1 } : { type: String(d.type), count: Number(d.count) || 1 }
+  );
+};
+
+/** The most useful message in an API error body: ours ({error}), DRF's
+ *  ({detail}), or the first field error of a validation response. */
+const firstApiError = (data: unknown): string => {
+  if (!data || typeof data !== 'object') return 'Something went wrong.';
+  const body = data as Record<string, unknown>;
+  if (typeof body.error === 'string') return body.error;
+  if (typeof body.detail === 'string') return body.detail;
+  for (const [field, messages] of Object.entries(body)) {
+    const message = Array.isArray(messages) ? messages[0] : messages;
+    if (typeof message === 'string') return `${formatFieldName(field)}: ${message}`;
+  }
+  return 'Something went wrong.';
+};
+
+const formatFieldName = (field: string) =>
+  field.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
+
 // Helper function to get today's date in YYYY-MM-DD format
 const getTodayDate = () => {
   const today = new Date();
@@ -200,6 +235,14 @@ const CreateCampaign = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Opened at /brand/campaigns/:slug/edit, this same form edits an existing
+  // campaign: a draft, or a published one still inside its 5-minute window.
+  const { slug: editSlug } = useParams<{ slug: string }>();
+  const isEdit = !!editSlug;
+  const [editTarget, setEditTarget] = useState<Campaign | null>(null);
+  const [editState, setEditState] = useState<'loading' | 'ready' | 'locked' | 'error'>('loading');
   const [step, setStep] = useState(1);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
@@ -293,6 +336,7 @@ const CreateCampaign = () => {
 
   // Load saved form data from sessionStorage on mount (persists during prev/next navigation only)
   useEffect(() => {
+    if (isEdit) return;
     const savedData = sessionStorage.getItem('campaign_form_draft');
     if (savedData) {
       try {
@@ -317,10 +361,11 @@ const CreateCampaign = () => {
     return () => {
       sessionStorage.removeItem('campaign_form_draft');
     };
-  }, []);
+  }, [isEdit]);
 
   // Save form data to sessionStorage (not localStorage) for prev/next navigation only
   useEffect(() => {
+    if (isEdit) return;
     const dataToSave = {
       formData,
       targetNiches,
@@ -330,7 +375,57 @@ const CreateCampaign = () => {
       timestamp: Date.now()
     };
     sessionStorage.setItem('campaign_form_draft', JSON.stringify(dataToSave));
-  }, [formData, targetNiches, targetCities, campaignHashtags, deliverables]);
+  }, [isEdit, formData, targetNiches, targetCities, campaignHashtags, deliverables]);
+
+  // Fetched fresh rather than from the query cache: whether it is still
+  // editable is time-sensitive.
+  useEffect(() => {
+    if (!editSlug) return;
+    let cancelled = false;
+    campaignsApi.brand.get(editSlug)
+      .then((c) => {
+        if (cancelled) return;
+        setEditTarget(c);
+        if (!c.is_editable) {
+          setEditState('locked');
+          return;
+        }
+        setFormData(prev => ({
+          ...prev,
+          title: c.title || '',
+          description: c.description || '',
+          category: c.category || '',
+          objective: c.objective || 'none',
+          budget: c.budget != null ? String(Number(c.budget)) : '',
+          budget_type: c.budget_type || 'fixed',
+          post_date: c.post_date ? c.post_date.slice(0, 10) : '',
+          campaign_type: c.campaign_type || 'online',
+          location: c.location || '',
+          deadline: c.deadline || '',
+          event_date: c.event_date ? c.event_date.slice(0, 10) : '',
+          target_gender: c.target_gender || 'any',
+          min_followers: c.min_followers != null ? String(c.min_followers) : '',
+          max_followers: c.max_followers != null ? String(c.max_followers) : '',
+          requirements: c.requirements || '',
+          creative_brief_url: c.creative_brief_url || '',
+          key_messages: c.key_messages || '',
+          is_private: !!c.is_private,
+          contact_email: c.contact_email || '',
+          contact_phone: c.contact_phone || '',
+        }));
+        setDeliverables(toDeliverables(c.deliverables_required));
+        setTargetNiches((c.target_niche || '').split(',').map(n => n.trim()).filter(Boolean));
+        setTargetCities(c.target_cities || []);
+        setCampaignHashtags((c.hashtags || '').split(/\s+/).filter(Boolean));
+        setEditState('ready');
+      })
+      .catch(() => {
+        if (!cancelled) setEditState('error');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [editSlug]);
 
   // Clear storage on successful submission
   const clearFormDraft = () => {
@@ -441,6 +536,70 @@ const CreateCampaign = () => {
     });
   };
 
+  /** The form's fields as the API expects them -- shared by create and edit. */
+  const campaignFields = (deliverablesArray: { type: string; count: number }[]): Partial<Campaign> => ({
+    title: formData.title,
+    description: formData.description,
+    category: formData.category,
+    objective: formData.objective as Campaign['objective'],
+    budget: formData.budget ? Number(formData.budget) : 0,
+    budget_type: formData.budget_type as Campaign['budget_type'],
+    requirements: formData.requirements,
+    deliverables_required: deliverablesArray,
+    deadline: formData.deadline || null,
+    post_date: formData.post_date ? new Date(formData.post_date).toISOString() : undefined,
+    campaign_type: formData.campaign_type as Campaign['campaign_type'],
+    location: formData.location,
+    event_date: formData.event_date ? new Date(formData.event_date).toISOString() : undefined,
+    target_cities: targetCities,
+    target_gender: formData.target_gender,
+    min_followers: formData.min_followers ? Number(formData.min_followers) : undefined,
+    max_followers: formData.max_followers ? Number(formData.max_followers) : undefined,
+    target_niche: targetNiches.join(', '),
+    creative_brief_url: formData.creative_brief_url,
+    hashtags: campaignHashtags.join(' '),
+    key_messages: formData.key_messages,
+    is_private: formData.is_private,
+    contact_email: formData.contact_email,
+    contact_phone: formData.contact_phone,
+  });
+
+  const handleSaveEdit = async () => {
+    if (!editSlug) return;
+    // Every step is reachable from the Save button, so check them all and
+    // jump to the first one that needs attention.
+    for (const s of [1, 2, 4]) {
+      const validation = validateCampaignStep(s, formData, deliverables);
+      if (!validation.isValid) {
+        setFieldErrors(validation.fieldErrors);
+        setStep(s);
+        return;
+      }
+    }
+    setFieldErrors({});
+    setIsSubmitting(true);
+    try {
+      await campaignsApi.brand.update(editSlug, campaignFields(deliverables));
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['campaign', 'brand', editSlug] }),
+        queryClient.invalidateQueries({ queryKey: ['campaigns', 'brand'] }),
+      ]);
+      toast({ title: 'Changes saved', description: `"${formData.title}" has been updated.` });
+      navigate(`/brand/campaigns/${editSlug}`);
+    } catch (error) {
+      const data = (error as { response?: { data?: { edit_locked?: boolean; error?: string } } })?.response?.data;
+      if (data?.edit_locked) {
+        toast({ title: 'This campaign is now live', description: data.error, variant: 'destructive' });
+        await queryClient.invalidateQueries({ queryKey: ['campaign', 'brand', editSlug] });
+        navigate(`/brand/campaigns/${editSlug}`);
+        return;
+      }
+      toast({ title: "Couldn't save changes", description: firstApiError(data), variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (publishStatus: 'draft' | 'active' = 'active') => {
     if (!user) return toast({ title: "Not Authenticated", description: "Please log in.", variant: "destructive" });
 
@@ -472,29 +631,7 @@ const CreateCampaign = () => {
       }
 
       const payload: Partial<Campaign> = {
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        objective: formData.objective as any,
-        budget: formData.budget ? Number(formData.budget) : 0,
-        budget_type: formData.budget_type as any,
-        requirements: formData.requirements,
-        deliverables_required: deliverablesArray,
-        post_date: formData.post_date ? new Date(formData.post_date).toISOString() : undefined,
-        campaign_type: formData.campaign_type as any,
-        location: formData.location,
-        event_date: formData.event_date ? new Date(formData.event_date).toISOString() : undefined,
-        target_cities: targetCities,
-        target_gender: formData.target_gender,
-        min_followers: formData.min_followers ? Number(formData.min_followers) : undefined,
-        max_followers: formData.max_followers ? Number(formData.max_followers) : undefined,
-        target_niche: targetNiches.join(', '),
-        creative_brief_url: formData.creative_brief_url,
-        hashtags: campaignHashtags.join(' '),
-        key_messages: formData.key_messages,
-        is_private: formData.is_private,
-        contact_email: formData.contact_email,
-        contact_phone: formData.contact_phone,
+        ...campaignFields(deliverablesArray),
         status: status,
       };
 
@@ -542,6 +679,39 @@ const CreateCampaign = () => {
     }
   };
 
+  if (isEdit && editState !== 'ready') {
+    return (
+      <div className="container flex min-h-[60vh] items-center justify-center py-16">
+        <Card className="max-w-md p-8 text-center">
+          {editState === 'loading' ? (
+            <Loader2 className="mx-auto size-6 animate-spin text-muted-foreground" aria-label="Loading campaign" />
+          ) : (
+            <>
+              <span className="mx-auto mb-5 inline-flex size-14 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                {editState === 'locked' ? <Lock className="size-6" /> : <FileText className="size-6" />}
+              </span>
+              <h1 className="mb-2 font-display text-display-3">
+                {editState === 'locked' ? 'This campaign is live' : 'Campaign not found'}
+              </h1>
+              <p className="mb-6 text-sm text-muted-foreground">
+                {editState === 'locked'
+                  ? 'Published campaigns can only be edited in the first 5 minutes, before creators can see them.'
+                  : 'This campaign may have been deleted or the link is wrong.'}
+              </p>
+              <Button
+                variant="form"
+                onClick={() => navigate(editTarget ? `/brand/campaigns/${editTarget.slug}` : '/brand/campaigns')}
+              >
+                <ArrowLeft />
+                {editTarget ? 'Back to campaign' : 'Back to campaigns'}
+              </Button>
+            </>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <TooltipProvider>
       <div className="min-h-[calc(100vh-4rem)]">
@@ -551,23 +721,32 @@ const CreateCampaign = () => {
             <Button
               variant="ghost"
               onClick={() => {
+                if (isEdit) {
+                  navigate(`/brand/campaigns/${editSlug}`);
+                  return;
+                }
                 clearFormDraft();
                 navigate('/brand/dashboard');
               }}
               className="-ml-3 mb-6"
             >
               <ArrowLeft />
-              Back to dashboard
+              {isEdit ? 'Back to campaign' : 'Back to dashboard'}
             </Button>
 
             {/* Header */}
             <Rise className="mb-9">
-              <p className="eyebrow mb-3">New brief</p>
-              <h1 className="font-display text-display-2">Create campaign.</h1>
+              <p className="eyebrow mb-3">{isEdit ? 'Editing' : 'New brief'}</p>
+              <h1 className="font-display text-display-2">{isEdit ? 'Edit campaign.' : 'Create campaign.'}</h1>
               <p className="mt-3 max-w-[46ch] leading-relaxed text-muted-foreground">
-                Set up a new campaign for creators to apply to.
+                {!isEdit
+                  ? 'Set up a new campaign for creators to apply to.'
+                  : editTarget?.status === 'active' && editTarget.live_at
+                    ? `Creators can't see this campaign yet. You can save changes until it goes live at ${new Date(editTarget.live_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`
+                    : 'Changes are saved to your draft. Publish it from the campaign page when it is ready.'}
               </p>
 
+              {!isEdit && (
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <Button
                   variant="secondary"
@@ -592,6 +771,7 @@ const CreateCampaign = () => {
                   </p>
                 )}
               </div>
+              )}
             </Rise>
 
             {/* Progress Steps */}
@@ -1512,6 +1692,7 @@ const CreateCampaign = () => {
                           </FormField>
                         </div>
 
+                        {!isEdit && (
                         <FormField delay={0.35}>
                           <Card intent="tinted" className="p-5">
                             <div className="flex items-start gap-3.5">
@@ -1531,6 +1712,7 @@ const CreateCampaign = () => {
                             </div>
                           </Card>
                         </FormField>
+                        )}
                       </motion.div>
                     )
                   }
@@ -1546,7 +1728,29 @@ const CreateCampaign = () => {
                   ) : (
                     <div className="hidden sm:block" />
                   )}
-                  {
+                  {isEdit ? (
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                      {step < 4 && (
+                        <Button variant="outline" onClick={handleNext}>
+                          Next
+                          <ArrowRight />
+                        </Button>
+                      )}
+                      <Button variant="form" onClick={handleSaveEdit} disabled={isSubmitting}>
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="animate-spin" />
+                            Saving…
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle />
+                            Save changes
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ) :
                     step < 4 ? (
                       <Button variant="form" onClick={handleNext}>
                         Next
