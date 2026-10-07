@@ -99,10 +99,10 @@ export const getDeclineEmailSubject = (campaignTitle: string): string =>
 
 // Analytics-friendly data structure
 export interface DeclineAnalytics {
-  application_id: number;
-  campaign_id: number;
-  influencer_id: number;
-  brand_id: number;
+  application_id: string;
+  campaign_id: string;
+  influencer_id: string;
+  brand_id: string;
   reason_code: DeclineReasonCode | null;
   declined_at: string;
 }

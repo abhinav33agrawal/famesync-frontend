@@ -22,7 +22,7 @@ import type { Application } from '@/lib/api/types';
 
 const CELEBRATED_MATCHES_KEY = 'celebrated_matches';
 
-const getCelebratedMatches = (): number[] => {
+const getCelebratedMatches = (): string[] => {
   try {
     const stored = localStorage.getItem(CELEBRATED_MATCHES_KEY);
     return stored ? JSON.parse(stored) : [];
@@ -31,7 +31,7 @@ const getCelebratedMatches = (): number[] => {
   }
 };
 
-const addCelebratedMatch = (applicationId: number) => {
+const addCelebratedMatch = (applicationId: string) => {
   const current = getCelebratedMatches();
   if (!current.includes(applicationId)) {
     localStorage.setItem(CELEBRATED_MATCHES_KEY, JSON.stringify([...current, applicationId]));

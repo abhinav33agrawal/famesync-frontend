@@ -345,7 +345,7 @@ const InstagramTab = ({ user }: { user: AdminUserDetail }) => {
 };
 
 interface CreditTxn {
-  id: number;
+  id: string;
   action: string;
   credits_used: number;
   description?: string;
@@ -434,8 +434,8 @@ const PlanTab = ({ user }: { user: AdminUserDetail }) => {
 };
 
 interface AppRow {
-  id: number;
-  campaign: number;
+  id: string;
+  campaign: string;
   campaign_title: string;
   brand_name: string;
   status: string;
@@ -443,7 +443,7 @@ interface AppRow {
 }
 
 interface CampaignRow {
-  id: number;
+  id: string;
   title: string;
   status: string;
   budget: number | string | null;

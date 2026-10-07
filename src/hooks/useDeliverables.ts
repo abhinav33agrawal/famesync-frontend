@@ -36,7 +36,7 @@ export const useSubmitDeliverable = () => {
 };
 
 // Brand hooks
-export const useBrandDeliverables = (campaignId?: number) => {
+export const useBrandDeliverables = (campaignId?: string) => {
   return useQuery({
     queryKey: ['deliverables', 'brand', campaignId],
     queryFn: () => deliverablesApi.brand.list(campaignId),
@@ -53,7 +53,7 @@ export const useReviewDeliverable = () => {
       status,
       feedback,
     }: {
-      id: number;
+      id: string;
       status: 'in_review' | 'approved' | 'rejected';
       feedback?: string;
     }) => deliverablesApi.brand.review(id, status, feedback),

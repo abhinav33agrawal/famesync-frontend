@@ -1,7 +1,7 @@
 import api from './config';
 
 export interface Notification {
-  id: number;
+  id: string;
   message: string;
   created_at: string;
   status: 'unread' | 'read';

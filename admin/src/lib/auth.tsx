@@ -9,7 +9,7 @@ import {
 import api, { clearTokens, readTokens, writeTokens } from "./api";
 
 export interface AdminIdentity {
-  id: number;
+  id: string;
   username: string;
   email: string;
   first_name: string;

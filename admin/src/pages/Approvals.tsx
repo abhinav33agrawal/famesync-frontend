@@ -23,7 +23,7 @@ export const Approvals = () => {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [role, setRole] = useState("");
-  const [picked, setPicked] = useState<number[]>([]);
+  const [picked, setPicked] = useState<string[]>([]);
   const [reason, setReason] = useState("Profile incomplete");
   const [confirmReject, setConfirmReject] = useState(false);
 
@@ -49,13 +49,13 @@ export const Approvals = () => {
   };
 
   const approve = useMutation({
-    mutationFn: (ids: number[]) =>
+    mutationFn: (ids: string[]) =>
       api.post("/admin-panel/approvals/bulk-approve/", { user_ids: ids }),
     onSuccess: done,
   });
 
   const reject = useMutation({
-    mutationFn: (ids: number[]) =>
+    mutationFn: (ids: string[]) =>
       api.post("/admin-panel/approvals/bulk-reject/", {
         user_ids: ids,
         reason,
@@ -63,7 +63,7 @@ export const Approvals = () => {
     onSuccess: done,
   });
 
-  const toggle = (id: number) =>
+  const toggle = (id: string) =>
     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
   const allPicked = rows.length > 0 && picked.length === rows.length;

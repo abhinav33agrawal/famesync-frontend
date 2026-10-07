@@ -15,10 +15,10 @@ import type { Campaign } from "@/lib/api/types";
 /** Shaped as a real Campaign so the landing hero renders the exact card
  *  creators see in Discover — one component, no marketing-only variant. */
 export const SHOWCASE_CAMPAIGN: Campaign = {
-  id: 0,
+  id: "",
   slug: "showcase",
   brand: {
-    id: 0,
+    id: "",
     username: "studioverde",
     email: "hello@example.com",
     first_name: "Studio",
@@ -28,9 +28,9 @@ export const SHOWCASE_CAMPAIGN: Campaign = {
     created_at: new Date().toISOString(),
   },
   brand_profile: {
-    id: 0,
+    id: "",
     user: {
-      id: 0,
+      id: "",
       username: "studioverde",
       email: "hello@example.com",
       first_name: "Studio",

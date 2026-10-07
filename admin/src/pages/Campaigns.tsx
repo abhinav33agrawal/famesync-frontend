@@ -75,7 +75,7 @@ export const Campaigns = () => {
   const total = asCount(data);
 
   const close = useMutation({
-    mutationFn: (id: number) =>
+    mutationFn: (id: string) =>
       api.post(`/admin-panel/campaigns/${id}/force-close/`, {
         reason: "Closed by admin",
       }),

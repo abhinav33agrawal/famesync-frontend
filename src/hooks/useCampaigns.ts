@@ -217,7 +217,7 @@ export const useUpdateApplicationStatus = () => {
 
   return useMutation({
     mutationFn: ({ id, status, declineReason }: {
-      id: number;
+      id: string;
       status: 'accepted' | 'rejected';
       declineReason?: string;
     }) =>

@@ -106,8 +106,8 @@ const ManageCollaborationArea = ({
   application: Application;
   campaignTitle: string;
   onViewProfile: () => void;
-  inProgressIds: Set<number>;
-  onToggleInProgress: (id: number) => void;
+  inProgressIds: Set<string>;
+  onToggleInProgress: (id: string) => void;
 }) => {
   const influencerEmail = application.influencer_profile?.user?.email || application.influencer?.email || '';
   const influencerName = application.influencer_profile?.user?.first_name || application.influencer?.username || 'there';
@@ -247,7 +247,7 @@ const CampaignDetail = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedInfluencer, setSelectedInfluencer] = useState<InfluencerProfile | null>(null);
-  const [inProgressIds, setInProgressIds] = useState<Set<number>>(new Set());
+  const [inProgressIds, setInProgressIds] = useState<Set<string>>(new Set());
   const [dialogState, setDialogState] = useState<{
     open: boolean;
     action: 'publish' | 'complete' | 'cancel' | 'delete';
@@ -265,7 +265,7 @@ const CampaignDetail = () => {
   const { mutate: updateCampaignStatus, isPending: isUpdatingStatus } = useUpdateCampaignStatus();
   const { mutate: deleteCampaign, isPending: isDeleting } = useDeleteCampaign();
 
-  const handleApprove = (applicationId: number) => {
+  const handleApprove = (applicationId: string) => {
     updateApplicationStatus({ id: applicationId, status: 'accepted' });
   };
 
@@ -283,7 +283,7 @@ const CampaignDetail = () => {
     setDeclineDialogState({ open: false, application: null });
   };
 
-  const handleToggleInProgress = (applicationId: number) => {
+  const handleToggleInProgress = (applicationId: string) => {
     setInProgressIds(prev => {
       const newSet = new Set(prev);
       if (newSet.has(applicationId)) {

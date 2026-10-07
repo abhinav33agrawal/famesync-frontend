@@ -30,7 +30,7 @@ const Campaigns = () => {
   const [dialogState, setDialogState] = useState<{
     open: boolean;
     action: 'publish' | 'complete' | 'cancel' | 'delete';
-    campaignId: number;
+    campaignId: string;
     campaignSlug: string;
     campaignTitle: string;
   } | null>(null);
@@ -115,7 +115,7 @@ const Campaigns = () => {
     return sum + (isNaN(budget) ? 0 : budget);
   }, 0);
 
-  const handleStatusAction = (action: 'publish' | 'complete' | 'cancel' | 'delete', campaignId: number, campaignSlug: string, campaignTitle: string) => {
+  const handleStatusAction = (action: 'publish' | 'complete' | 'cancel' | 'delete', campaignId: string, campaignSlug: string, campaignTitle: string) => {
     setDialogState({ open: true, action, campaignId, campaignSlug, campaignTitle });
   };
 

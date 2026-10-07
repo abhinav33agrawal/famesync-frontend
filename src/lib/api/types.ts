@@ -1,6 +1,6 @@
 // User & Auth Types
 export interface User {
-  id: number;
+  id: string;
   username: string;
   email: string;
   first_name: string;
@@ -18,19 +18,19 @@ export interface User {
   instagram_connected?: boolean;
 }
 export interface Category {
-  id: number;
+  id: string;
   name: string;
   slug: string;
 }
 
 export interface Niche {
-  id: number;
+  id: string;
   name: string;
   slug: string;
 }
 
 export interface City {
-  id: number;
+  id: string;
   name: string;
   state: string;
   country: string;
@@ -68,7 +68,7 @@ export interface SocialUrlEntry {
 }
 
 export interface InfluencerProfile {
-  id: number;
+  id: string;
   user: User;
   profile_picture?: string;
   bio: string;
@@ -87,7 +87,7 @@ export interface InfluencerProfile {
 }
 
 export interface BrandProfile {
-  id: number;
+  id: string;
   user: User;
   profile_picture?: string;
   company_name: string;
@@ -104,7 +104,7 @@ export interface BrandProfile {
 
 // Campaign Types
 export interface Campaign {
-  id: number;
+  id: string;
   slug: string;
   brand: User;
   brand_profile?: BrandProfile;
@@ -164,7 +164,7 @@ export interface CampaignSuggestion {
 }
 
 export interface Application {
-  id: number;
+  id: string;
   influencer: User;
   influencer_profile?: InfluencerProfile;
   campaign: Campaign;
@@ -175,13 +175,13 @@ export interface Application {
 }
 
 export interface ApplicationCreate {
-  campaign: number;
+  campaign: string;
   message: string;
 }
 
 // Deliverable Types
 export interface Deliverable {
-  id: number;
+  id: string;
   application: Application;
   deliverable_type: 'post' | 'story' | 'video' | 'reel' | 'other';
   link: string;
@@ -194,7 +194,7 @@ export interface Deliverable {
 }
 
 export interface DeliverableCreate {
-  application: number;
+  application: string;
   deliverable_type: 'post' | 'story' | 'video' | 'reel' | 'other';
   link: string;
   description?: string;
@@ -203,7 +203,7 @@ export interface DeliverableCreate {
 
 // Subscription Types
 export interface Subscription {
-  id: number;
+  id: string;
   user: User;
   plan: 'free' | 'pro';
   credit_limit: number;
@@ -212,7 +212,7 @@ export interface Subscription {
 }
 
 export interface UsageTracker {
-  id: number;
+  id: string;
   user: User;
   action: string;
   credits_used: number;
@@ -274,7 +274,7 @@ export interface ApiError {
 
 // Configuration Types
 export interface SubscriptionPlan {
-  id: number;
+  id: string;
   name: string;
   slug: 'free' | 'pro';
   price_monthly: number; // decimal from backend comes as string or number depending on serializer settings, usually string if DecimalField, but let's assume number or we handle it
@@ -288,7 +288,7 @@ export interface SubscriptionPlan {
 }
 
 export interface DeclineReason {
-  id: number;
+  id: string;
   code: string;
   label: string;
   description: string;

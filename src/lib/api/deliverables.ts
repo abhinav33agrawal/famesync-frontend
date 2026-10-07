@@ -28,14 +28,14 @@ export const deliverablesApi = {
 
   // Brand endpoints
   brand: {
-    list: async (campaignId?: number): Promise<Deliverable[]> => {
+    list: async (campaignId?: string): Promise<Deliverable[]> => {
       const params = campaignId ? { campaign_id: campaignId } : {};
       const response = await api.get('/deliverables/brand/', { params });
       return response.data;
     },
 
     review: async (
-      id: number,
+      id: string,
       status: 'in_review' | 'approved' | 'rejected',
       feedback?: string
     ): Promise<Deliverable> => {
@@ -48,7 +48,7 @@ export const deliverablesApi = {
   },
 
   // Get single deliverable
-  get: async (id: number): Promise<Deliverable> => {
+  get: async (id: string): Promise<Deliverable> => {
     const response = await api.get(`/deliverables/${id}/`);
     return response.data;
   },

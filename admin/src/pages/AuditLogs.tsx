@@ -16,12 +16,12 @@ import {
 } from "@/components/ui";
 
 interface Log {
-  id: number;
+  id: string;
   admin_username?: string;
   action_type?: string;
   target_type?: string;
   target_name?: string;
-  target_id?: number | null;
+  target_id?: string | null;
   details?: string;
   ip_address?: string | null;
   timestamp?: string;

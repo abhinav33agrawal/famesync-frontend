@@ -109,7 +109,7 @@ export const Users = () => {
   const [state, setState] = useState("");
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const [creditsFor, setCreditsFor] = useState<number | null>(null);
+  const [creditsFor, setCreditsFor] = useState<string | null>(null);
 
   const q = useDebounced(search);
 
@@ -152,12 +152,12 @@ export const Users = () => {
   };
 
   const approve = useMutation({
-    mutationFn: (id: number) => api.post(`/admin-panel/users/${id}/approve/`, {}),
+    mutationFn: (id: string) => api.post(`/admin-panel/users/${id}/approve/`, {}),
     onSuccess: refresh,
   });
 
   const suspend = useMutation({
-    mutationFn: (id: number) =>
+    mutationFn: (id: string) =>
       api.post(`/admin-panel/users/${id}/suspend/`, {
         reason: "Suspended by admin",
       }),
@@ -168,7 +168,7 @@ export const Users = () => {
      RetrieveUpdateDestroyAPIView and is_active is writable on
      UserDetailAdminSerializer, so a PATCH is the supported reversal. */
   const reactivate = useMutation({
-    mutationFn: (id: number) =>
+    mutationFn: (id: string) =>
       api.patch(`/admin-panel/users/${id}/`, { is_active: true }),
     onSuccess: refresh,
   });

@@ -86,7 +86,7 @@ export interface Paginated<T> {
 }
 
 export interface AdminUser {
-  id: number;
+  id: string;
   username: string;
   email: string;
   first_name: string;
@@ -112,7 +112,7 @@ export interface DashboardStats {
 }
 
 export interface PendingApproval {
-  id: number;
+  id: string;
   username: string;
   email: string;
   role: "influencer" | "brand";
@@ -124,7 +124,7 @@ export interface PendingApproval {
 }
 
 export interface AdminCampaign {
-  id: number;
+  id: string;
   title: string;
   status: string;
   created_at: string;
@@ -132,7 +132,7 @@ export interface AdminCampaign {
 }
 
 export interface AuditLog {
-  id: number;
+  id: string;
   [k: string]: unknown;
 }
 
@@ -147,9 +147,9 @@ export const asCount = <T,>(data: Paginated<T> | T[] | undefined): number =>
 /* ------------------------------------------------------- subscriptions */
 
 export interface SubscriptionRow {
-  id: number;
+  id: string;
   user: number;
-  user_id: number;
+  user_id: string;
   username: string;
   email: string;
   full_name: string;
@@ -204,7 +204,7 @@ export interface SocialUrl {
  *  is present for its role. Kept loose on purpose: the page renders what is
  *  there rather than failing on a field the backend adds later. */
 export interface AdminProfile {
-  id: number;
+  id: string;
   profile_picture?: string | null;
   bio?: string;
   niche?: string;
@@ -227,7 +227,7 @@ export interface AdminProfile {
 }
 
 export interface AdminUserDetail {
-  id: number;
+  id: string;
   username: string;
   email: string;
   first_name: string;
@@ -292,7 +292,7 @@ export interface Insights {
   applications_by_status: { status: string; count: number }[];
   campaigns_by_category: { category: string; count: number }[];
   top_campaigns: {
-    id: number;
+    id: string;
     title: string;
     brand: string;
     status: string;

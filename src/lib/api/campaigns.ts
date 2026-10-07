@@ -71,7 +71,7 @@ export const campaignsApi = {
 
   // Application management
   updateApplicationStatus: async (
-    id: number,
+    id: string,
     status: 'accepted' | 'rejected',
     declineReason?: string
   ): Promise<Application> => {

@@ -45,7 +45,7 @@ const Deliverables = () => {
     return <DeliverablesSkeleton />;
   }
 
-  const handleUpload = (deliverableId: number) => {
+  const handleUpload = (deliverableId: string) => {
     toast.success('Deliverable upload initiated');
   };
 
