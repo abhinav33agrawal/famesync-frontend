@@ -1,4 +1,4 @@
-/* Bricolage Grotesque + Plus Jakarta Sans are loaded via <link> in index.html
+/* Montserrat + Plus Jakarta Sans are loaded via <link> in index.html
    rather than @import here — a stylesheet @import serialises the font request
    behind this file, a link in the head starts it immediately. */
 
@@ -6,63 +6,74 @@
 @tailwind components;
 @tailwind utilities;
 
-/* FameSync design system — single light theme.
-   No dark mode, no theme toggle, no gradients except the one `wash` motif. */
+/* FameSync design system — single light theme with ink marketing sections.
+   No dark mode, no theme toggle. Gradients: `wash` and the `brand-gradient`
+   signature only. */
 
 @layer base {
   :root {
-    --background: 40 33% 96%;
-    --foreground: 30 9% 9%;
+    /* IZEA-inspired: near-white ground, ink sections, electric violet brand,
+       magenta as the rationed accent, one violet→magenta signature gradient */
+    --background: 270 33% 99%;
+    --foreground: 268 35% 8%;
 
     --card: 0 0% 100%;
-    --card-foreground: 30 9% 9%;
+    --card-foreground: 268 35% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 30 9% 9%;
+    --popover-foreground: 268 35% 8%;
 
-    /* aubergine — the only brand colour */
-    --primary: 288 42% 20%;
-    --primary-foreground: 40 33% 96%;
+    /* electric violet — the brand colour */
+    --primary: 268 78% 52%;
+    --primary-foreground: 0 0% 100%;
 
     /* lilac tint — nav-active, avatar fallbacks, tinted cards */
-    --secondary: 288 18% 93%;
-    --secondary-foreground: 288 42% 20%;
+    --secondary: 272 100% 95%;
+    --secondary-foreground: 268 70% 34%;
 
-    /* citrus — rationed: creator CTA, live dot, one eyebrow per screen */
-    --accent: 72 88% 60%;
-    --accent-foreground: 288 45% 12%;
+    /* magenta — rationed: creator CTA, live dot, one eyebrow per screen */
+    --accent: 332 88% 50%;
+    --accent-foreground: 0 0% 100%;
 
-    --muted: 40 25% 93%;
-    --muted-foreground: 30 7% 40%;
+    --muted: 270 25% 96%;
+    --muted-foreground: 266 10% 38%;
 
-    --success: 156 46% 33%;
-    --success-foreground: 40 33% 96%;
+    --success: 156 56% 32%;
+    --success-foreground: 0 0% 100%;
     --warning: 33 86% 38%;
-    --warning-foreground: 40 33% 96%;
-    --destructive: 7 61% 43%;
-    --destructive-foreground: 40 33% 96%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 356 70% 46%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 38 22% 89%;
-    --input: 38 22% 89%;
-    --ring: 288 42% 20%;
+    --border: 268 22% 90%;
+    --input: 268 22% 88%;
+    --ring: 268 78% 52%;
 
     --radius: 0.75rem;
 
-    /* the one retained decorative motif */
-    --wash-from: 288 18% 93%;
-    --wash-to: 40 33% 96%;
+    /* ink — the dark marketing sections (hero, stats, footer) */
+    --ink: 266 52% 7%;
+    --ink-foreground: 270 40% 97%;
+    --ink-muted: 268 18% 68%;
+    --ink-border: 268 30% 18%;
 
-    --elevation-1: 0 1px 2px -1px hsl(30 9% 9% / 0.08);
-    --elevation-2: 0 8px 18px -12px hsl(288 42% 20% / 0.22), 0 1px 2px -1px hsl(30 9% 9% / 0.06);
-    --elevation-3: 0 24px 48px -28px hsl(288 42% 20% / 0.28), 0 2px 6px -2px hsl(30 9% 9% / 0.06);
+    /* the soft panel wash, and the one signature gradient */
+    --wash-from: 272 100% 95%;
+    --wash-to: 270 33% 99%;
+    --brand-from: 268 78% 52%;
+    --brand-to: 322 90% 55%;
 
-    --sidebar-background: 40 33% 96%;
-    --sidebar-foreground: 30 7% 30%;
-    --sidebar-primary: 288 42% 20%;
-    --sidebar-primary-foreground: 40 33% 96%;
-    --sidebar-accent: 288 18% 93%;
-    --sidebar-accent-foreground: 288 42% 20%;
-    --sidebar-border: 38 22% 89%;
-    --sidebar-ring: 288 42% 20%;
+    --elevation-1: 0 1px 2px -1px hsl(268 35% 8% / 0.08);
+    --elevation-2: 0 10px 22px -12px hsl(268 78% 40% / 0.28), 0 1px 2px -1px hsl(268 35% 8% / 0.06);
+    --elevation-3: 0 30px 60px -28px hsl(268 78% 30% / 0.45), 0 2px 6px -2px hsl(268 35% 8% / 0.08);
+
+    --sidebar-background: 270 33% 99%;
+    --sidebar-foreground: 266 10% 30%;
+    --sidebar-primary: 268 78% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 272 100% 95%;
+    --sidebar-accent-foreground: 268 70% 34%;
+    --sidebar-border: 268 22% 90%;
+    --sidebar-ring: 268 78% 52%;
   }
 
   * {
@@ -80,20 +91,34 @@
   h2,
   h3,
   .display {
-    font-family: 'Bricolage Grotesque', sans-serif;
-    font-weight: 600;
-    letter-spacing: -0.03em;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.035em;
     text-wrap: balance;
   }
 
   h1 {
-    letter-spacing: -0.04em;
-    line-height: 0.96;
+    font-weight: 900;
+    letter-spacing: -0.045em;
+    line-height: 0.95;
   }
 
   ::selection {
     background: hsl(var(--secondary));
     color: hsl(var(--primary));
+  }
+}
+
+@layer components {
+  /* small-caps label above every card header and section. In components so
+     a text-* utility on the same element (text-primary, text-ink-muted)
+     wins over the default muted colour. */
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground) / 0.75);
   }
 }
 
@@ -103,24 +128,34 @@
     background: linear-gradient(160deg, hsl(var(--wash-from)), hsl(var(--wash-to)) 62%);
   }
 
+  /* the signature violet→magenta — hero highlight word, CTA banner */
+  .brand-gradient {
+    background: linear-gradient(120deg, hsl(var(--brand-from)), hsl(var(--brand-to)));
+  }
+
+  .brand-gradient-text {
+    background: linear-gradient(100deg, hsl(272 100% 78%), hsl(var(--brand-to)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* the one moving thing: the niche ticker under the hero */
+  .marquee {
+    display: flex;
+    width: max-content;
+    animation: marquee 40s linear infinite;
+  }
+
   .e1 { box-shadow: var(--elevation-1); }
   .e2 { box-shadow: var(--elevation-2); }
   .e3 { box-shadow: var(--elevation-3); }
 
   /* budgets, follower counts, dates, stat values */
   .num {
-    font-family: 'Bricolage Grotesque', sans-serif;
-    font-weight: 600;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
     letter-spacing: -0.02em;
-  }
-
-  /* small-caps label above every card header and section */
-  .eyebrow {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: hsl(var(--muted-foreground) / 0.75);
   }
 
   /* the standard interactive-card behaviour: 2px lift, e1 -> e2 */
@@ -134,7 +169,15 @@
   }
 }
 
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .marquee {
+    animation: none;
+  }
+
   *,
   *::before,
   *::after {

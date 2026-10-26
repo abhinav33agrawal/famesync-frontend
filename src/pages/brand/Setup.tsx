@@ -1,25 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input, Textarea } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Upload, CheckCircle2, Loader2, ArrowRight } from 'lucide-react';
+import { ArrowRight, Globe, Instagram, Loader2, ShieldCheck, Youtube } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { profilesApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { ImageCropper } from '@/components/ui/image-cropper';
 import { useCategories } from '@/hooks/useCategories';
-import { Rise } from '@/components/motion';
-import { cn } from '@/lib/utils';
+import { BrandLogo } from '@/components/Avatar';
+import { AvatarPicker, OnboardingShell, SetupSection } from '@/components/onboarding/OnboardingShell';
 
-/* Setup renders with no app chrome — it carries its own hairline header and
-   owns the full viewport height.
-   Removed from the old Setup.tsx: FloatingOrb, the animated gradient progress
-   bar, the border-2/bg-background-50 field styling, the shadow-2xl card and
-   the unused SetupSkeleton. */
+/* Setup renders with no app chrome. OnboardingShell supplies the layout: the
+   ink panel with a live brand-card preview and checklist, and the form in
+   three numbered sections. Fields, validation and the payload are unchanged. */
 
 // Social media platforms configuration
 const SOCIAL_PLATFORMS = [
@@ -73,26 +71,6 @@ const validateSocialUrl = (platform: string, url: string): boolean => {
 const hasValidSocialUrl = (socialUrls: { platform: string; url: string }[]): boolean => {
   return socialUrls.some(social => social.url.trim() !== '' && validateSocialUrl(social.platform, social.url));
 };
-
-/** Restrained completion meter — four hairline segments, no gradient, no glow. */
-const StepIndicator = ({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) => (
-  <div className="mb-9">
-    <div className="mb-2.5 flex items-center justify-between">
-      <span className="eyebrow">Profile completeness</span>
-      <span className="num text-sm text-muted-foreground">
-        {Math.min(currentStep, totalSteps)}/{totalSteps}
-      </span>
-    </div>
-    <div className="flex gap-1.5" role="presentation">
-      {Array.from({ length: totalSteps }).map((_, i) => (
-        <span
-          key={i}
-          className={cn('h-1.5 flex-1 rounded-sm', i < currentStep ? 'bg-primary' : 'bg-border')}
-        />
-      ))}
-    </div>
-  </div>
-);
 
 const BrandSetup = () => {
   const navigate = useNavigate();
@@ -266,246 +244,237 @@ const BrandSetup = () => {
     formData.description,
   ].filter(Boolean).length;
 
+  const industryName =
+    formData.industry === 'other'
+      ? formData.customIndustry
+      : dynamicCategories.find((ind) => ind.slug === formData.industry)?.name;
+  const websiteHost = (() => {
+    try {
+      return formData.website ? new URL(formData.website).host.replace(/^www\./, '') : '';
+    } catch {
+      return '';
+    }
+  })();
+  const brandName = formData.brandName.trim();
+
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* ------------------------------------------------- standalone header */}
-      <header className="border-b border-border">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 px-6 py-4">
-          <Link
-            to="/"
-            className="font-display text-[1.25rem] font-semibold tracking-[-0.035em] text-foreground"
-          >
-            FameSync
-          </Link>
-          <p className="text-sm text-muted-foreground">
-            Welcome, <span className="font-semibold text-foreground">{user?.first_name || 'there'}</span>
-          </p>
-        </div>
-      </header>
-
-      <main className="flex-1">
-        <div className="mx-auto w-full max-w-3xl px-6 pb-16 pt-10 sm:pt-14">
-          <Rise>
-            <p className="eyebrow mb-4">Step 1 of 1 · Brand setup</p>
-            <h1 className="font-display text-display-2">Set up your brand.</h1>
-            <p className="mt-4 max-w-[46ch] leading-relaxed text-muted-foreground">
-              Tell us about your brand so creators know who they&apos;re working with.
-            </p>
-          </Rise>
-
-          <div className="mt-9">
-            <StepIndicator currentStep={completedFields} totalSteps={3} />
-
-            <Card>
-              <CardContent className="p-5 pt-5 sm:p-7 sm:pt-7">
-                <form onSubmit={handleSubmit} className="space-y-7">
-                  {/* Brand Name */}
-                  <div className="space-y-2">
-                    <Label htmlFor="brandName">Brand name *</Label>
-                    <Input
-                      id="brandName"
-                      value={formData.brandName}
-                      onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
-                      placeholder="Your brand name"
-                      required
-                    />
-                  </div>
-
-                  {/* Industry */}
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="industry">Industry</Label>
-                      <Select
-                        value={formData.industry}
-                        onValueChange={(value) => setFormData({ ...formData, industry: value })}
-                      >
-                        <SelectTrigger id="industry" className={SELECT_INPUT}>
-                          <SelectValue placeholder={categoriesLoading ? "Loading..." : "Select industry"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {dynamicCategories.map((ind) => (
-                            <SelectItem key={ind.slug} value={ind.slug}>
-                              <span className="flex items-center gap-2">
-                                <span>{ind.name}</span>
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Custom Industry Field - Only show when "other" is selected */}
-                    {formData.industry === 'other' && (
-                      <div className="space-y-2">
-                        <Label htmlFor="customIndustry">Specify your industry</Label>
-                        <Input
-                          id="customIndustry"
-                          value={formData.customIndustry}
-                          onChange={(e) => setFormData({ ...formData, customIndustry: e.target.value })}
-                          placeholder="Enter your industry"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Website */}
-                  <div className="space-y-2">
-                    <Label htmlFor="website">
-                      Website URL <span className="font-normal text-muted-foreground">(optional)</span>
-                    </Label>
-                    <Input
-                      id="website"
-                      type="url"
-                      value={formData.website}
-                      onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const value = formData.website.trim();
-                          if (value && !value.match(/^https?:\/\//i)) {
-                            // Check if it has a domain extension like .com, .in, .org, etc.
-                            if (value.match(/\.[a-z]{2,}$/i)) {
-                              setFormData({ ...formData, website: `https://${value}` });
-                            }
-                          }
-                        }
-                      }}
-                      onBlur={() => {
-                        const value = formData.website.trim();
-                        if (value && !value.match(/^https?:\/\//i)) {
-                          // Check if it has a domain extension like .com, .in, .org, etc.
-                          if (value.match(/\.[a-z]{2,}$/i)) {
-                            setFormData({ ...formData, website: `https://${value}` });
-                          }
-                        }
-                      }}
-                      placeholder="https://yourbrand.com"
-                    />
-                  </div>
-
-                  {/* Social Media Links */}
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Social media links *</Label>
-                      <p id="social-url-help" className="mt-1 text-xs text-muted-foreground">
-                        At least one valid social media link is required
-                      </p>
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      {socialUrls.map((social, index) => {
-                        const platformLabel = SOCIAL_PLATFORMS.find(p => p.platform === social.platform)?.label || social.platform;
-                        const hasError = urlErrors[social.platform];
-                        return (
-                          <div key={social.platform} className="space-y-2">
-                            <Label htmlFor={social.platform} className="capitalize">
-                              {platformLabel}
-                            </Label>
-                            <Input
-                              id={social.platform}
-                              type="url"
-                              value={social.url}
-                              onChange={(e) => handleSocialUrlChange(index, e.target.value)}
-                              placeholder={`https://${social.platform}.com/yourbrand`}
-                              aria-required={true}
-                              aria-invalid={hasError ? true : false}
-                              aria-describedby={socialUrlError ? 'social-url-error' : 'social-url-help'}
-                            />
-                            {hasError && <p className="text-xs text-destructive">{hasError}</p>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {socialUrlError && (
-                      <p id="social-url-error" className="text-xs text-destructive" role="alert">
-                        {socialUrlError}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Description */}
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Brand description *</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Tell us about your brand, your mission, target audience, and what you're looking for in influencer partnerships..."
-                      rows={5}
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      A good description helps creators understand your brand better
-                    </p>
-                  </div>
-
-                  {/* Brand Logo */}
-                  <div className="space-y-2">
-                    <Label htmlFor="profilePicture">Brand logo</Label>
-                    <input
-                      id="profilePicture"
-                      type="file"
-                      accept="image/png,image/jpeg,image/jpg,image/svg+xml"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="profilePicture"
-                      className="block cursor-pointer rounded-xl border border-dashed border-muted-foreground/35 bg-card p-7 text-center transition-colors hover:bg-muted"
-                    >
-                      {previewUrl ? (
-                        <span className="flex flex-col items-center">
-                          <span className="relative">
-                            <img
-                              src={previewUrl}
-                              alt="Brand logo preview"
-                              className="size-24 rounded-xl border border-border object-cover"
-                            />
-                            <span className="absolute -bottom-1.5 -right-1.5 inline-flex size-7 items-center justify-center rounded-full bg-success text-success-foreground">
-                              <CheckCircle2 className="size-4" />
-                            </span>
-                          </span>
-                          <span className="mt-3.5 text-sm text-muted-foreground">Click to change</span>
-                        </span>
-                      ) : (
-                        <span className="flex flex-col items-center">
-                          <span className="mb-3.5 inline-flex size-14 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                            <Upload className="size-5" />
-                          </span>
-                          <span className="text-sm font-semibold">Click to upload your logo</span>
-                          <span className="mt-1 text-xs text-muted-foreground">
-                            PNG, JPG, SVG up to 10MB
-                          </span>
-                        </span>
-                      )}
-                    </label>
-                  </div>
-
-                  {/* Submit */}
-                  <Button
-                    type="submit"
-                    variant="form"
-                    size="lg"
-                    className="w-full"
-                    disabled={setupMutation.isPending}
-                  >
-                    {setupMutation.isPending ? (
-                      <>
-                        <Loader2 className="animate-spin" />
-                        Creating profile…
-                      </>
-                    ) : (
-                      <>
-                        Complete setup
-                        <ArrowRight />
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+    <OnboardingShell
+      firstName={user?.first_name}
+      eyebrow="Brand onboarding"
+      title="Set up"
+      highlight="your brand."
+      intro="Creators see this before they apply, so tell them who they'd be working with."
+      previewLabel="How creators will see you"
+      preview={
+        <Card className="p-5">
+          <div className="flex items-center gap-3">
+            <BrandLogo src={previewUrl || null} name={brandName || 'Your brand'} className="size-12" />
+            <div className="min-w-0">
+              <p className="truncate font-display text-[1.0625rem] font-extrabold tracking-[-0.02em]">
+                {brandName || 'Your brand'}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                {[industryName, websiteHost].filter(Boolean).join(' · ') || 'Industry · website'}
+              </p>
+            </div>
           </div>
+          <p className="mt-4 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+            {formData.description || 'Your description shows here — what you make, and the creators you want to work with.'}
+          </p>
+          <div className="mt-4 flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-xs font-semibold text-secondary-foreground">
+            <ShieldCheck className="size-3.5" />
+            Reviewed by the FameSync team
+          </div>
+        </Card>
+      }
+      checklist={[
+        { label: 'Brand name', done: Boolean(brandName) },
+        { label: 'Industry', done: Boolean(formData.industry) },
+        { label: 'A social profile', done: hasValidSocialUrl(socialUrls) },
+        { label: 'Description', done: Boolean(formData.description) },
+      ]}
+      reviewNote="Every brand is checked by hand before its first brief goes live."
+    >
+      <div className="mb-10">
+        <h1 className="font-display text-[2.5rem] leading-[1.02] tracking-[-0.04em]">Set up your brand</h1>
+        <p className="mt-3 max-w-[46ch] leading-relaxed text-muted-foreground">
+          Takes about two minutes. You can edit it any time from your brand profile.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-10">
+        {/* ------------------------------------------------ the basics */}
+        <SetupSection index={1} title="The basics">
+          <input
+            id="profilePicture"
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+            onChange={handleFileChange}
+            className="sr-only"
+          />
+          <AvatarPicker
+            inputId="profilePicture"
+            previewUrl={previewUrl}
+            fallback={(brandName || 'B').charAt(0).toUpperCase()}
+            shape="square"
+            label="logo"
+            hint="Optional · PNG, JPG or SVG up to 10MB."
+          />
+
+          <div className="space-y-2">
+            <Label htmlFor="brandName" className="font-semibold">Brand name</Label>
+            <Input
+              id="brandName"
+              value={formData.brandName}
+              onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
+              placeholder="Your brand name"
+              required
+            />
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="industry" className="font-semibold">Industry</Label>
+              <Select
+                value={formData.industry}
+                onValueChange={(value) => setFormData({ ...formData, industry: value })}
+              >
+                <SelectTrigger id="industry" className={SELECT_INPUT}>
+                  <SelectValue placeholder={categoriesLoading ? 'Loading...' : 'Select industry'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {dynamicCategories.map((ind) => (
+                    <SelectItem key={ind.slug} value={ind.slug}>
+                      {ind.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {formData.industry === 'other' && (
+              <div className="space-y-2">
+                <Label htmlFor="customIndustry" className="font-semibold">Specify your industry</Label>
+                <Input
+                  id="customIndustry"
+                  value={formData.customIndustry}
+                  onChange={(e) => setFormData({ ...formData, customIndustry: e.target.value })}
+                  placeholder="Enter your industry"
+                />
+              </div>
+            )}
+          </div>
+        </SetupSection>
+
+        {/* -------------------------------------------- where to find you */}
+        <SetupSection
+          index={2}
+          title="Where creators can find you"
+          hint="At least one social profile, so creators can check you out."
+        >
+          <div className="grid gap-5 sm:grid-cols-2">
+            {socialUrls.map((social, index) => {
+              const platformLabel = SOCIAL_PLATFORMS.find((p) => p.platform === social.platform)?.label || social.platform;
+              const Icon = social.platform === 'youtube' ? Youtube : Instagram;
+              const hasError = urlErrors[social.platform];
+              return (
+                <div key={social.platform} className="space-y-2">
+                  <Label htmlFor={social.platform} className="font-semibold">{platformLabel}</Label>
+                  <div className="relative">
+                    <Icon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id={social.platform}
+                      type="url"
+                      value={social.url}
+                      onChange={(e) => handleSocialUrlChange(index, e.target.value)}
+                      placeholder={`https://${social.platform}.com/yourbrand`}
+                      aria-required={true}
+                      aria-invalid={hasError ? true : false}
+                      aria-describedby={socialUrlError ? 'social-url-error' : undefined}
+                      className="pl-10"
+                    />
+                  </div>
+                  {hasError && <p className="text-xs text-destructive">{hasError}</p>}
+                </div>
+              );
+            })}
+          </div>
+          {socialUrlError && (
+            <p id="social-url-error" className="text-xs text-destructive" role="alert">
+              {socialUrlError}
+            </p>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="website" className="font-semibold">
+              Website <span className="font-normal text-muted-foreground">(optional)</span>
+            </Label>
+            <div className="relative">
+              <Globe className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="website"
+                type="url"
+                value={formData.website}
+                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const value = formData.website.trim();
+                    if (value && !value.match(/^https?:\/\//i)) {
+                      // Check if it has a domain extension like .com, .in, .org, etc.
+                      if (value.match(/\.[a-z]{2,}$/i)) {
+                        setFormData({ ...formData, website: `https://${value}` });
+                      }
+                    }
+                  }
+                }}
+                onBlur={() => {
+                  const value = formData.website.trim();
+                  if (value && !value.match(/^https?:\/\//i)) {
+                    // Check if it has a domain extension like .com, .in, .org, etc.
+                    if (value.match(/\.[a-z]{2,}$/i)) {
+                      setFormData({ ...formData, website: `https://${value}` });
+                    }
+                  }
+                }}
+                placeholder="https://yourbrand.com"
+                className="pl-10"
+              />
+            </div>
+          </div>
+        </SetupSection>
+
+        {/* ---------------------------------------------- your story */}
+        <SetupSection index={3} title="Your story" hint="A good description gets better applications.">
+          <div className="space-y-2">
+            <Label htmlFor="description" className="font-semibold">Brand description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="What you make, who it's for, and the kind of creators you want to work with…"
+              rows={5}
+              required
+            />
+          </div>
+        </SetupSection>
+
+        <div className="border-t border-border pt-7">
+          <Button type="submit" variant="form" size="lg" className="w-full" disabled={setupMutation.isPending}>
+            {setupMutation.isPending ? (
+              <>
+                <Loader2 className="animate-spin" />
+                Creating profile…
+              </>
+            ) : (
+              <>
+                Complete setup
+                <ArrowRight />
+              </>
+            )}
+          </Button>
         </div>
-      </main>
+      </form>
 
       <ImageCropper
         imageSrc={tempImageSrc}
@@ -514,7 +483,7 @@ const BrandSetup = () => {
         onCropComplete={handleCropComplete}
         aspect={1}
       />
-    </div>
+    </OnboardingShell>
   );
 };
 

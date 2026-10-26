@@ -14,11 +14,11 @@ type StatProps = {
 };
 
 /** Replaces the four gradient stat tiles on every dashboard.
- *  Use tone="feature" for the single aubergine credits block. */
+ *  Use tone="feature" for the single ink credits block. */
 export const Stat = ({ label, value, note, noteTone = "muted", tone = "default", className }: StatProps) => (
-  <Card intent={tone === "feature" ? "feature" : "default"} className={cn("p-6", className)}>
-    <span className={cn("eyebrow", tone === "feature" && "text-accent")}>{label}</span>
-    <div className="num mt-5 text-[2.375rem] leading-none">{value}</div>
+  <Card intent={tone === "feature" ? "feature" : "default"} className={cn("p-4 sm:p-6", className)}>
+    <span className={cn("eyebrow", tone === "feature" && "brand-gradient-text")}>{label}</span>
+    <div className="num mt-4 text-[2rem] leading-none sm:mt-5 sm:text-[2.375rem]">{value}</div>
     {note && (
       <p
         className={cn(
@@ -54,7 +54,7 @@ const STATUS = {
   expired: { label: "Closed", variant: "neutral" },
   draft: { label: "Draft", variant: "neutral" },
   not_submitted: { label: "Not submitted", variant: "neutral" },
-  locked: { label: "Pro", variant: "premium" },
+  locked: { label: "Locked", variant: "neutral" },
 } as const;
 
 export type StatusKey = keyof typeof STATUS;

@@ -6,7 +6,8 @@ import { Card } from '@/components/ui/card';
 import { Stat, StatusBadge } from '@/components/Stat';
 import { BrandLogo } from '@/components/Avatar';
 import { Rise } from '@/components/motion';
-import { formatINR } from '@/lib/format';
+import { campaignDueDate, formatINR } from '@/lib/format';
+import { formatDateDMY } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useInfluencerDashboard } from '@/hooks/useProfile';
 import { useInfluencerApplications } from '@/hooks/useApplications';
@@ -39,7 +40,7 @@ const InfluencerDashboard = () => {
         : app.status === 'rejected'
           ? `Application for "${app.campaign.title}" was not accepted`
           : `Application for "${app.campaign.title}" is under review`,
-      time: new Date(app.applied_at).toLocaleDateString(),
+      time: formatDateDMY(app.applied_at),
     }));
 
   return (
@@ -71,12 +72,12 @@ const InfluencerDashboard = () => {
         </Rise>
 
         {/* ------------------------------------------------------------ stats */}
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <Stat
             tone="feature"
             label="Credits remaining"
             value={user?.credits ?? 0}
-            note="Application credits"
+            note="1 credit unlocks a brief"
           />
           <Stat
             label="Applications sent"
@@ -96,10 +97,10 @@ const InfluencerDashboard = () => {
           />
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
           {/* -------------------------------------------- active collaborations */}
           <section className="lg:col-span-2">
-            <Card className="h-full p-5 sm:p-6">
+            <Card className="p-5 sm:p-6">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
                   <p className="eyebrow">Live work</p>
@@ -122,7 +123,7 @@ const InfluencerDashboard = () => {
                   </Button>
                 </Card>
               ) : (
-                <ul className="grid gap-3">
+                <ul className="grid grid-cols-1 gap-3">
                   {acceptedApplications.map((application) => (
                     <li key={application.id}>
                       <Card
@@ -142,7 +143,8 @@ const InfluencerDashboard = () => {
                                 {application.campaign.title}
                               </h3>
                               <p className="truncate text-xs text-muted-foreground">
-                                @{application.campaign.brand.username}
+                                {application.campaign.brand_profile?.company_name ||
+                                  `@${application.campaign.brand.username}`}
                               </p>
                             </div>
                           </div>
@@ -151,10 +153,30 @@ const InfluencerDashboard = () => {
                         <div className="mt-3 flex items-center gap-3 border-t border-border pt-3">
                           <span className="num text-[0.9375rem]">{formatINR(application.campaign.budget)}</span>
                           <span className="text-xs text-muted-foreground">{application.campaign.category}</span>
+                          {formatDateDMY(campaignDueDate(application.campaign)) && (
+                            <span className="ml-auto text-xs text-muted-foreground">
+                              Post by{' '}
+                              <span className="num text-foreground">
+                                {formatDateDMY(campaignDueDate(application.campaign))}
+                              </span>
+                            </span>
+                          )}
                         </div>
                       </Card>
                     </li>
                   ))}
+                  {acceptedApplications.length < 3 && (
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/influencer/campaigns')}
+                        className="flex min-h-14 w-full items-center justify-between gap-3 rounded-xl border border-dashed border-muted-foreground/35 px-4 text-left text-sm font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                      >
+                        Room for more — browse open briefs
+                        <ArrowRight className="size-4" />
+                      </button>
+                    </li>
+                  )}
                 </ul>
               )}
             </Card>
@@ -188,9 +210,9 @@ const InfluencerDashboard = () => {
             {user?.subscription_plan !== 'pro' && (
               <Card intent="tinted" className="p-6">
                 <p className="eyebrow text-secondary-foreground/70">Pro plan</p>
-                <h2 className="mb-2 mt-1.5 font-display text-display-3">Get more applications</h2>
+                <h2 className="mb-2 mt-1.5 font-display text-display-3">Unlock more briefs</h2>
                 <p className="mb-5 text-sm leading-relaxed text-secondary-foreground/80">
-                  Upgrade to Pro for more monthly applications and full campaign details.
+                  Pro gives you 30 credits a month and up to 3 unlocks a day. Applying stays free.
                 </p>
                 <Button variant="form" className="w-full" onClick={() => navigate('/subscription')}>
                   Upgrade now

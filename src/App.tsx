@@ -103,12 +103,20 @@ const AppContent = () => {
     pathname.includes("/setup") ||
     pathname === "/waiting-for-approval";
 
+  /* Not on the setup pages: they already say "Complete your profile" and
+     carry the review note themselves, and the sticky band used to sit over
+     the onboarding panel. */
   const showApprovalBanner =
-    isAuthenticated && user && user.is_approved === false && pathname !== "/waiting-for-approval" && pathname !== "/auth";
+    isAuthenticated &&
+    user &&
+    user.is_approved === false &&
+    pathname !== "/waiting-for-approval" &&
+    pathname !== "/auth" &&
+    !pathname.includes("/setup");
 
   return (
     <div className="flex min-h-screen flex-col">
-      {showApprovalBanner && <ApprovalBanner isSetup={pathname.includes("/setup")} />}
+      {showApprovalBanner && <ApprovalBanner />}
       {!hideChrome && <Navbar />}
 
       <main className="flex-1">

@@ -89,26 +89,30 @@ const Subscription = () => {
         <div className="space-y-5 lg:col-span-2">
           <Rise>
             <Card intent="feature" className="rounded-2xl p-8">
-              <span className="eyebrow text-accent">Current plan</span>
+              <span className="eyebrow brand-gradient-text">Current plan</span>
               <h2 className="mt-4 font-display text-[2.5rem] leading-none tracking-[-0.03em]">
                 {planConfig?.name || 'Free'}
               </h2>
               <p className="mt-3 max-w-[44ch] leading-relaxed text-primary-foreground/75">
-                {currentPlan === 'free'
-                  ? 'Upgrade to unlock premium features and more credits.'
-                  : 'Enjoy all premium features and benefits.'}
+                {user?.role === 'influencer'
+                  ? currentPlan === 'free'
+                    ? 'Each credit unlocks one full brief, and applying is free. Pro gives you 30 credits a month.'
+                    : 'Each credit unlocks one full brief, and applying is free. Up to 3 unlocks a day.'
+                  : currentPlan === 'free'
+                    ? 'Upgrade to unlock premium features and more credits.'
+                    : 'Enjoy all premium features and benefits.'}
               </p>
 
               <dl className="mt-8 grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-primary-foreground/15 bg-primary-foreground/15">
-                <div className="bg-primary p-4">
+                <div className="bg-ink p-4">
                   <dt className="eyebrow text-primary-foreground/60">Credits left</dt>
                   <dd className="num mt-2 text-2xl">{user?.credits || 0}</dd>
                 </div>
-                <div className="bg-primary p-4">
+                <div className="bg-ink p-4">
                   <dt className="eyebrow text-primary-foreground/60">Total</dt>
                   <dd className="num mt-2 text-2xl">{totalCredits}</dd>
                 </div>
-                <div className="bg-primary p-4">
+                <div className="bg-ink p-4">
                   <dt className="eyebrow text-primary-foreground/60">Used</dt>
                   <dd className="num mt-2 text-2xl">{creditsUsed}</dd>
                 </div>

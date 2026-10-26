@@ -12,6 +12,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Building2,
+  Lock,
+  LockOpen,
   ExternalLink,
   FileText,
   Hash,
@@ -30,10 +32,8 @@ import { BrandLogo } from '@/components/Avatar';
 import { formatINR, formatCompact, daysLeftLabel, deliverableChips, campaignDueDate } from '@/lib/format';
 import { useInfluencerCampaign, useApplyToCampaign } from '@/hooks/useCampaigns';
 import { useInfluencerApplications } from '@/hooks/useApplications';
-import { useSubscription } from '@/hooks/useSubscription';
-import { LockedFeature, LockedText, PremiumBadgeIndicator } from '@/components/LockedFeature';
-import { UpgradePrompt } from '@/components/UpgradePrompt';
-import { CreditWarning, InsufficientCreditsBlock, canApplyWithCredits } from '@/components/CreditWarning';
+import { LockedText } from '@/components/LockedFeature';
+import { UnlockCampaignDialog } from '@/components/UnlockCampaignDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import CampaignDetailSkeleton from '@/components/CampaignDetailSkeleton';
@@ -72,16 +72,13 @@ const InfluencerCampaignDetail = () => {
   const { user } = useAuth();
   const [showApplyDialog, setShowApplyDialog] = useState(false);
   const [applicationMessage, setApplicationMessage] = useState('');
-  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
-  const [upgradeMessage, setUpgradeMessage] = useState('');
+  const [showUnlockDialog, setShowUnlockDialog] = useState(false);
 
   const { data: campaignData, isLoading: campaignLoading } = useInfluencerCampaign(slug || '');
-  const { data: subscription } = useSubscription();
   const { data: applications } = useInfluencerApplications();
   const { mutate: applyToCampaign, isPending: isApplying } = useApplyToCampaign();
 
   const campaign = campaignData;
-  const isPremium = subscription?.plan !== 'free';
   const hasApplied = campaign?.has_applied || false;
 
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
@@ -113,7 +110,10 @@ const InfluencerCampaignDetail = () => {
   }, [applications, campaign]);
 
   const hasAcceptedApplication = applicationStatus === 'accepted';
-  const canViewFullDetails = isPremium || hasAcceptedApplication;
+  /* The server decides: until a credit is spent (or the creator applied
+     before unlocks existed) it sends no brand, budget, contacts, brief or
+     key messages, so there is nothing here to reveal client-side. */
+  const isUnlocked = Boolean(campaign?.is_unlocked || hasApplied);
 
   const handleApply = () => {
     if (!applicationMessage.trim()) {
@@ -139,9 +139,8 @@ const InfluencerCampaignDetail = () => {
           });
         },
         onError: (error: any) => {
-          if (error.response?.data?.limit_reached) {
-            setUpgradeMessage(error.response.data.error);
-            if (!canViewFullDetails) setShowUpgradePrompt(true);
+          if (error.response?.data?.not_unlocked) {
+            setShowUnlockDialog(true);
           } else {
             toast({
               title: "Error",
@@ -201,11 +200,13 @@ const InfluencerCampaignDetail = () => {
 
         <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
           <div className="flex min-w-0 items-start gap-4">
-            <BrandLogo
-              src={campaign.brand_profile?.logo}
-              name={brandName}
-              className="size-14 text-xl"
-            />
+            {isUnlocked ? (
+              <BrandLogo src={campaign.brand_profile?.logo} name={brandName} className="size-14 text-xl" />
+            ) : (
+              <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground/60">
+                <Lock className="size-5" />
+              </span>
+            )}
             <div className="min-w-0">
               <span className="eyebrow">{daysLeftLabel(campaignDueDate(campaign))}</span>
               <h1 className="mt-2 font-display text-display-2">{campaign.title}</h1>
@@ -273,61 +274,62 @@ const InfluencerCampaignDetail = () => {
                   </div>
                 )}
 
-                {/* Hashtags - Premium */}
-                {campaign.hashtags && (
-                  <div>
-                    <h4 className="eyebrow mb-2 flex items-center gap-2">
-                      <Hash className="size-3.5" />
-                      Campaign hashtags
-                      {!canViewFullDetails && <PremiumBadgeIndicator />}
-                    </h4>
-                    <LockedFeature
-                      isLocked={!canViewFullDetails}
-                      message="Upgrade to Premium to view hashtags"
-                    >
-                      <p className="text-[0.9375rem] leading-relaxed">{campaign.hashtags}</p>
-                    </LockedFeature>
-                  </div>
-                )}
+                {isUnlocked ? (
+                  <>
+                    {campaign.hashtags && (
+                      <div>
+                        <h4 className="eyebrow mb-2 flex items-center gap-2">
+                          <Hash className="size-3.5" />
+                          Campaign hashtags
+                        </h4>
+                        <p className="text-[0.9375rem] leading-relaxed">{campaign.hashtags}</p>
+                      </div>
+                    )}
 
-                {/* Key Messages - Premium */}
-                {campaign.key_messages && (
-                  <div>
-                    <h4 className="eyebrow mb-2 flex items-center gap-2">
-                      <MessageSquare className="size-3.5" />
-                      Key messages
-                      {!canViewFullDetails && <PremiumBadgeIndicator />}
-                    </h4>
-                    <LockedFeature
-                      isLocked={!canViewFullDetails}
-                      message="Upgrade to Premium to view key messages"
-                    >
-                      <p className="whitespace-pre-wrap text-[0.9375rem] leading-relaxed">
-                        {campaign.key_messages}
-                      </p>
-                    </LockedFeature>
-                  </div>
-                )}
+                    {campaign.key_messages && (
+                      <div>
+                        <h4 className="eyebrow mb-2 flex items-center gap-2">
+                          <MessageSquare className="size-3.5" />
+                          Key messages
+                        </h4>
+                        <p className="whitespace-pre-wrap text-[0.9375rem] leading-relaxed">
+                          {campaign.key_messages}
+                        </p>
+                      </div>
+                    )}
 
-                {/* Creative Brief - Premium */}
-                {campaign.creative_brief_url && (
-                  <div>
-                    <h4 className="eyebrow mb-2 flex items-center gap-2">
-                      <FileText className="size-3.5" />
-                      Creative brief
-                      {!canViewFullDetails && <PremiumBadgeIndicator />}
-                    </h4>
-                    <LockedFeature
-                      isLocked={!canViewFullDetails}
-                      message="Upgrade to Premium to access creative brief"
-                    >
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={campaign.creative_brief_url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink />
-                          View creative brief
-                        </a>
-                      </Button>
-                    </LockedFeature>
+                    {campaign.creative_brief_url && (
+                      <div>
+                        <h4 className="eyebrow mb-2 flex items-center gap-2">
+                          <FileText className="size-3.5" />
+                          Creative brief
+                        </h4>
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={campaign.creative_brief_url} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink />
+                            View creative brief
+                          </a>
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex flex-col gap-4 rounded-xl border border-dashed border-muted-foreground/35 p-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-start gap-3">
+                      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+                        <Lock className="size-4" />
+                      </span>
+                      <div>
+                        <p className="font-semibold">The rest of the brief is locked</p>
+                        <p className="mt-0.5 text-sm text-muted-foreground">
+                          Brand, budget, contact details, key messages and the creative brief.
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="form" size="sm" className="shrink-0" onClick={() => setShowUnlockDialog(true)}>
+                      <LockOpen />
+                      Unlock · 1 credit
+                    </Button>
                   </div>
                 )}
               </CardContent>
@@ -383,20 +385,29 @@ const InfluencerCampaignDetail = () => {
                 <TooltipTrigger asChild>
                   <span className="block w-full">
                     <Button
-                      onClick={() => setShowApplyDialog(true)}
+                      onClick={() => (isUnlocked ? setShowApplyDialog(true) : setShowUnlockDialog(true))}
                       variant="accent"
                       size="lg"
                       className="w-full"
                       disabled={!user?.is_approved}
                     >
-                      Apply now
-                      <ArrowRight />
+                      {isUnlocked ? (
+                        <>
+                          Apply now · free
+                          <ArrowRight />
+                        </>
+                      ) : (
+                        <>
+                          <LockOpen />
+                          Unlock to apply · 1 credit
+                        </>
+                      )}
                     </Button>
                   </span>
                 </TooltipTrigger>
                 {!user?.is_approved && (
                   <TooltipContent>
-                    <p>Your account is pending approval. You cannot apply to campaigns yet.</p>
+                    <p>Your account is pending approval. You can unlock and apply once you&apos;re approved.</p>
                   </TooltipContent>
                 )}
               </Tooltip>
@@ -432,9 +443,9 @@ const InfluencerCampaignDetail = () => {
         {/* ------------------------------------------ right: the numbers */}
         <div className="space-y-5">
           <Rise>
-            {campaign.budget && canViewFullDetails ? (
+            {campaign.budget && isUnlocked ? (
               <Stat label={budgetLabel} value={formatINR(campaign.budget)} />
-            ) : campaign.budget_type ? (
+            ) : isUnlocked && campaign.budget_type ? (
               <Stat
                 label={budgetLabel}
                 value={
@@ -448,10 +459,20 @@ const InfluencerCampaignDetail = () => {
                 <div className="num mt-5 text-[2.375rem] leading-none">
                   <LockedText
                     text="₹50,000"
-                    isLocked={!canViewFullDetails}
-                    message="Upgrade to view budget"
+                    isLocked={!isUnlocked}
+                    message="Unlock the brief to see the budget"
                   />
                 </div>
+                {!isUnlocked && (
+                  <button
+                    type="button"
+                    onClick={() => setShowUnlockDialog(true)}
+                    className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+                  >
+                    <LockOpen className="size-4" />
+                    Unlock · 1 credit
+                  </button>
+                )}
               </Card>
             )}
           </Rise>
@@ -490,18 +511,14 @@ const InfluencerCampaignDetail = () => {
                 {/* Brand Name */}
                 <div>
                   <p className="eyebrow mb-1">Brand name</p>
-                  {campaign.brand?.username && canViewFullDetails ? (
-                    <p className="text-[0.9375rem] font-semibold">{campaign.brand.username}</p>
+                  {isUnlocked ? (
+                    <p className="text-[0.9375rem] font-semibold">{brandName}</p>
                   ) : (
-                    <LockedText
-                      text="Brand Name"
-                      isLocked={!canViewFullDetails}
-                      message="Upgrade to view brand name"
-                    />
+                    <LockedText text="Brand Name" isLocked message="Unlock the brief to see the brand" />
                   )}
                 </div>
 
-                {campaign.brand_profile && canViewFullDetails && (
+                {campaign.brand_profile && isUnlocked && (
                   <>
                     <div>
                       <p className="eyebrow mb-1">Company</p>
@@ -533,7 +550,7 @@ const InfluencerCampaignDetail = () => {
                 )}
 
                 {/* Contact Info - Premium */}
-                {(campaign.contact_email || campaign.contact_phone) && canViewFullDetails && (
+                {(campaign.contact_email || campaign.contact_phone) && isUnlocked && (
                   <div className="border-t border-border pt-4">
                     <p className="eyebrow mb-2">Contact</p>
                     {campaign.contact_email && (
@@ -551,19 +568,20 @@ const InfluencerCampaignDetail = () => {
                   </div>
                 )}
 
-                {!canViewFullDetails && (
+                {!isUnlocked && (
                   <div className="border-t border-border pt-4">
                     <div className="rounded-lg bg-muted p-4 text-center">
                       <p className="text-sm leading-relaxed text-muted-foreground">
-                        Upgrade to Pro to view full brand details.
+                        Unlock the brief to see who the brand is and how to reach them.
                       </p>
                       <Button
                         variant="form"
                         size="sm"
                         className="mt-3 w-full"
-                        onClick={() => setShowUpgradePrompt(true)}
+                        onClick={() => setShowUnlockDialog(true)}
                       >
-                        Upgrade
+                        <LockOpen />
+                        Unlock · 1 credit
                       </Button>
                     </div>
                   </div>
@@ -583,7 +601,7 @@ const InfluencerCampaignDetail = () => {
               Apply to campaign
             </DialogTitle>
             <DialogDescription>
-              Write a message to the brand explaining why you're a great fit
+              Tell the brand why you&apos;re a great fit. Applying is free — you&apos;ve unlocked this brief.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -598,51 +616,38 @@ const InfluencerCampaignDetail = () => {
               />
             </div>
 
-            {/* Credit Warning - Inline, no modal */}
-            {canApplyWithCredits(user?.credits || 0) ? (
-              <>
-                <CreditWarning credits={user?.credits || 0} />
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Button
-                    variant="form"
-                    onClick={handleApply}
-                    disabled={isApplying || !applicationMessage.trim()}
-                    className="flex-1"
-                  >
-                    {isApplying ? (
-                      <>
-                        <Loader2 className="animate-spin" />
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
-                        <Send />
-                        {user?.credits === 1 ? 'Apply (last credit)' : 'Submit application'}
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" onClick={() => setShowApplyDialog(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <InsufficientCreditsBlock />
-            )}
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                variant="form"
+                onClick={handleApply}
+                disabled={isApplying || !applicationMessage.trim()}
+                className="flex-1"
+              >
+                {isApplying ? (
+                  <>
+                    <Loader2 className="animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Send />
+                    Submit application
+                  </>
+                )}
+              </Button>
+              <Button variant="outline" onClick={() => setShowApplyDialog(false)}>
+                Cancel
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Upgrade Prompt */}
-      {!canViewFullDetails && (
-        <UpgradePrompt
-          open={showUpgradePrompt}
-          onClose={() => setShowUpgradePrompt(false)}
-          title="Upgrade to Pro"
-          description={upgradeMessage || "Get full access to campaign details, brand information, and apply to more campaigns"}
-          limitType="applications"
-        />
-      )}
+      <UnlockCampaignDialog
+        campaign={campaign}
+        open={showUnlockDialog}
+        onOpenChange={setShowUnlockDialog}
+      />
     </div>
   );
 };

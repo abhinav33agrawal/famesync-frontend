@@ -16,9 +16,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useBrandProfile, useInfluencerProfile } from "@/hooks/useProfile";
 import { cn } from "@/lib/utils";
 
-/* 76px shell, paper at 92% with blur, one hairline.
-   Removed: the gradient accent hairline, hover-glow, the Grand Hotel
-   `.brand` wordmark, and the gradient avatar fallback. */
+/* 76px shell, one hairline. Signed out it's ink, so it runs straight into
+   the landing hero (izea.com-style); signed in it's the light app bar. */
 
 const MARKETING_LINKS = [
   { to: "/#value", label: "Why FameSync", hash: "value" },
@@ -56,6 +55,7 @@ export const Navbar = () => {
 
   const displayName = user?.first_name || user?.username || "Account";
   const links = !user ? MARKETING_LINKS : role === "brand" ? BRAND_LINKS : CREATOR_LINKS;
+  const ink = !user;
 
   const go = (to: string) => {
     setOpen(false);
@@ -72,12 +72,17 @@ export const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/92 backdrop-blur-md">
+    <header
+      className={cn(
+        "sticky top-0 z-40 border-b backdrop-blur-md",
+        ink ? "border-ink-border bg-ink/95 text-ink-foreground" : "border-border bg-background/92",
+      )}
+    >
       <nav className="container flex h-[76px] items-center justify-between gap-6">
         <div className="flex items-center gap-9">
           <Link
             to={user ? `/${role}/dashboard` : "/"}
-            className="font-display text-[1.4375rem] font-semibold tracking-[-0.035em] text-foreground"
+            className="font-display text-[1.4375rem] font-black tracking-[-0.04em]"
           >
             FameSync
           </Link>
@@ -92,9 +97,13 @@ export const Navbar = () => {
                   onClick={(e) => handleLink(e, link)}
                   className={cn(
                     "rounded-full px-3.5 py-2 text-sm font-medium transition-colors duration-200",
-                    active
-                      ? "bg-secondary font-semibold text-secondary-foreground"
-                      : "text-muted-foreground hover:text-foreground",
+                    ink
+                      ? active
+                        ? "bg-ink-foreground/10 font-semibold text-ink-foreground"
+                        : "text-ink-muted hover:text-ink-foreground"
+                      : active
+                        ? "bg-secondary font-semibold text-secondary-foreground"
+                        : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {link.label}
@@ -109,10 +118,15 @@ export const Navbar = () => {
             /* Below sm these live in the mobile sheet, so the row can't
                overflow the 390px viewport. */
             <>
-              <Button variant="ghost" size="sm" className="hidden sm:inline-flex" onClick={() => go("/auth?mode=login")}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden hover:bg-ink-foreground/10 sm:inline-flex"
+                onClick={() => go("/auth?mode=login")}
+              >
                 Log in
               </Button>
-              <Button size="sm" className="hidden sm:inline-flex" onClick={() => go("/auth?mode=signup")}>
+              <Button variant="inverse" size="sm" className="hidden sm:inline-flex" onClick={() => go("/auth?mode=signup")}>
                 Start free
               </Button>
             </>
@@ -131,7 +145,7 @@ export const Navbar = () => {
                 className="hidden items-center gap-1.5 rounded-full border border-border px-3.5 py-2 text-[0.8125rem] font-semibold transition-colors hover:bg-muted sm:inline-flex"
               >
                 <Zap className="size-4 text-warning" />
-                {user.credits ?? 0} credits
+                {user.credits ?? 0} {user.credits === 1 ? "credit" : "credits"}
               </button>
 
               <NotificationsDropdown />
@@ -180,7 +194,10 @@ export const Navbar = () => {
             aria-label="Menu"
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
-            className="inline-flex size-11 items-center justify-center rounded-md hover:bg-muted md:hidden"
+            className={cn(
+              "inline-flex size-11 items-center justify-center rounded-md md:hidden",
+              ink ? "hover:bg-ink-foreground/10" : "hover:bg-muted",
+            )}
           >
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
@@ -188,7 +205,7 @@ export const Navbar = () => {
       </nav>
 
       {open && (
-        <div className="border-t border-border bg-background md:hidden">
+        <div className={cn("border-t md:hidden", ink ? "border-ink-border bg-ink" : "border-border bg-background")}>
           <div className="container flex flex-col py-3">
             {links.map((link) => (
               <Link
@@ -198,7 +215,10 @@ export const Navbar = () => {
                   handleLink(e, link);
                   setOpen(false);
                 }}
-                className="rounded-md px-2 py-3 text-[0.9375rem] font-medium hover:bg-muted"
+                className={cn(
+                  "rounded-md px-2 py-3 text-[0.9375rem] font-medium",
+                  ink ? "hover:bg-ink-foreground/10" : "hover:bg-muted",
+                )}
               >
                 {link.label}
               </Link>
@@ -228,7 +248,7 @@ export const Navbar = () => {
                   onClick={() => setOpen(false)}
                   className="rounded-md px-2 py-3 text-[0.9375rem] font-medium hover:bg-muted"
                 >
-                  Subscription · {user.credits ?? 0} credits
+                  Subscription · {user.credits ?? 0} {user.credits === 1 ? "credit" : "credits"}
                 </Link>
                 <Link
                   to="/settings"
@@ -252,11 +272,11 @@ export const Navbar = () => {
 
             {!user && (
               <>
-                <div className="my-2 h-px bg-border" />
-                <Button className="mb-2" onClick={() => go("/auth?mode=signup")}>
+                <div className="my-2 h-px bg-ink-border" />
+                <Button variant="inverse" className="mb-2" onClick={() => go("/auth?mode=signup")}>
                   Start free
                 </Button>
-                <Button variant="secondary" onClick={() => go("/auth?mode=login")}>
+                <Button variant="outline-inverse" onClick={() => go("/auth?mode=login")}>
                   Log in
                 </Button>
               </>

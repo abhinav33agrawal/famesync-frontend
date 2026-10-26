@@ -1,15 +1,17 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { CampaignCard } from "@/components/CampaignCard";
+import { HeroPhone } from "@/components/landing/HeroPhone";
+import { PlatformTour } from "@/components/landing/PlatformTour";
 import { Rise } from "@/components/motion";
-import { SHOWCASE_CAMPAIGN, VALUE_POINTS, STEPS, BENTO } from "@/data/landing";
+import { AUDIENCES, FACTS, NICHES, STEPS, VALUE_POINTS } from "@/data/landing";
 
-/* Removed from the old Home.tsx: FloatingOrb, SplitText, AnimatedCounter,
-   the marquee strip, the mesh-gradient hero, the four soft stat tiles,
-   the six gradient icon tiles, and every glow/shimmer/blob element. */
+/* Layout modelled on izea.com: an ink hero with a heavy headline and a
+   ticker, a "why" statement in three numbered columns, a "How?" section of
+   giant stacked verbs, a tabbed platform tour, an ink facts-and-audiences block, and a
+   gradient closing banner. */
 
 const Home = () => {
   const navigate = useNavigate();
@@ -32,194 +34,201 @@ const Home = () => {
       </Helmet>
 
       {/* ------------------------------------------------------------ hero */}
-        <section className="container grid items-center gap-16 py-24 lg:grid-cols-[1.05fr_0.95fr]">
-          <Rise>
-            <span className="mb-7 inline-flex items-center gap-2.5 rounded-full bg-secondary py-1.5 pl-2.5 pr-3.5">
+      <section className="overflow-hidden bg-ink text-ink-foreground">
+        <div className="container grid grid-cols-1 items-center gap-16 pb-20 pt-16 lg:grid-cols-[1.1fr_0.9fr] lg:pb-28 lg:pt-24">
+          <Rise className="min-w-0">
+            <span className="mb-8 inline-flex items-center gap-2.5 rounded-full border border-ink-border py-1.5 pl-2.5 pr-3.5">
               <span className="size-1.5 rounded-full bg-accent ring-4 ring-accent/25" />
-              <span className="text-xs font-semibold tracking-wide text-primary">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
                 Early access — India first
               </span>
             </span>
 
-            <h1 className="font-display text-display-1">Get paid to post.</h1>
+            <h1 className="font-display text-display-1 uppercase">
+              Get paid
+              <br />
+              to <span className="brand-gradient-text">post.</span>
+            </h1>
 
-            <p className="mt-6 max-w-[44ch] text-lg leading-relaxed text-muted-foreground">
+            <p className="mt-7 max-w-[46ch] text-lg leading-relaxed text-ink-muted">
               Real brands, real budgets, real briefs. Apply in a tap, deliver on Instagram, get paid —
               no agency in the middle.
             </p>
 
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Button size="lg" onClick={() => navigate("/auth?role=influencer&mode=signup")}>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Button variant="accent" size="lg" onClick={() => navigate("/auth?role=influencer&mode=signup")}>
                 Join as a creator
+                <ArrowRight />
               </Button>
-              <Button size="lg" variant="secondary" onClick={() => navigate("/auth?role=brand&mode=signup")}>
+              <Button size="lg" variant="outline-inverse" onClick={() => navigate("/auth?role=brand&mode=signup")}>
                 I&apos;m a brand
               </Button>
             </div>
           </Rise>
 
-          {/* one sized block — a video can replace the card later without
-              touching the layout */}
-          <Rise delay={0.06} className="relative">
-            <div className="wash absolute inset-y-4 -bottom-3 left-6 right-0 rounded-[1.75rem]" />
-            <CampaignCard campaign={SHOWCASE_CAMPAIGN} className="relative shadow-e3" />
+          <Rise delay={0.06}>
+            <HeroPhone />
           </Rise>
-        </section>
+        </div>
 
-        {/* --------------------------------------------- value proposition */}
-        <section id="value" className="container grid items-start gap-16 border-t border-border pt-24 pb-26 lg:grid-cols-[0.9fr_1.1fr]">
-          <Rise>
-            <p className="eyebrow mb-5">Why we built it</p>
-            <h2 className="font-display text-display-2">
-              Small creators do the best work and get the worst deals.
-            </h2>
-          </Rise>
-          <div className="divide-y divide-border border-y border-border">
-            {VALUE_POINTS.map((point, i) => (
-              <Rise key={point.title} delay={i * 0.06}>
-                <div className="grid grid-cols-[44px_1fr] gap-5 py-7">
-                  <span className="num text-[0.9375rem] text-primary">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <div>
-                    <h3 className="mb-1.5 text-[1.1875rem] font-semibold tracking-[-0.01em]">
-                      {point.title}
-                    </h3>
-                    <p className="max-w-[52ch] leading-relaxed text-muted-foreground">{point.body}</p>
-                  </div>
-                </div>
-              </Rise>
-            ))}
+        {/* niche ticker — the list is doubled so the loop is seamless */}
+        <div className="border-y border-ink-border py-5" aria-label="Niches on FameSync">
+          <div className="overflow-hidden">
+            <ul className="marquee gap-10 pr-10">
+              {[...NICHES, ...NICHES].map((niche, i) => (
+                <li
+                  key={i}
+                  aria-hidden={i >= NICHES.length}
+                  className="flex items-center gap-10 whitespace-nowrap font-display text-2xl font-extrabold uppercase tracking-[-0.02em] text-ink-foreground/80"
+                >
+                  {niche}
+                  <span className="size-2 rounded-full bg-primary" />
+                </li>
+              ))}
+            </ul>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* --------------------------------------------------- how it works */}
-        <section id="how" className="container pb-26">
-          <div className="mb-11 flex flex-wrap items-end justify-between gap-6">
-            <h2 className="font-display text-display-2">Three steps to your first collab.</h2>
-            <p className="text-muted-foreground">Roughly nine minutes, start to finish.</p>
+      {/* --------------------------------------------- value proposition */}
+      <section id="value" className="container py-24 lg:py-32">
+        <Rise className="max-w-[880px]">
+          <p className="eyebrow mb-5 text-primary">Why we built it</p>
+          <h2 className="font-display text-display-2">
+            Small creators do the best work and get the worst deals.
+          </h2>
+        </Rise>
+
+        <div className="mt-16 grid gap-12 md:grid-cols-3 md:gap-10">
+          {VALUE_POINTS.map((point, i) => (
+            <Rise key={point.title} delay={i * 0.06}>
+              <div className="border-t-2 border-foreground pt-6">
+                <span className="num text-5xl text-primary">{String(i + 1).padStart(2, "0")}</span>
+                <h3 className="mb-3 mt-5 text-xl font-extrabold tracking-[-0.02em]">{point.title}</h3>
+                <p className="leading-relaxed text-muted-foreground">{point.body}</p>
+              </div>
+            </Rise>
+          ))}
+        </div>
+      </section>
+
+      {/* --------------------------------------------------- how it works */}
+      <section id="how" className="bg-secondary py-24 lg:py-32">
+        <div className="container">
+          <div className="mb-14 flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <p className="eyebrow mb-4 text-secondary-foreground">How?</p>
+              <h2 className="font-display text-display-2">Three steps to your first collab.</h2>
+            </div>
+            <p className="text-secondary-foreground">Roughly nine minutes, start to finish.</p>
           </div>
-          <div className="grid gap-5 md:grid-cols-3">
+
+          <ol className="border-t border-secondary-foreground/20">
             {STEPS.map((step, i) => (
               <Rise key={step.title} delay={i * 0.06}>
-                <Card intent="interactive" className="h-full p-7">
-                  <div className="mb-14 flex items-center justify-between">
-                    <span className="eyebrow">Step {String(i + 1).padStart(2, "0")}</span>
-                    <span className={i === 0 ? "size-2.5 rounded-full bg-accent" : "size-2.5 rounded-full bg-border"} />
+                <li className="grid gap-4 border-b border-secondary-foreground/20 py-10 md:grid-cols-[1.2fr_1fr] md:items-center md:gap-12">
+                  <div className="flex items-baseline gap-5">
+                    <span className="num text-base text-secondary-foreground">{String(i + 1).padStart(2, "0")}</span>
+                    <span className="font-display text-[clamp(48px,8vw,112px)] font-black uppercase leading-[0.9] tracking-[-0.05em] text-primary">
+                      {step.word}
+                    </span>
                   </div>
-                  <h3 className="mb-2.5 font-display text-display-3">{step.title}</h3>
-                  <p className="leading-relaxed text-muted-foreground">{step.body}</p>
-                </Card>
+                  <div>
+                    <h3 className="mb-2 text-xl font-extrabold tracking-[-0.02em]">{step.title}</h3>
+                    <p className="max-w-[46ch] leading-relaxed text-muted-foreground">{step.body}</p>
+                  </div>
+                </li>
+              </Rise>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* --------------------------------------------------- bento grid */}
+      <section id="features" className="container py-24 lg:py-32">
+        <Rise>
+          <p className="eyebrow mb-5 text-primary">The platform</p>
+          <h2 className="mb-14 max-w-[20ch] font-display text-display-2">
+            Everything the collab needs. Nothing it doesn&apos;t.
+          </h2>
+        </Rise>
+        <PlatformTour />
+      </section>
+
+      {/* ----------------------------------------- facts + two audiences */}
+      <section className="bg-ink py-24 text-ink-foreground lg:py-32">
+        <div className="container">
+          <Rise>
+            <p className="eyebrow mb-5 text-ink-muted">Why believe in FameSync?</p>
+            <h2 className="max-w-[18ch] font-display text-display-2">
+              Fair by default, <span className="brand-gradient-text">on both sides.</span>
+            </h2>
+          </Rise>
+
+          <dl className="mt-14 grid grid-cols-2 gap-x-8 gap-y-10 border-y border-ink-border py-12 lg:grid-cols-4">
+            {FACTS.map((fact) => (
+              <div key={fact.label}>
+                <dt className="sr-only">{fact.label}</dt>
+                <dd>
+                  <span className="num block text-[clamp(40px,5vw,64px)] leading-none">{fact.value}</span>
+                  <span className="mt-3 block max-w-[22ch] text-sm leading-relaxed text-ink-muted">
+                    {fact.label}
+                  </span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+
+          <div className="mt-16 grid gap-14 md:grid-cols-2 md:gap-10">
+            {AUDIENCES.map((audience, i) => (
+              <Rise key={audience.eyebrow} delay={i * 0.06} className="flex flex-col">
+                <p className="eyebrow mb-4 text-ink-muted">{audience.eyebrow}</p>
+                <h3 className="max-w-[22ch] font-display text-[1.75rem] leading-tight tracking-[-0.03em]">
+                  {audience.title}
+                </h3>
+                <ul className="mb-10 mt-8 border-t border-ink-border">
+                  {audience.lines.map((line) => (
+                    <li
+                      key={line}
+                      className="flex items-center justify-between gap-4 border-b border-ink-border py-4 text-[1.0625rem] font-semibold"
+                    >
+                      {line}
+                      <ArrowUpRight className="size-4 shrink-0 text-primary" />
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  size="lg"
+                  variant={i === 0 ? "inverse" : "outline-inverse"}
+                  className="mt-auto self-start"
+                  onClick={() => navigate(audience.to)}
+                >
+                  {audience.cta}
+                </Button>
               </Rise>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* --------------------------------------------------- bento grid */}
-        <section id="features" className="container pb-26">
-          <h2 className="mb-11 max-w-[20ch] font-display text-display-2">
-            Everything the collab needs. Nothing it doesn&apos;t.
-          </h2>
-          <div className="grid gap-5 md:grid-cols-3">
-            {BENTO.map((cell) => (
-              <Card
-                key={cell.title}
-                intent={cell.intent}
-                className={cell.wide ? "p-9 md:col-span-2" : "p-7"}
-              >
-                <span
-                  className={
-                    cell.intent === "feature"
-                      ? "eyebrow text-accent"
-                      : cell.intent === "tinted"
-                        ? "eyebrow text-secondary-foreground/70"
-                        : "eyebrow"
-                  }
-                >
-                  {cell.eyebrow}
-                </span>
-                <h3
-                  className={
-                    cell.wide
-                      ? "mb-3 mt-3.5 font-display text-[1.875rem] tracking-[-0.03em]"
-                      : "mb-2.5 mt-3.5 font-display text-display-3"
-                  }
-                >
-                  {cell.title}
-                </h3>
-                <p
-                  className={
-                    cell.intent === "feature"
-                      ? "max-w-[40ch] leading-relaxed text-primary-foreground/75"
-                      : "leading-relaxed text-muted-foreground"
-                  }
-                >
-                  {cell.body}
-                </p>
-              </Card>
-            ))}
+      {/* ------------------------------------------------- closing banner */}
+      <section className="container py-20">
+        <Rise>
+          <div className="brand-gradient flex flex-col gap-8 rounded-2xl px-8 py-14 text-primary-foreground md:flex-row md:items-end md:justify-between md:px-14 md:py-20">
+            <h2 className="max-w-[16ch] font-display text-display-2 uppercase">
+              Let&apos;s make something worth posting.
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              <Button size="lg" variant="inverse" onClick={() => navigate("/auth?mode=signup")}>
+                Start free
+                <ArrowRight />
+              </Button>
+              <Button size="lg" variant="outline-inverse" onClick={() => navigate("/contact")}>
+                Talk to us
+              </Button>
+            </div>
           </div>
-        </section>
-
-        {/* ------------------------------------------------- two-path CTA */}
-        <section className="container grid gap-5 pb-14 md:grid-cols-2">
-          <Card intent="feature" className="flex flex-col rounded-2xl p-11">
-            <h3 className="mb-3.5 font-display text-[2.125rem] leading-tight tracking-[-0.03em]">
-              For creators
-            </h3>
-            <p className="mb-7 max-w-[34ch] leading-relaxed text-primary-foreground/75">
-              Find paid work that fits what you already make.
-            </p>
-            <ul className="mb-9 grid gap-3">
-              {[
-                "Browse briefs from reviewed brands",
-                "Apply in one tap with your verified reach",
-                "Get paid for content you'd post anyway",
-              ].map((line) => (
-                <li key={line} className="flex items-center gap-3 text-[0.9375rem]">
-                  <span className="size-1.5 shrink-0 rounded-full bg-accent" />
-                  {line}
-                </li>
-              ))}
-            </ul>
-            <Button
-              variant="accent"
-              size="lg"
-              className="mt-auto self-start"
-              onClick={() => navigate("/auth?role=influencer&mode=signup")}
-            >
-              Join as a creator
-            </Button>
-          </Card>
-
-          <Card className="flex flex-col rounded-2xl p-11">
-            <h3 className="mb-3.5 font-display text-[2.125rem] leading-tight tracking-[-0.03em]">
-              For brands
-            </h3>
-            <p className="mb-7 max-w-[34ch] leading-relaxed text-muted-foreground">
-              Run micro-creator campaigns without an agency retainer.
-            </p>
-            <ul className="mb-9 grid gap-3">
-              {[
-                "Post a brief in minutes",
-                "Review verified applicants side by side",
-                "Track deliverables to approval",
-              ].map((line) => (
-                <li key={line} className="flex items-center gap-3 text-[0.9375rem]">
-                  <span className="size-1.5 shrink-0 rounded-full bg-primary" />
-                  {line}
-                </li>
-              ))}
-            </ul>
-            <Button
-              variant="secondary"
-              size="lg"
-              className="mt-auto self-start"
-              onClick={() => navigate("/auth?role=brand&mode=signup")}
-            >
-              Post a campaign
-            </Button>
-          </Card>
+        </Rise>
       </section>
     </>
   );

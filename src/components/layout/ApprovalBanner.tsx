@@ -1,37 +1,43 @@
-import { Info } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
-interface ApprovalBannerProps {
-    isSetup?: boolean;
-}
+/* One slim ink line above the navbar while an account waits for approval —
+   the landing page's ink band, not a warning: nothing is wrong, it's a wait.
+   It scrolls away with the page (the navbar is the sticky element), and it
+   isn't shown on the setup pages, which carry their own review note. */
+const ApprovalBanner = () => {
+  const { user } = useAuth();
+  // Creators are held on /waiting-for-approval (ProtectedRoute), so in
+  // practice this is the brand's line: explore and draft, publish later.
+  const brand = user?.role === "brand";
+  const detail = brand
+    ? "Explore and draft campaigns now. Publishing unlocks once our team approves your brand."
+    : "Some features unlock once our team approves your account.";
+  const short = brand ? "Publishing unlocks once approved." : "Some features unlock once approved.";
 
-/* Sits above the navbar on every signed-in surface, so it stays quiet:
-   a warning-tinted hairline band, no gradient, no shadow. */
-const ApprovalBanner = ({ isSetup }: ApprovalBannerProps) => {
-    return (
-        <div className="sticky top-0 z-[100] border-b border-warning/20 bg-warning/[0.07] py-3 backdrop-blur-md">
-            <div className="container flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-warning/15 text-warning">
-                        <Info className="size-4" />
-                    </span>
-                    <div>
-                        <p className="text-sm font-semibold text-foreground">
-                            {isSetup ? 'Complete your profile' : 'Account under review'}
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                            {isSetup
-                                ? 'Please finish setting up your profile. Our team will review your account once submitted.'
-                                : 'Your account is currently waiting for admin approval. Some features may be restricted until yours is whitelisted.'}
-                        </p>
-                    </div>
-                </div>
-                <Badge variant="warning" className="hidden shrink-0 sm:inline-flex">
-                    {isSetup ? 'Setup required' : 'Pending approval'}
-                </Badge>
-            </div>
-        </div>
-    );
+  return (
+    <div className="bg-ink text-ink-foreground">
+      <div className="container flex min-h-11 items-center justify-between gap-x-6 py-1 text-sm">
+        <p className="flex min-w-0 items-center gap-2.5">
+          <span className="size-2 shrink-0 rounded-full bg-primary ring-4 ring-primary/25" />
+          <span>
+            <span className="font-semibold">Account under review.</span>{" "}
+            <span className="text-ink-muted sm:hidden">{short}</span>
+            <span className="hidden text-ink-muted sm:inline">{detail}</span>
+          </span>
+        </p>
+        <Link
+          to="/waiting-for-approval"
+          className="inline-flex min-h-11 items-center gap-1.5 font-semibold text-ink-foreground underline-offset-4 hover:underline"
+        >
+          <span className="hidden sm:inline">What happens next</span>
+          <span className="sm:hidden">Details</span>
+          <ArrowRight className="size-4" />
+        </Link>
+      </div>
+    </div>
+  );
 };
 
 export default ApprovalBanner;

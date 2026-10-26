@@ -1,5 +1,5 @@
 import api from './config';
-import type { Campaign, Application, ApplicationCreate, CampaignSuggestion } from './types';
+import type { Campaign, Application, ApplicationCreate, CampaignSuggestion, CampaignUnlockResponse } from './types';
 
 export type CampaignStatus = 'draft' | 'active' | 'completed' | 'cancelled';
 
@@ -55,6 +55,12 @@ export const campaignsApi = {
 
     get: async (slug: string): Promise<Campaign> => {
       const response = await api.get(`/campaigns/influencer/${slug}/`);
+      return response.data;
+    },
+
+    /** Spend one credit to see the full brief. Idempotent server-side. */
+    unlock: async (slug: string): Promise<CampaignUnlockResponse> => {
+      const response = await api.post(`/campaigns/influencer/${slug}/unlock/`);
       return response.data;
     },
 

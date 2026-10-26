@@ -19,6 +19,10 @@ const buttonVariants = cva(
         // creator-facing CTA only (citrus rule: one per screen)
         accent:
           "rounded-full bg-accent text-accent-foreground hover:-translate-y-px hover:shadow-e2",
+        // on ink sections — white pill and its outline partner
+        inverse: "rounded-full bg-ink-foreground text-ink hover:bg-secondary hover:-translate-y-px",
+        "outline-inverse":
+          "rounded-full border-[1.5px] border-ink-foreground/30 bg-transparent text-ink-foreground hover:border-ink-foreground hover:bg-ink-foreground/10",
         secondary:
           "rounded-full border-[1.5px] border-border bg-transparent text-foreground hover:border-primary hover:bg-muted",
         // inside cards, dialogs, wizards — radius 12

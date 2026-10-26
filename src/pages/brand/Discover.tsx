@@ -198,8 +198,7 @@ export default function Discover() {
                         engagement: profile.engagement_rate,
                         verified: isVerified,
                       }}
-                      onInvite={() => setSelectedProfile(profile)}
-                      onSave={() => setSelectedProfile(profile)}
+                      onView={() => setSelectedProfile(profile)}
                     />
                   </motion.div>
                 );

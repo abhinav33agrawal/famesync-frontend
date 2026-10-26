@@ -71,7 +71,7 @@ const BrandDashboard = () => {
 
         {/* ----------------------------------------------------------- stats */}
         <Rise>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             <Stat
               label="Active campaigns"
               value={stats?.active_campaigns || 0}
@@ -92,9 +92,9 @@ const BrandDashboard = () => {
           </div>
         </Rise>
 
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           {/* ------------------------------------------- recent campaigns */}
-          <section className="lg:col-span-2">
+          <section className="min-w-0 lg:col-span-2">
             <div className="mb-5 flex items-end justify-between gap-4">
               <div>
                 <p className="eyebrow mb-2">Latest briefs</p>
@@ -117,12 +117,12 @@ const BrandDashboard = () => {
                 </Button>
               </Card>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {recentCampaigns.map((campaign) => (
                   <CampaignCard
                     key={campaign.id}
                     campaign={campaign}
-                    state="applied"
+                    state="owned"
                     onView={() => navigate(`/brand/campaigns/${campaign.slug}`)}
                   />
                 ))}
@@ -187,18 +187,19 @@ const BrandDashboard = () => {
 
         {/* ------------------------------------------------------ closing CTA */}
         <Rise>
-          <Card intent="tinted" className="rounded-2xl p-8 md:p-11">
+          <Card intent="feature" className="rounded-2xl p-8 md:p-11">
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="max-w-[26ch] font-display text-display-2">
+                <h2 className="max-w-[26ch] font-display text-[2rem] leading-tight tracking-[-0.03em]">
                   Ready to launch your next campaign?
                 </h2>
-                <p className="mt-3 max-w-[48ch] leading-relaxed text-secondary-foreground/80">
+                <p className="mt-3 max-w-[48ch] leading-relaxed text-ink-muted">
                   Post a brief in minutes and review verified applicants side by side.
                 </p>
               </div>
               <Button
                 size="lg"
+                variant="inverse"
                 className="shrink-0 self-start md:self-auto"
                 onClick={() => navigate('/brand/create-campaign')}
               >

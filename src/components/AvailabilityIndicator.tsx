@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 
 /* green-500 -> success, amber-500 -> warning. */
 
-type AvailabilityStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
+type AvailabilityStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'error';
 
 interface AvailabilityIndicatorProps {
   status: AvailabilityStatus;
@@ -32,6 +32,12 @@ export function AvailabilityIndicator({ status, message, className }: Availabili
         <>
           <X className="size-3.5 text-destructive" />
           <span className="font-medium text-destructive">{message}</span>
+        </>
+      )}
+      {status === 'error' && (
+        <>
+          <AlertCircle className="size-3.5 text-muted-foreground" />
+          <span className="text-muted-foreground">{message}</span>
         </>
       )}
       {status === 'invalid' && (

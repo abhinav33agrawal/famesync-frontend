@@ -38,8 +38,8 @@ export const UpgradePrompt = ({
     'Advanced analytics',
     'Direct messaging'
   ] : [
-    'Apply to 30 campaigns per month (Pro)',
-    'See full campaign details',
+    '30 credits a month to unlock briefs (Pro)',
+    'Up to 3 unlocks a day',
     'Priority in brand searches',
     'Advanced analytics',
     'Profile views tracking'
