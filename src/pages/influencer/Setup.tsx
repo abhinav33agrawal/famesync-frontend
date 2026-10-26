@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,33 +9,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import {
-  Upload,
-  Plus,
-  X,
-  Instagram,
-  Youtube,
-  Globe,
-  Hash,
-  FileText,
-  ArrowRight,
-  Check,
-  Camera,
-  Loader2,
-  Star,
-} from 'lucide-react';
+import { Plus, X, Instagram, Youtube, Globe, ArrowRight, Loader2 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { profilesApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { ImageCropper } from '@/components/ui/image-cropper';
 import { useCategories } from '@/hooks/useCategories';
-import { Rise } from '@/components/motion';
-import { cn } from '@/lib/utils';
+import { CreatorCard } from '@/components/CreatorCard';
+import { AvatarPicker, OnboardingShell, SetupSection } from '@/components/onboarding/OnboardingShell';
 
-/* Removed from the old wizard: FloatingOrb (looping animation), the gradient
-   progress bar and glow-shadow submit button, the per-field entrance stagger,
-   the pink/red brand-coloured input focus states, and the spinning
-   framer-motion loader (`repeat: Infinity`). */
+/* Laid out by OnboardingShell (ink panel with a live CreatorCard preview and
+   checklist, form on the right in three numbered sections). Field names,
+   validation and the setup payload are unchanged. */
 
 // URL Validation Functions
 const validateInstagramUrl = (url: string): boolean => {
@@ -59,46 +44,6 @@ const validateYoutubeUrl = (url: string): boolean => {
   ];
   return youtubePatterns.some(pattern => pattern.test(url.trim()));
 };
-
-/** Restrained step meter: five hairline segments, no gradient, no glow. */
-const StepIndicator = ({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) => (
-  <div className="mb-8">
-    <div className="mb-2.5 flex items-baseline justify-between gap-4">
-      <span className="eyebrow">Profile completeness</span>
-      <span className="num text-sm text-muted-foreground">
-        {Math.min(currentStep, totalSteps)}/{totalSteps}
-      </span>
-    </div>
-    <div className="flex gap-1.5">
-      {Array.from({ length: totalSteps }).map((_, i) => (
-        <span
-          key={i}
-          className={cn(
-            "h-1.5 flex-1 rounded-full transition-colors duration-200",
-            i < currentStep ? "bg-primary" : "bg-border",
-          )}
-        />
-      ))}
-    </div>
-  </div>
-);
-
-/** Field header: icon + label, and the required marker where it applies. */
-const FieldLabel = ({
-  icon: Icon,
-  children,
-  required,
-}: {
-  icon: React.ElementType;
-  children: React.ReactNode;
-  required?: boolean;
-}) => (
-  <div className="flex items-center gap-2">
-    <Icon className="size-4 text-muted-foreground" />
-    <Label className="font-semibold">{children}</Label>
-    {required && <span className="text-xs text-destructive">*</span>}
-  </div>
-);
 
 // Loading skeleton
 const SetupSkeleton = () => (
@@ -314,299 +259,277 @@ const InfluencerSetup = () => {
     formData.audienceInfo,
   ].filter(Boolean).length;
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* This route has no navbar, so the wizard carries its own hairline bar. */}
-      <header className="border-b border-border bg-background/92 backdrop-blur-md">
-        <div className="container flex h-[76px] items-center justify-between gap-4">
-          <Link
-            to="/"
-            className="font-display text-[1.4375rem] font-semibold tracking-[-0.035em] text-foreground"
-          >
-            FameSync
-          </Link>
-          <div className="text-sm text-muted-foreground">
-            Welcome, <span className="font-semibold text-foreground">{user?.first_name || 'Creator'}</span>
-          </div>
-        </div>
-      </header>
+  const categoryName =
+    formData.category === 'other'
+      ? formData.customCategory
+      : dynamicCategories.find((cat) => cat.slug === formData.category)?.name;
+  const handle =
+    formData.instagramUrl.match(/instagram\.com\/([^/?#]+)/i)?.[1] || user?.username || 'yourhandle';
+  const displayName = `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim() || user?.username || 'You';
 
-      <div className="container max-w-2xl py-12">
-        {isLoading ? (
-          <SetupSkeleton />
-        ) : (
-          <>
-            <Rise>
-              <div className="mb-9">
-                <span className="eyebrow">Creator onboarding</span>
-                <h1 className="mt-2.5 font-display text-display-2">Complete your profile.</h1>
-                <p className="mt-4 max-w-[46ch] leading-relaxed text-muted-foreground">
-                  Tell us about yourself to start applying to campaigns.
-                </p>
+  const fieldError = (message: string) => (
+    <p className="flex items-center gap-1.5 text-xs text-destructive">
+      <X className="size-3" />
+      {message}
+    </p>
+  );
+
+  return (
+    <OnboardingShell
+      firstName={user?.first_name}
+      eyebrow="Creator onboarding"
+      title="Almost"
+      highlight="there."
+      intro="Fill this in once. Brands see it on every application you send."
+      previewLabel="How brands will see you"
+      preview={
+        <>
+          <CreatorCard
+            preview
+            creator={{
+              id: 'preview',
+              name: displayName,
+              username: handle,
+              niches: [formData.niche || categoryName].filter(Boolean) as string[],
+              city: formData.location || null,
+              photo: previewUrl || null,
+              followers: null,
+              engagement: null,
+            }}
+          />
+          <p className="mt-3 text-xs text-ink-muted">
+            Followers and engagement sync from Instagram once your profile is live.
+          </p>
+        </>
+      }
+      checklist={[
+        { label: 'A social profile', done: Boolean(formData.instagramUrl || formData.youtubeUrl) },
+        { label: 'Category', done: Boolean(formData.category) },
+        { label: 'Niche', done: Boolean(formData.niche) },
+        { label: 'Location', done: Boolean(formData.location) },
+        { label: 'About you', done: Boolean(formData.audienceInfo) },
+      ]}
+      reviewNote="Every profile is reviewed by hand before it goes live."
+    >
+      {isLoading ? (
+        <SetupSkeleton />
+      ) : (
+        <>
+          <div className="mb-10">
+            <h1 className="font-display text-[2.5rem] leading-[1.02] tracking-[-0.04em]">Complete your profile</h1>
+            <p className="mt-3 max-w-[46ch] leading-relaxed text-muted-foreground">
+              Takes about two minutes. You can change any of it later from your profile.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-10">
+            {/* ------------------------------------------------ socials */}
+            <SetupSection
+              index={1}
+              title="Where you post"
+              hint="At least one profile. Your follower count is fetched from Instagram automatically."
+            >
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="instagramUrl" className="sr-only">Instagram profile URL</Label>
+                  <div className="relative">
+                    <Instagram className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="instagramUrl"
+                      type="url"
+                      value={formData.instagramUrl}
+                      onChange={(e) => handleSocialUrlChange('instagramUrl', e.target.value)}
+                      placeholder="https://instagram.com/yourusername"
+                      aria-invalid={Boolean(instagramUrlError)}
+                      className="pl-10"
+                    />
+                  </div>
+                  {instagramUrlError && fieldError(instagramUrlError)}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="youtubeUrl" className="sr-only">YouTube channel URL</Label>
+                  <div className="relative">
+                    <Youtube className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="youtubeUrl"
+                      type="url"
+                      value={formData.youtubeUrl}
+                      onChange={(e) => handleSocialUrlChange('youtubeUrl', e.target.value)}
+                      placeholder="https://youtube.com/@yourchannel"
+                      aria-invalid={Boolean(youtubeUrlError)}
+                      className="pl-10"
+                    />
+                  </div>
+                  {youtubeUrlError && fieldError(youtubeUrlError)}
+                </div>
+
+                <AnimatePresence>
+                  {additionalUrls.map((item, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex flex-wrap gap-2"
+                    >
+                      <div className="relative w-full sm:w-1/3">
+                        <Globe className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                          placeholder="Platform"
+                          value={item.platform}
+                          onChange={(e) => handleUrlChange(index, 'platform', e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      <Input
+                        placeholder="Profile URL"
+                        type="url"
+                        value={item.url}
+                        onChange={(e) => handleUrlChange(index, 'url', e.target.value)}
+                        className="min-w-0 flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        aria-label="Remove platform"
+                        onClick={() => handleRemoveUrl(index)}
+                        className="size-12 shrink-0 text-muted-foreground hover:text-destructive"
+                      >
+                        <X />
+                      </Button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+
+                <button
+                  type="button"
+                  onClick={handleAddUrl}
+                  className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+                >
+                  <Plus className="size-4" />
+                  Add another platform
+                </button>
+                {socialUrlError && <p className="text-xs text-destructive">{socialUrlError}</p>}
+              </div>
+            </SetupSection>
+
+            {/* ------------------------------------------- what you make */}
+            <SetupSection index={2} title="What you make" hint="This is how brands find you in search.">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="category" className="font-semibold">Category</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  >
+                    <SelectTrigger id="category" className="h-12 rounded-lg border-input bg-card px-4 text-[0.95rem]">
+                      <SelectValue placeholder={categoriesLoading ? 'Loading...' : 'Select category'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {dynamicCategories.map((cat) => (
+                        <SelectItem key={cat.slug} value={cat.slug}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="niche" className="font-semibold">Your niche</Label>
+                  <Input
+                    id="niche"
+                    value={formData.niche}
+                    onChange={(e) => setFormData({ ...formData, niche: e.target.value })}
+                    placeholder="Vegan food, budget travel…"
+                    required
+                  />
+                </div>
               </div>
 
-              <StepIndicator currentStep={completedFields} totalSteps={5} />
-            </Rise>
-
-            <Rise delay={0.06}>
-              <Card>
-                <CardContent className="p-6 sm:p-8">
-                  <form onSubmit={handleSubmit} className="space-y-8">
-                    {/* Social Media Section */}
-                    <div className="space-y-4">
-                      <FieldLabel icon={Instagram} required>
-                        Social media profiles
-                      </FieldLabel>
-
-                      <div className="space-y-3">
-                        <div className="space-y-1.5">
-                          <div className="relative">
-                            <Instagram className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                              type="url"
-                              value={formData.instagramUrl}
-                              onChange={(e) => handleSocialUrlChange('instagramUrl', e.target.value)}
-                              placeholder="https://instagram.com/yourusername"
-                              aria-invalid={Boolean(instagramUrlError)}
-                              className="pl-10"
-                            />
-                          </div>
-                          {instagramUrlError && (
-                            <p className="flex items-center gap-1.5 text-xs text-destructive">
-                              <X className="size-3" />
-                              {instagramUrlError}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <div className="relative">
-                            <Youtube className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                              type="url"
-                              value={formData.youtubeUrl}
-                              onChange={(e) => handleSocialUrlChange('youtubeUrl', e.target.value)}
-                              placeholder="https://youtube.com/@yourchannel"
-                              aria-invalid={Boolean(youtubeUrlError)}
-                              className="pl-10"
-                            />
-                          </div>
-                          {youtubeUrlError && (
-                            <p className="flex items-center gap-1.5 text-xs text-destructive">
-                              <X className="size-3" />
-                              {youtubeUrlError}
-                            </p>
-                          )}
-                        </div>
-
-                        <AnimatePresence>
-                          {additionalUrls.map((item, index) => (
-                            <motion.div
-                              key={index}
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              className="flex flex-wrap gap-2"
-                            >
-                              <div className="relative w-full sm:w-1/3">
-                                <Globe className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                                <Input
-                                  placeholder="Platform"
-                                  value={item.platform}
-                                  onChange={(e) => handleUrlChange(index, 'platform', e.target.value)}
-                                  className="pl-10"
-                                />
-                              </div>
-                              <Input
-                                placeholder="Profile URL"
-                                type="url"
-                                value={item.url}
-                                onChange={(e) => handleUrlChange(index, 'url', e.target.value)}
-                                className="min-w-0 flex-1"
-                              />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                aria-label="Remove platform"
-                                onClick={() => handleRemoveUrl(index)}
-                                className="size-12 shrink-0 text-muted-foreground hover:text-destructive"
-                              >
-                                <X />
-                              </Button>
-                            </motion.div>
-                          ))}
-                        </AnimatePresence>
-
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleAddUrl}
-                          className="w-full border-dashed"
-                        >
-                          <Plus />
-                          Add another platform
-                        </Button>
-                        {socialUrlError && (
-                          <p className="text-xs text-destructive">{socialUrlError}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          At least one social media profile is required
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Category */}
+              <AnimatePresence>
+                {formData.category === 'other' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                  >
                     <div className="space-y-2">
-                      <FieldLabel icon={Hash}>Category</FieldLabel>
-                      <Select
-                        value={formData.category}
-                        onValueChange={(value) => setFormData({ ...formData, category: value })}
-                      >
-                        <SelectTrigger className="h-12 rounded-lg border-input bg-card px-4 text-[0.95rem]">
-                          <SelectValue placeholder={categoriesLoading ? "Loading..." : "Select category"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {dynamicCategories.map((cat) => (
-                            <SelectItem key={cat.slug} value={cat.slug}>
-                              <span className="flex items-center gap-2">
-                                <span>{cat.name}</span>
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-muted-foreground">
-                        Your follower count will be automatically fetched from Instagram
-                      </p>
-                    </div>
-
-                    {/* Custom Category */}
-                    <AnimatePresence>
-                      {formData.category === 'other' && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                        >
-                          <div className="space-y-2">
-                            <Label className="font-semibold">Specify your category</Label>
-                            <Input
-                              value={formData.customCategory}
-                              onChange={(e) => setFormData({ ...formData, customCategory: e.target.value })}
-                              placeholder="Enter your category"
-                              required
-                            />
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Niche */}
-                    <div className="space-y-2">
-                      <FieldLabel icon={Star}>Your niche</FieldLabel>
+                      <Label htmlFor="customCategory" className="font-semibold">Specify your category</Label>
                       <Input
-                        value={formData.niche}
-                        onChange={(e) => setFormData({ ...formData, niche: e.target.value })}
-                        placeholder="Sustainable fashion, vegan lifestyle, etc."
+                        id="customCategory"
+                        value={formData.customCategory}
+                        onChange={(e) => setFormData({ ...formData, customCategory: e.target.value })}
+                        placeholder="Enter your category"
                         required
                       />
                     </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </SetupSection>
 
-                    {/* Location */}
-                    <div className="space-y-2">
-                      <FieldLabel icon={Globe}>Location</FieldLabel>
-                      <Input
-                        value={formData.location}
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        placeholder="e.g. New York, USA"
-                        required
-                      />
-                    </div>
+            {/* ------------------------------------------------ about you */}
+            <SetupSection index={3} title="About you">
+              <input
+                id="profilePicture"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg"
+                onChange={handleFileChange}
+                className="sr-only"
+              />
+              <AvatarPicker
+                inputId="profilePicture"
+                previewUrl={previewUrl}
+                fallback={displayName.charAt(0).toUpperCase()}
+                label="photo"
+                hint="Optional · PNG or JPG up to 10MB. A clear face photo gets more replies."
+              />
 
-                    {/* Audience Info */}
-                    <div className="space-y-2">
-                      <FieldLabel icon={FileText}>About you &amp; your audience</FieldLabel>
-                      <Textarea
-                        value={formData.audienceInfo}
-                        onChange={(e) => setFormData({ ...formData, audienceInfo: e.target.value })}
-                        placeholder="Tell us about your audience demographics, engagement rate, content style, and what makes you unique..."
-                        rows={4}
-                        required
-                      />
-                    </div>
+              <div className="space-y-2">
+                <Label htmlFor="location" className="font-semibold">City</Label>
+                <Input
+                  id="location"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  placeholder="e.g. Pune, India"
+                  required
+                />
+              </div>
 
-                    {/* Profile Picture */}
-                    <div className="space-y-2">
-                      <FieldLabel icon={Camera}>Profile picture</FieldLabel>
-                      <input
-                        id="profilePicture"
-                        type="file"
-                        accept="image/png,image/jpeg,image/jpg"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                      <label
-                        htmlFor="profilePicture"
-                        className="block cursor-pointer rounded-lg border border-dashed border-muted-foreground/35 p-8 text-center transition-colors hover:border-primary/50 hover:bg-muted"
-                      >
-                        {previewUrl ? (
-                          <span className="flex flex-col items-center">
-                            <span className="relative">
-                              <img
-                                src={previewUrl}
-                                alt="Preview"
-                                className="size-24 rounded-full object-cover ring-2 ring-border"
-                              />
-                              <span className="absolute -bottom-1 -right-1 inline-flex size-7 items-center justify-center rounded-full bg-success text-success-foreground">
-                                <Check className="size-4" />
-                              </span>
-                            </span>
-                            <span className="mt-3 text-sm text-muted-foreground">Click to change</span>
-                          </span>
-                        ) : (
-                          <span className="block">
-                            <span className="mx-auto mb-3 inline-flex size-14 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                              <Upload className="size-5" />
-                            </span>
-                            <span className="block text-sm font-semibold">Click to upload your photo</span>
-                            <span className="mt-1 block text-xs text-muted-foreground">
-                              PNG, JPG up to 10MB
-                            </span>
-                          </span>
-                        )}
-                      </label>
-                    </div>
+              <div className="space-y-2">
+                <Label htmlFor="audienceInfo" className="font-semibold">About you &amp; your audience</Label>
+                <Textarea
+                  id="audienceInfo"
+                  value={formData.audienceInfo}
+                  onChange={(e) => setFormData({ ...formData, audienceInfo: e.target.value })}
+                  placeholder="Who follows you, what you post, and what makes your content yours…"
+                  rows={4}
+                  required
+                />
+              </div>
+            </SetupSection>
 
-                    {/* Submit Button */}
-                    <div className="pt-2">
-                      <Button
-                        type="submit"
-                        variant="form"
-                        size="lg"
-                        className="w-full"
-                        disabled={setupMutation.isPending}
-                      >
-                        {setupMutation.isPending ? (
-                          <>
-                            <Loader2 className="animate-spin" />
-                            Creating profile...
-                          </>
-                        ) : (
-                          <>
-                            Complete setup
-                            <ArrowRight />
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            </Rise>
-          </>
-        )}
-      </div>
+            <div className="border-t border-border pt-7">
+              <Button type="submit" variant="form" size="lg" className="w-full" disabled={setupMutation.isPending}>
+                {setupMutation.isPending ? (
+                  <>
+                    <Loader2 className="animate-spin" />
+                    Creating profile...
+                  </>
+                ) : (
+                  <>
+                    Complete setup
+                    <ArrowRight />
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </>
+      )}
 
       <ImageCropper
         imageSrc={tempImageSrc}
@@ -615,7 +538,7 @@ const InfluencerSetup = () => {
         onCropComplete={handleCropComplete}
         aspect={1}
       />
-    </div>
+    </OnboardingShell>
   );
 };
 

@@ -8,7 +8,7 @@ const cardVariants = cva("rounded-xl text-card-foreground", {
       default: "border border-border bg-card",
       interactive: "border border-border bg-card lift cursor-pointer",
       tinted: "bg-secondary text-secondary-foreground",
-      feature: "bg-primary text-primary-foreground",
+      feature: "bg-ink text-ink-foreground",
       dashed: "border border-dashed border-muted-foreground/35 bg-card",
     },
   },

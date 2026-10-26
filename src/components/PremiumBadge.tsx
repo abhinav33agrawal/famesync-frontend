@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-/* The Pro marker: the `premium` badge variant (aubergine with citrus text),
+/* The Pro marker: the `premium` badge variant (the violet→magenta signature gradient),
    replacing the primary→secondary gradient with white text. */
 
 export interface PremiumBadgeProps {

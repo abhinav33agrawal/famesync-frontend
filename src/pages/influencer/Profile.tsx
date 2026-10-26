@@ -381,7 +381,7 @@ const InfluencerProfile = () => {
               note={
                 renewalDays !== null
                   ? `Resets in ${renewalDays} days`
-                  : 'One credit per application'
+                  : 'One credit unlocks a brief'
               }
             />
           </Rise>

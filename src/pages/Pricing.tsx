@@ -35,8 +35,9 @@ const INFLUENCER_TIERS: { free: Tier; pro: Tier } = {
     description: 'Perfect for getting started with influencer marketing',
     features: [
       '5 credits per month',
-      'Basic profile setup',
-      'Apply to campaigns',
+      '1 credit unlocks a full brief',
+      'Apply free to briefs you unlock',
+      'Up to 1 unlock per day',
       'Email support',
       'Access to community',
     ],
@@ -48,8 +49,8 @@ const INFLUENCER_TIERS: { free: Tier; pro: Tier } = {
     description: 'For influencers ready to scale their brand partnerships',
     features: [
       '30 credits per month',
-      'Max 3 applications per day',
-      'See full campaign details',
+      '1 credit unlocks a full brief',
+      'Up to 3 unlocks per day',
       'Priority email support',
       'Higher visibility to brands',
       'Basic campaign insights',

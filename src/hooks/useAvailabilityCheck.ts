@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '@/lib/api';
 
-type AvailabilityStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
+/** 'error' means the check itself failed (network, CORS, server) — it says
+ *  nothing about the value, so callers must not treat it as a rejection. */
+type AvailabilityStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'error';
 
 interface AvailabilityResult {
   status: AvailabilityStatus;
@@ -96,8 +98,10 @@ export function useAvailabilityCheck(
       if (error.name === 'CanceledError' || error.name === 'AbortError') {
         return; // Request was cancelled, don't update state
       }
-      setStatus('idle');
-      setMessage('');
+      // Used to reset to 'idle' silently, which the signup form then read as
+      // "not available" and blocked with "Please enter a valid username".
+      setStatus('error');
+      setMessage("Couldn't check right now. We'll confirm when you sign up.");
     }
   }, [type]);
 

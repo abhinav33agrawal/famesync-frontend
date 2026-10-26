@@ -1,7 +1,8 @@
 # FameSync design system
 
-Single light theme. Aubergine is the brand, citrus is rationed, paper is the
-ground. If a screen needs a colour, a radius or a shadow that isn't listed
+Single light theme, with ink sections on the marketing pages (layout modelled
+on izea.com). Violet is the brand, magenta is rationed, near-white is the
+ground, ink is the dark band. If a screen needs a colour, a radius or a shadow that isn't listed
 here, it's wrong — reach for the token, not a new value.
 
 Run `node scripts/design-check.mjs` to check the mechanical rules below
@@ -15,27 +16,30 @@ Semantic tokens only. **Never** use a raw Tailwind palette colour
 
 | Token | Role |
 |---|---|
-| `background` | warm paper — the page ground |
-| `foreground` | near-black text |
+| `background` | near-white with a violet cast — the page ground |
+| `foreground` | ink-black text |
 | `card` | white — the only raised surface |
-| `primary` | aubergine — the one brand colour; fills, active nav, feature cards |
-| `secondary` | lilac tint — nav-active, avatar fallbacks, tinted cards |
-| `accent` | citrus — **rationed**, see below |
+| `primary` | electric violet — the brand colour; fills, active nav, big numerals |
+| `secondary` | lilac tint — nav-active, avatar fallbacks, tinted cards, the "How?" band |
+| `accent` | magenta — **rationed**, see below |
+| `ink` / `ink-foreground` / `ink-muted` / `ink-border` | the dark band: signed-out navbar, landing hero, facts block, footer, `feature` cards |
 | `muted` / `muted-foreground` | quiet fills and secondary text |
 | `success` `warning` `destructive` | status only, always via `StatusBadge` where possible |
 | `border` / `input` | one hairline value |
 
-### The citrus rule
+### The magenta rule
 
-Citrus (`accent`) is the loudest thing on the page, so it appears **once per
+Magenta (`accent`) is the loudest thing on the page, so it appears **once per
 screen**, and only as: the creator-facing CTA, a live/active dot, or a single
-eyebrow label. Text never sits on citrus except `accent-foreground` at button
-size. `rg "bg-accent" src/` should return at most one hit per route.
+eyebrow label. Text never sits on magenta except `accent-foreground` at button
+size. On ink, a highlighted word or eyebrow uses `brand-gradient-text`, never
+`text-accent`. `rg "bg-accent" src/` should return at most one hit per route.
 
 ## Type
 
-- `font-display` (Bricolage Grotesque) — `h1`–`h3`, card titles, and anything
-  in the `.display` class. Tight tracking; it carries the personality.
+- `font-display` (Montserrat 800/900, our stand-in for IZEA's Gotham Black) —
+  `h1`–`h3`, card titles, and anything in the `.display` class. Tight
+  tracking; hero and closing-banner headlines are uppercase.
 - Body (Plus Jakarta Sans) — everything else, set on `body`.
 - `.num` — budgets, follower counts, dates, stat values. Numerals should read
   as a claim, not as data slop.
@@ -51,8 +55,11 @@ size. `rg "bg-accent" src/` should return at most one hit per route.
 - Elevation: `shadow-e1` resting, `shadow-e2` hover, `shadow-e3` for the one
   hero object. There is no glow. Ever.
 - Interactive cards get `lift` (2px rise, e1 → e2), not a bespoke hover.
-- `wash` is the only decorative background in the product, and one panel per
-  page is the budget.
+- Decorative backgrounds: `wash` (soft lilac panel) and `brand-gradient`
+  (violet→magenta, the signature). One of each per page at most.
+- `feature` cards are ink, so their text is `text-ink-foreground` /
+  `text-primary-foreground` (both near-white).
+- On ink, buttons are `inverse` (white pill) and `outline-inverse`.
 
 ## Components — reuse before you build
 
@@ -60,7 +67,7 @@ size. `rg "bg-accent" src/` should return at most one hit per route.
 |---|---|
 | a campaign, anywhere | `CampaignCard` (`@/components/CampaignCard`) |
 | a creator, brand-side | `CreatorCard` |
-| a dashboard metric | `Stat` — `tone="feature"` for the single aubergine block |
+| a dashboard metric | `Stat` — `tone="feature"` for the single ink block |
 | any status string | `StatusBadge` — never a bespoke colour map or icon |
 | an avatar / brand mark | `Avatar`, `BrandLogo` |
 | money, reach, dates, deliverables | `@/lib/format` — `formatINR`, `formatCompact`, `daysLeftLabel`, `deliverableChips` |
@@ -68,24 +75,25 @@ size. `rg "bg-accent" src/` should return at most one hit per route.
 | surfaces | `Card` intents below |
 
 `Button` variants: `default` (pill, page-level action) · `accent` (creator CTA,
-citrus rule applies) · `secondary` (outline pill) · `form` (inside cards,
+magenta rule applies) · `secondary` (outline pill) · `inverse` / `outline-inverse` (on ink) · `form` (inside cards,
 dialogs, wizards — radius 12) · `outline` · `ghost` · `destructive` · `link`.
 
 `Card` intents: `default` · `interactive` (adds `lift`) · `tinted` (lilac) ·
-`feature` (aubergine) · `dashed` (empty states).
+`feature` (ink) · `dashed` (empty states).
 
 **A note on `accent` in the Radix primitives.** Stock shadcn treats `accent` as
-a quiet neutral hover tint, but here `accent` is the loud citrus — so the
+a quiet neutral hover tint, but here `accent` is the loud magenta — so the
 primitives in `components/ui/` were rewired to highlight with `secondary`
 (the lilac selection surface, matching the Navbar's active pill). If you pull
-in a new shadcn component, do the same to it, or its menu rows will hover lime.
+in a new shadcn component, do the same to it, or its menu rows will hover magenta.
 
 ## Motion
 
 `Rise` and `RiseGroup` are the only entrance animations; `listItemMotion` is
 the only layout settle (filtered lists). Stagger at 60ms, three children max.
 
-Nothing loops. `rg "repeat: Infinity" src/` should stay empty — no floating
+Nothing loops, with one exception: the `.marquee` niche ticker under the
+landing hero (CSS, switched off under `prefers-reduced-motion`). `rg "repeat: Infinity" src/` should stay empty — no floating
 orbs, no pulsing rings, no shimmer. `prefers-reduced-motion` is honoured
 globally in `index.css`, so don't re-implement it.
 

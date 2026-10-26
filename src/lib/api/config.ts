@@ -1,7 +1,11 @@
 import axios from "axios";
 
-export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+/* Under `vite dev` the browser talks to the dev server's /api proxy (see
+   vite.config.ts), which forwards to VITE_API_URL. Calling the backend
+   directly from http://localhost:8080 is blocked by its CORS policy. */
+export const API_BASE_URL = __API_DEV_PROXY__
+  ? "/api"
+  : import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 /** Where uploaded media lives: the API origin without the /api suffix.
  *
@@ -40,10 +44,29 @@ const refreshApi = axios.create({ baseURL: API_BASE_URL });
 //   return config;
 // });
 
+/* Signed-out endpoints never get the saved token. The backend rejects an
+   expired Bearer token with 401 even on public views, so a stale session
+   used to break the signup availability checks (and the 401 handler below
+   would then bounce the page to /auth mid-form). */
+const PUBLIC_AUTH_PATHS = [
+  "/auth/check-username/",
+  "/auth/check-email/",
+  "/auth/register/",
+  "/auth/login/",
+  "/auth/forgot-password/",
+  "/auth/reset-password/",
+  "/auth/verify-email/",
+  "/auth/resend-verification/",
+  "/auth/google-login/",
+];
+
+const isPublicAuthPath = (url?: string) =>
+  Boolean(url) && PUBLIC_AUTH_PATHS.some((path) => url!.includes(path));
+
 api.interceptors.request.use((config) => {
   const tokens = localStorage.getItem("famee_tokens");
 
-  if (tokens) {
+  if (tokens && !isPublicAuthPath(config.url)) {
     const { access } = JSON.parse(tokens);
     config.headers.Authorization = `Bearer ${access}`;
   }
@@ -62,7 +85,7 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isPublicAuthPath(originalRequest?.url)) {
       originalRequest._retry = true;
 
       const tokens = localStorage.getItem("famee_tokens");

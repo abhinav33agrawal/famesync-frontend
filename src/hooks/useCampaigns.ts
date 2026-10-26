@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { campaignsApi, CampaignStatus } from '@/lib/api/campaigns';
-import type { Campaign, ApplicationCreate } from '@/lib/api/types';
+import type { Campaign, ApplicationCreate, CampaignUnlockResponse } from '@/lib/api/types';
 import { useToast } from '@/hooks/use-toast';
 
 // Brand hooks
@@ -166,16 +166,12 @@ export const useApplyToCampaign = () => {
       queryClient.invalidateQueries({ queryKey: ['campaigns', 'influencer'] });
       queryClient.invalidateQueries({ queryKey: ['applications'] });
       queryClient.invalidateQueries({ queryKey: ['campaign'] });
-      // Refresh user data to update credit balance
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-
-      const creditsRemaining = (response as any)?.credits_remaining;
+      // Applying is free (the credit went on the unlock), so there is no
+      // balance to refresh and nothing to count down in the toast.
+      void response;
       toast({
         title: 'Application Submitted! 🎉',
-        description: creditsRemaining !== undefined
-          ? `The brand will review your application. (${creditsRemaining} credits remaining)`
-          : 'The brand will review your application.',
+        description: 'The brand will review your application.',
       });
     },
     onError: (error: any) => {
@@ -188,10 +184,10 @@ export const useApplyToCampaign = () => {
           description: 'You have already applied to this campaign.',
           variant: 'destructive',
         });
-      } else if (errorData?.insufficient_credits) {
+      } else if (errorData?.not_unlocked) {
         toast({
-          title: 'Insufficient Credits',
-          description: 'You need at least 1 credit to apply. Upgrade your plan for more credits.',
+          title: 'Unlock this brief first',
+          description: 'Spend 1 credit to see the full brief, then applying is free.',
           variant: 'destructive',
         });
       } else if (errorData?.retry) {
@@ -205,6 +201,33 @@ export const useApplyToCampaign = () => {
           title: 'Error',
           description: errorData?.error || errorData?.detail || 'Failed to apply. Please try again.',
           variant: 'destructive',
+        });
+      }
+    },
+  });
+};
+
+/** Spend one credit to unlock a campaign's full brief. The response is the
+ *  unlocked campaign, so the detail cache is filled straight from it; the
+ *  list and the credit balance (navbar, subscription) are refetched. Errors
+ *  (out of credits, caps) are left to the caller, which shows them in the
+ *  unlock dialog rather than as a toast. */
+export const useUnlockCampaign = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (slug: string) => campaignsApi.influencer.unlock(slug),
+    onSuccess: (campaign: CampaignUnlockResponse, slug) => {
+      queryClient.setQueryData(['campaign', 'influencer', slug], campaign);
+      queryClient.invalidateQueries({ queryKey: ['campaigns', 'influencer'] });
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['credit-usage'] });
+      if (campaign.charged) {
+        toast({
+          title: 'Brief unlocked',
+          description: `You can apply for free. ${campaign.credits_remaining} credit${campaign.credits_remaining === 1 ? '' : 's'} left.`,
         });
       }
     },

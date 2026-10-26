@@ -21,24 +21,60 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
-  Check,
   Loader2,
 } from 'lucide-react';
-import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from '@react-oauth/google';
+import type { CredentialResponse } from '@react-oauth/google';
+import { GOOGLE_CLIENT_ID, GoogleButton } from '@/components/auth/GoogleButton';
 import { useAvailabilityCheck } from '@/hooks/useAvailabilityCheck';
 import { AvailabilityIndicator } from '@/components/AvailabilityIndicator';
 import { getInstagramErrorMessage, startInstagramAuth } from '@/lib/instagram';
 import { INSTAGRAM_LOGIN_ENABLED } from '@/lib/features';
+import { FACTS, STEPS } from '@/data/landing';
 
-/* Removed from the old Auth.tsx: the floating-orb blobs, the AnimatedInput
-   slide wrapper, the spring tab indicator, the ping ring behind the mail
-   icon, the gradient icon tiles and every hard-coded white / heavy shadow. */
+/* Ink brand panel on the left in the landing page's language; the form sits
+   straight on the page (no card), social sign-in first, email below. */
 
-const PITCH_POINTS = [
-  'Simple campaign discovery',
-  'Direct brand communication',
-  'No complicated setup',
-];
+/* The ink side panel follows the person: creator steps, brand steps, or a
+   plain welcome back. Steps restate the landing page — no new claims. */
+const PANEL = {
+  influencer: {
+    eyebrow: 'For creators',
+    title: 'Get paid',
+    highlight: 'to post.',
+    steps: STEPS.map(({ title, body }) => ({ title, body })),
+  },
+  brand: {
+    eyebrow: 'For brands',
+    title: 'Hire creators',
+    highlight: 'who fit.',
+    steps: [
+      {
+        title: 'Post a brief',
+        body: 'Budget, deliverables and creative direction in one place. Every brand is checked by hand before a brief goes live.',
+      },
+      {
+        title: 'Review verified applicants',
+        body: 'Real Instagram reach and engagement on every application, side by side.',
+      },
+      {
+        title: 'Track to approval',
+        body: 'Accept creators, collect post links and approve deliverables in one place.',
+      },
+    ],
+  },
+} as const;
+
+/* Blank in any build without VITE_GOOGLE_CLIENT_ID (local dev with no .env,
+   a Vercel environment missing it). Rendering GoogleLogin with an empty id
+   sends people to Google's "Missing required parameter: client_id" page,
+   so the button is hidden instead — and shown disabled in dev as a hint. */
+const SHOW_GOOGLE = Boolean(GOOGLE_CLIENT_ID) || import.meta.env.DEV;
+const HAS_SOCIAL = INSTAGRAM_LOGIN_ENABLED || SHOW_GOOGLE;
+
+const ROLES = [
+  { key: 'influencer', label: 'Creator', note: 'Find paid briefs', Icon: User },
+  { key: 'brand', label: 'Brand', note: 'Hire creators', Icon: Building2 },
+] as const;
 
 /** Meter only — the validation rule (8 chars) lives in handleSignUp. */
 const PasswordStrength = ({ password }: { password: string }) => {
@@ -108,6 +144,7 @@ const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [instagramStarting, setInstagramStarting] = useState(false);
   const [instagramStatusMessage, setInstagramStatusMessage] = useState('');
+  const panel = PANEL[selectedRole] ?? PANEL.influencer;
 
   // Real-time availability checks with debouncing
   const usernameAvailability = useAvailabilityCheck('username', signUpData.username, 400);
@@ -154,7 +191,11 @@ const Auth = () => {
     e.preventDefault();
     setPasswordError('');
 
-    // Check username availability and validity
+    /* Block only on a definite answer. The live check is a convenience:
+       when it is still debouncing, mid-flight or failed (network, CORS, a
+       stale token), /auth/register/ validates username and email again and
+       AuthContext shows the server's message. Requiring 'available' here
+       used to reject perfectly good usernames whenever the check failed. */
     if (usernameAvailability.status === 'invalid') {
       toast.error(usernameAvailability.message);
       return;
@@ -163,30 +204,12 @@ const Auth = () => {
       toast.error('Username is already taken. Please choose another one.');
       return;
     }
-    if (usernameAvailability.status === 'checking') {
-      toast.error('Please wait while we check username availability');
-      return;
-    }
-    if (usernameAvailability.status !== 'available') {
-      toast.error('Please enter a valid username');
-      return;
-    }
-
-    // Check email availability and validity
     if (emailAvailability.status === 'invalid') {
       toast.error(emailAvailability.message);
       return;
     }
     if (emailAvailability.status === 'taken') {
       toast.error('This email is already registered. Please sign in or use a different email.');
-      return;
-    }
-    if (emailAvailability.status === 'checking') {
-      toast.error('Please wait while we check email availability');
-      return;
-    }
-    if (emailAvailability.status !== 'available') {
-      toast.error('Please enter a valid email address');
       return;
     }
 
@@ -273,7 +296,7 @@ const Auth = () => {
         variant="outline"
         onClick={handleInstagramLogin}
         disabled={instagramStarting}
-        className="h-12 w-full font-medium"
+        className="h-10 w-full rounded-full font-medium"
       >
         <Instagram />
         {instagramStarting ? 'Opening Instagram…' : 'Continue with Instagram'}
@@ -284,46 +307,17 @@ const Auth = () => {
     </div>
   );
 
-  const GoogleLoginButton = () => (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ""}>
-      <div className="relative flex h-12 items-center justify-center overflow-hidden rounded-lg border border-border bg-card transition-colors hover:bg-muted">
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
-          <div className="flex items-center gap-2.5">
-            {/* Google's mark keeps its brand colours by licence */}
-            <svg className="size-[18px]" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                fill="#4285F4"
-              />
-              <path
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                fill="#34A853"
-              />
-              <path
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-                fill="#FBBC05"
-              />
-              <path
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                fill="#EA4335"
-              />
-            </svg>
-            <span className="text-[0.95rem] font-semibold">Continue with Google</span>
-          </div>
-        </div>
-        <div className="absolute inset-0 z-20 opacity-[0.01]">
-          <GoogleLogin
-            onSuccess={googleResponse}
-            onError={() =>
-              toast.error("Google sign-in failed. Check that localhost:8080 is allowed in your Google client origins.")
-            }
-            useOneTap={false}
-            width="400"
-          />
-        </div>
-      </div>
-    </GoogleOAuthProvider>
-  );
+  const GoogleLoginButton = () =>
+    GOOGLE_CLIENT_ID ? (
+      <GoogleButton
+        onCredential={googleResponse}
+        text={activeTab === 'signup' ? 'signup_with' : 'signin_with'}
+      />
+    ) : (
+      <Button type="button" variant="outline" className="h-10 w-full rounded-full" disabled>
+        Google sign-in needs VITE_GOOGLE_CLIENT_ID in .env
+      </Button>
+    );
 
   const divider = (
     <div className="relative py-2">
@@ -331,7 +325,7 @@ const Auth = () => {
         <div className="w-full border-t border-border" />
       </div>
       <div className="relative flex justify-center">
-        <span className="eyebrow bg-card px-3">Or continue with</span>
+        <span className="eyebrow bg-background px-3">Or with email</span>
       </div>
     </div>
   );
@@ -351,57 +345,57 @@ const Auth = () => {
 
       <div className="flex min-h-screen bg-background">
         {/* ------------------------------------------- brand panel (lg only) */}
-        <aside className="wash hidden w-1/2 flex-col justify-between border-r border-border p-12 lg:flex xl:p-14">
-          <Link
-            to="/"
-            className="w-fit font-display text-[1.75rem] font-semibold tracking-[-0.035em] text-foreground"
-          >
+        <aside className="sticky top-0 hidden h-screen w-[46%] flex-col justify-between overflow-hidden bg-ink p-12 text-ink-foreground lg:flex xl:p-14">
+          <Link to="/" className="w-fit font-display text-[1.75rem] font-black tracking-[-0.04em]">
             FameSync
           </Link>
 
           <div>
-            <span className="mb-7 inline-flex items-center gap-2.5 rounded-full bg-card py-1.5 pl-2.5 pr-3.5 shadow-e1">
-              <span className="size-1.5 rounded-full bg-accent" />
-              <span className="text-xs font-semibold tracking-wide text-primary">
-                Early access — India first
-              </span>
-            </span>
-
-            <h2 className="max-w-[16ch] font-display text-display-2">
-              Where creators and brands meet.
+            <p className="eyebrow mb-5 text-ink-muted">{activeTab === 'signin' ? 'Welcome back' : panel.eyebrow}</p>
+            <h2 className="font-display text-[clamp(44px,4.6vw,72px)] font-black uppercase leading-[0.92] tracking-[-0.045em]">
+              {activeTab === 'signin' ? 'Good to' : panel.title}
+              <br />
+              <span className="brand-gradient-text">{activeTab === 'signin' ? 'see you.' : panel.highlight}</span>
             </h2>
 
-            <p className="mt-6 max-w-[42ch] text-lg leading-relaxed text-muted-foreground">
-              A simple way to connect micro-creators with brands. Join the early community.
-            </p>
-
-            <ul className="mt-9 grid gap-3.5">
-              {PITCH_POINTS.map((point) => (
-                <li key={point} className="flex items-center gap-3 text-[0.9375rem]">
-                  <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-card text-primary shadow-e1">
-                    <Check className="size-3.5" />
-                  </span>
-                  {point}
-                </li>
-              ))}
-            </ul>
+            {activeTab === 'signin' ? (
+              <p className="mt-7 max-w-[40ch] text-lg leading-relaxed text-ink-muted">
+                Your briefs, applications and approvals are right where you left them.
+              </p>
+            ) : (
+              <ol className="mt-10 max-w-[480px] border-t border-ink-border">
+                {panel.steps.map((step, i) => (
+                  <li key={step.title} className="grid grid-cols-[40px_1fr] border-b border-ink-border py-4">
+                    <span className="num pt-0.5 text-sm text-primary">{String(i + 1).padStart(2, '0')}</span>
+                    <div>
+                      <p className="font-semibold">{step.title}</p>
+                      <p className="mt-1 text-sm leading-relaxed text-ink-muted">{step.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
           </div>
 
-          <Card className="max-w-md rounded-2xl p-6">
-            <span className="eyebrow">Early access</span>
-            <p className="mt-3 leading-relaxed text-muted-foreground">
-              We&apos;re in beta, working closely with our first users. Your feedback shapes what we
-              build next.
-            </p>
-          </Card>
+          <dl className="grid grid-cols-3 gap-6">
+            {FACTS.slice(0, 3).map((fact) => (
+              <div key={fact.label}>
+                <dt className="sr-only">{fact.label}</dt>
+                <dd>
+                  <span className="num block text-[2rem] leading-none">{fact.value}</span>
+                  <span className="mt-2 block text-xs leading-relaxed text-ink-muted">{fact.label}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
         </aside>
 
         {/* -------------------------------------------------------- form side */}
-        <div className="flex w-full flex-col lg:w-1/2">
+        <div className="flex w-full flex-col lg:w-[54%]">
           <header className="flex items-center justify-between gap-4 px-5 py-4 sm:px-8">
             <Link
               to="/"
-              className="font-display text-[1.25rem] font-semibold tracking-[-0.035em] text-foreground lg:invisible"
+              className="font-display text-[1.25rem] font-black tracking-[-0.04em] lg:invisible"
             >
               FameSync
             </Link>
@@ -459,88 +453,73 @@ const Auth = () => {
               ) : (
                 <Rise>
                   <div className="mb-8">
-                    <p className="eyebrow mb-3">
-                      {activeTab === 'signin' ? 'Sign in' : 'Create account'}
-                    </p>
-                    <h1 className="font-display text-display-2">
-                      {activeTab === 'signin' ? 'Welcome back.' : 'Get started.'}
-                    </h1>
-                    <p className="mt-4 leading-relaxed text-muted-foreground">
+                    <h1 className="font-display text-[2.5rem] leading-[1.02] tracking-[-0.04em]">
                       {activeTab === 'signin'
-                        ? 'Sign in to continue to FameSync.'
-                        : 'Start your journey with FameSync.'}
+                        ? 'Sign in'
+                        : selectedRole === 'brand'
+                          ? 'Create a brand account'
+                          : 'Create a creator account'}
+                    </h1>
+                    <p className="mt-3 leading-relaxed text-muted-foreground">
+                      {activeTab === 'signin' ? (
+                        <>
+                          New to FameSync?{' '}
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('signup')}
+                            className="font-semibold text-primary underline-offset-4 hover:underline"
+                          >
+                            Create an account
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          Free to join. Already have an account?{' '}
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('signin')}
+                            className="font-semibold text-primary underline-offset-4 hover:underline"
+                          >
+                            Sign in
+                          </button>
+                        </>
+                      )}
                     </p>
                   </div>
 
-                  {/* segmented control */}
-                  <div
-                    role="tablist"
-                    aria-label="Authentication mode"
-                    className="mb-7 flex gap-1 rounded-xl bg-muted p-1"
-                  >
-                    {(['signin', 'signup'] as const).map((tab) => (
-                      <button
-                        key={tab}
-                        type="button"
-                        role="tab"
-                        aria-selected={activeTab === tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={cn(
-                          'h-11 flex-1 rounded-lg text-sm font-semibold transition-colors duration-200',
-                          activeTab === tab
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:text-foreground',
-                        )}
-                      >
-                        {tab === 'signin' ? 'Sign in' : 'Sign up'}
-                      </button>
-                    ))}
-                  </div>
-
-                  <Card className="rounded-2xl shadow-e1">
-                    <CardContent className="space-y-5 pt-5 sm:pt-6">
+                  <div className="space-y-6">
                       {activeTab === 'signup' && (
                         <fieldset>
-                          <legend className="mb-3 text-sm font-semibold">I am a…</legend>
+                          <legend className="mb-3 text-sm font-semibold">I&apos;m joining as a</legend>
                           <div className="grid grid-cols-2 gap-3">
-                            {(['influencer', 'brand'] as const).map((role) => {
-                              const Icon = role === 'influencer' ? User : Building2;
-                              const isSelected = selectedRole === role;
+                            {ROLES.map(({ key, label, note, Icon }) => {
+                              const isSelected = selectedRole === key;
                               return (
                                 <button
-                                  key={role}
+                                  key={key}
                                   type="button"
                                   aria-pressed={isSelected}
-                                  onClick={() => setSelectedRole(role)}
+                                  onClick={() => setSelectedRole(key)}
                                   className={cn(
-                                    'relative flex min-h-[5.5rem] flex-col items-center justify-center gap-2 rounded-lg border p-4',
+                                    'flex items-center gap-3 rounded-xl border-[1.5px] p-3.5 text-left',
                                     'transition-[border-color,background-color] duration-200',
                                     isSelected
                                       ? 'border-primary bg-secondary'
-                                      : 'border-border hover:bg-muted',
+                                      : 'border-border bg-card hover:border-muted-foreground/40',
                                   )}
                                 >
                                   <span
                                     className={cn(
-                                      'inline-flex size-9 items-center justify-center rounded-md',
-                                      isSelected
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'bg-muted text-muted-foreground',
+                                      'inline-flex size-9 shrink-0 items-center justify-center rounded-full sm:size-10',
+                                      isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
                                     )}
                                   >
                                     <Icon className="size-[18px]" />
                                   </span>
-                                  <span
-                                    className={cn(
-                                      'text-sm font-semibold capitalize',
-                                      isSelected ? 'text-primary' : 'text-foreground',
-                                    )}
-                                  >
-                                    {role}
+                                  <span className="min-w-0">
+                                    <span className="block font-semibold">{label}</span>
+                                    <span className="block text-xs leading-snug text-muted-foreground">{note}</span>
                                   </span>
-                                  {isSelected && (
-                                    <Check className="absolute right-2.5 top-2.5 size-4 text-primary" />
-                                  )}
                                 </button>
                               );
                             })}
@@ -550,6 +529,18 @@ const Auth = () => {
 
                       {activeTab === 'signin' ? (
                         <form onSubmit={handleSignIn} className="space-y-5">
+                          {HAS_SOCIAL && (
+                            <>
+                              {/* capped at 400px: the widest Google's official button draws */}
+                              <div className="mx-auto w-full max-w-[400px] space-y-3">
+                                {INSTAGRAM_LOGIN_ENABLED && <InstagramLoginButton />}
+                                {SHOW_GOOGLE && <GoogleLoginButton />}
+                              </div>
+
+                              {divider}
+                            </>
+                          )}
+
                           <div className="space-y-2">
                             <Label htmlFor="signin-identifier">Username or email</Label>
                             <div className="group relative">
@@ -573,7 +564,7 @@ const Auth = () => {
                                 to="/forgot-password"
                                 className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
                               >
-                                Forgot?
+                                Forgot password?
                               </Link>
                             </div>
                             <div className="group relative">
@@ -609,22 +600,28 @@ const Auth = () => {
                             )}
                           </Button>
 
-                          {divider}
-
-                          <div className="space-y-3">
-                            {INSTAGRAM_LOGIN_ENABLED && <InstagramLoginButton />}
-                            <GoogleLoginButton />
-                          </div>
                         </form>
                       ) : (
                         <form onSubmit={handleSignUp} className="space-y-4">
-                          <div className="grid gap-4 sm:grid-cols-2">
+                          {HAS_SOCIAL && (
+                            <>
+                              {/* capped at 400px: the widest Google's official button draws */}
+                              <div className="mx-auto w-full max-w-[400px] space-y-3">
+                                {INSTAGRAM_LOGIN_ENABLED && <InstagramLoginButton />}
+                                {SHOW_GOOGLE && <GoogleLoginButton />}
+                              </div>
+
+                              {divider}
+                            </>
+                          )}
+
+                          <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             <div className="space-y-2">
                               <Label htmlFor="signup-firstname">First name</Label>
                               <Input
                                 id="signup-firstname"
                                 type="text"
-                                placeholder="John"
+                                placeholder="Aarav"
                                 value={signUpData.firstName}
                                 onChange={(e) => setSignUpData({ ...signUpData, firstName: e.target.value })}
                                 required
@@ -635,7 +632,7 @@ const Auth = () => {
                               <Input
                                 id="signup-lastname"
                                 type="text"
-                                placeholder="Doe"
+                                placeholder="Sharma"
                                 value={signUpData.lastName}
                                 onChange={(e) => setSignUpData({ ...signUpData, lastName: e.target.value })}
                                 required
@@ -747,7 +744,7 @@ const Auth = () => {
                           <Button
                             type="submit"
                             variant="form"
-                            className="mt-1 w-full"
+                            className="mt-2 w-full"
                             disabled={isLoading}
                           >
                             {isLoading ? (
@@ -760,18 +757,11 @@ const Auth = () => {
                             )}
                           </Button>
 
-                          {divider}
-
-                          <div className="space-y-3">
-                            {INSTAGRAM_LOGIN_ENABLED && <InstagramLoginButton />}
-                            <GoogleLoginButton />
-                          </div>
                         </form>
                       )}
-                    </CardContent>
-                  </Card>
+                  </div>
 
-                  <p className="mt-7 text-center text-sm leading-relaxed text-muted-foreground">
+                  <p className="mt-8 text-center text-sm leading-relaxed text-muted-foreground">
                     By continuing, you agree to our{' '}
                     <Link to="/terms" className="font-semibold text-primary underline-offset-4 hover:underline">
                       Terms

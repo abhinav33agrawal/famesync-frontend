@@ -46,7 +46,7 @@ const ApplicationsSkeleton = () => (
       <Skeleton className="mt-4 h-5 w-80 max-w-full" />
     </div>
 
-    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       {[0, 1, 2, 3].map((i) => (
         <Skeleton key={i} className="h-[8.5rem] rounded-xl" />
       ))}
@@ -157,7 +157,7 @@ const Applications = () => {
       </Rise>
 
       {/* -------------------------------------------------------------- stats */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Stat label="Total applications" value={stats.total} note="All time" />
         <Stat label="In review" value={stats.pending} note="Awaiting a brand" noteTone={stats.pending ? 'warning' : 'muted'} />
         <Stat label="Accepted" value={stats.accepted} note="Matched brands" noteTone={stats.accepted ? 'success' : 'muted'} />
@@ -178,7 +178,7 @@ const Applications = () => {
 
       {/* --------------------------------------------------------------- list */}
       {filteredApplications.length > 0 && (
-        <ul className="grid gap-4">
+        <ul className="grid grid-cols-1 gap-4">
           <AnimatePresence initial={false}>
             {filteredApplications.map((app) => (
               <motion.li key={app.id} {...listItemMotion}>

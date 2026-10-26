@@ -54,6 +54,12 @@ export default {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
+        ink: {
+          DEFAULT: "hsl(var(--ink))",
+          foreground: "hsl(var(--ink-foreground))",
+          muted: "hsl(var(--ink-muted))",
+          border: "hsl(var(--ink-border))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -67,11 +73,11 @@ export default {
       },
       fontFamily: {
         sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
-        display: ["Bricolage Grotesque", "sans-serif"],
+        display: ["Montserrat", "sans-serif"],
       },
       fontSize: {
-        "display-1": ["clamp(46px,6.2vw,82px)", { lineHeight: "0.94", letterSpacing: "-0.04em" }],
-        "display-2": ["clamp(32px,3.6vw,50px)", { lineHeight: "1.04", letterSpacing: "-0.035em" }],
+        "display-1": ["clamp(44px,7vw,96px)", { lineHeight: "0.94", letterSpacing: "-0.045em" }],
+        "display-2": ["clamp(32px,4vw,56px)", { lineHeight: "1.02", letterSpacing: "-0.04em" }],
         "display-3": ["1.4375rem", { lineHeight: "1.15", letterSpacing: "-0.025em" }],
       },
       spacing: {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Plus, Rocket, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -189,7 +189,7 @@ const Campaigns = () => {
 
       {/* ------------------------------------------------------------ stats */}
       <Rise>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <Stat label="Live" value={activeCampaigns} note={`${campaigns.length} total`} />
           <Stat label="Drafts" value={draftCampaigns} note="Not visible yet" />
           <Stat label="Applications" value={totalApplications} note="Across all briefs" />
@@ -262,24 +262,18 @@ const Campaigns = () => {
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence mode="popLayout">
             {paginatedCampaigns.map((campaign) => (
-              <motion.div key={campaign.id} {...listItemMotion} className="flex flex-col gap-2">
+              <motion.div key={campaign.id} {...listItemMotion}>
                 <CampaignCard
                   campaign={campaign}
-                  state="applied"
+                  state="owned"
                   className="h-full"
                   onView={() => navigate(`/brand/campaigns/${campaign.slug}`)}
+                  onPublish={
+                    campaign.status === 'draft'
+                      ? () => handleStatusAction('publish', campaign.id, campaign.slug, campaign.title)
+                      : undefined
+                  }
                 />
-                {campaign.status === 'draft' && (
-                  <Button
-                    variant="form"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => handleStatusAction('publish', campaign.id, campaign.slug, campaign.title)}
-                  >
-                    <Rocket />
-                    Publish
-                  </Button>
-                )}
               </motion.div>
             ))}
           </AnimatePresence>

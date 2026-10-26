@@ -152,8 +152,19 @@ export interface Campaign {
   is_editable?: boolean;
   applications_count?: number;
   has_applied?: boolean;
+  /** Creator views only. False until the creator spends a credit to unlock
+   *  it (or applied before unlocks existed); while false the server sends
+   *  no brand, budget, contacts, creative brief or key messages. */
+  is_unlocked?: boolean;
   applications?: Application[];
 }
+
+/** POST /campaigns/influencer/<slug>/unlock/ — the full brief, plus whether
+ *  this call spent a credit (false when it was already unlocked). */
+export type CampaignUnlockResponse = Campaign & {
+  charged: boolean;
+  credits_remaining: number;
+};
 
 export interface CampaignSuggestion {
   title: string;
