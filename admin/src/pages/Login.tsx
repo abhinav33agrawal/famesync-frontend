@@ -31,19 +31,20 @@ export const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    /* the ink of the main site's hero, so staff land somewhere recognisable */
+    <div className="flex min-h-screen items-center justify-center bg-ink p-4 text-ink-foreground">
       <div className="w-full max-w-sm">
-        <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-primary">
-            <ShieldCheck className="h-5 w-5 text-primary-foreground" />
+        <div className="mb-7 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
+            <ShieldCheck className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="font-display text-xl font-bold">FameSync Admin</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Staff accounts only
-          </p>
+          <h1 className="text-3xl font-black tracking-[-0.04em]">
+            FameSync <span className="text-ink-muted">Admin</span>
+          </h1>
+          <p className="mt-1.5 text-sm text-ink-muted">Staff accounts only</p>
         </div>
 
-        <Card className="p-6">
+        <Card className="p-6 text-foreground shadow-e3">
           <form onSubmit={submit} className="space-y-4">
             <Field label="Username or email">
               <Input
@@ -51,7 +52,7 @@ export const Login = () => {
                 autoComplete="username"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="ridam"
+                placeholder="you@famesync.com"
                 required
               />
             </Field>
@@ -81,9 +82,9 @@ export const Login = () => {
           </form>
         </Card>
 
-        <p className="mt-4 text-center text-xs text-muted-foreground">
+        <p className="mt-5 text-center text-xs leading-relaxed text-ink-muted">
           Access is granted per account. If you are locked out, a superuser can
-          set <code className="rounded bg-muted px-1">is_staff</code> on your
+          set <code className="rounded bg-ink-foreground/10 px-1 text-ink-foreground">is_staff</code> on your
           user.
         </p>
       </div>

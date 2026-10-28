@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -8,7 +8,9 @@ import {
   ExternalLink,
   Heart,
   Instagram,
+  LockOpen,
   MessageCircle,
+  Send,
   ShieldCheck,
   ShieldOff,
   UserCheck,
@@ -112,9 +114,84 @@ const CreditPanel = ({ user, onDone }: { user: AdminUserDetail; onDone: () => vo
   );
 };
 
+/* ------------------------------------------------------- message user */
+
+/** One in-app notification to this user. Recorded in the audit log. */
+const MessagePanel = ({ user, onDone }: { user: AdminUserDetail; onDone: () => void }) => {
+  const [message, setMessage] = useState("");
+  const m = useMutation({
+    mutationFn: () => api.post(`/admin-panel/users/${user.id}/send-notification/`, { message: message.trim() }),
+    onSuccess: onDone,
+  });
+
+  return (
+    <Card className="mb-6 p-4">
+      <Field label={`Message to @${user.username}`} hint="Appears in their notification list. No email is sent.">
+        <textarea
+          rows={3}
+          maxLength={500}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="e.g. Your Instagram link looks broken. Could you reconnect it from your profile?"
+          className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+      </Field>
+      <div className="mt-3 flex items-center gap-2">
+        <Button busy={m.isPending} disabled={!message.trim()} onClick={() => m.mutate()}>
+          <Send className="h-3.5 w-3.5" />
+          Send
+        </Button>
+        <Button variant="ghost" onClick={onDone}>
+          Cancel
+        </Button>
+        <span className="nums ml-auto text-xs text-muted-foreground">{message.length} / 500</span>
+      </div>
+      {m.isError && <ErrorNote error={m.error} />}
+    </Card>
+  );
+};
+
+/* ------------------------------------------------------------ suspend */
+
+/** Suspending used to save a fixed "Suspended by admin", so the audit log
+ *  could never say why. The reason is required, shown to the user, and
+ *  recorded. */
+const SuspendPanel = ({ user, onDone }: { user: AdminUserDetail; onDone: () => void }) => {
+  const [reason, setReason] = useState("");
+  const m = useMutation({
+    mutationFn: () => api.post(`/admin-panel/users/${user.id}/suspend/`, { reason: reason.trim() }),
+    onSuccess: onDone,
+  });
+
+  return (
+    <Card className="mb-6 border-destructive/30 p-4">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="min-w-[240px] flex-1">
+          <Field label="Reason for suspending" hint="Shown to the user in a notification, and kept in the audit log.">
+            <Input
+              autoFocus
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g. Bought followers; engagement doesn't match reach"
+            />
+          </Field>
+        </div>
+        <Button variant="danger" busy={m.isPending} disabled={!reason.trim()} onClick={() => m.mutate()}>
+          <ShieldOff className="h-3.5 w-3.5" />
+          Suspend @{user.username}
+        </Button>
+        <Button variant="ghost" onClick={onDone}>
+          Cancel
+        </Button>
+      </div>
+      {m.isError && <ErrorNote error={m.error} />}
+    </Card>
+  );
+};
+
 /* ------------------------------------------------------------ tabs */
 
-const TABS = ["Profile", "Instagram", "Plan & credits", "Activity"] as const;
+const TABS = ["Profile", "Instagram", "Plan & credits", "Unlocks", "Activity"] as const;
 type Tab = (typeof TABS)[number];
 
 const ProfileTab = ({ user }: { user: AdminUserDetail }) => {
@@ -537,6 +614,84 @@ const ActivityTab = ({ user }: { user: AdminUserDetail }) => {
   );
 };
 
+/* ------------------------------------------------------------ unlocks */
+
+interface UnlockRow {
+  id: string;
+  campaign_id: string;
+  campaign_title: string;
+  campaign_status: string;
+  brand: string;
+  unlocked_at: string;
+  application_status: string | null;
+}
+
+/** The briefs a creator spent credits on, and which turned into an
+ *  application: the answer to "I paid a credit and can't see the brief". */
+const UnlocksTab = ({ user }: { user: AdminUserDetail }) => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["user-unlocks", user.id],
+    queryFn: async () =>
+      (
+        await api.get<{ unlocks: UnlockRow[]; stats: { total: number; applied: number; not_applied: number } }>(
+          `/admin-panel/users/${user.id}/unlocks/`
+        )
+      ).data,
+  });
+  const rows = data?.unlocks ?? [];
+
+  return (
+    <Card>
+      <CardHead
+        title="Unlocked briefs"
+        sub={
+          data
+            ? `${num(data.stats.total)} unlocked · ${num(data.stats.applied)} applied · ${num(data.stats.not_applied)} not applied`
+            : "One credit each"
+        }
+      />
+      {isLoading ? (
+        <Spinner />
+      ) : error ? (
+        <ErrorNote error={error} />
+      ) : rows.length === 0 ? (
+        <Empty title="No briefs unlocked yet" sub="Each unlock costs the creator one credit." />
+      ) : (
+        <Table>
+          <thead>
+            <tr>
+              <Th>Campaign</Th>
+              <Th>Brand</Th>
+              <Th>Unlocked</Th>
+              <Th>Application</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((u) => (
+              <tr key={u.id}>
+                <Td className="font-medium">
+                  <Link to={`/campaigns/${u.campaign_id}`} className="underline-offset-4 hover:text-primary hover:underline">
+                    {u.campaign_title}
+                  </Link>
+                </Td>
+                <Td className="text-muted-foreground">{u.brand}</Td>
+                <Td className="nums whitespace-nowrap text-muted-foreground">{dateTime(u.unlocked_at)}</Td>
+                <Td>
+                  {u.application_status ? (
+                    <Badge tone={STATUS_TONE[u.application_status] ?? "neutral"}>{u.application_status}</Badge>
+                  ) : (
+                    <Badge tone="neutral">not applied</Badge>
+                  )}
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
+    </Card>
+  );
+};
+
 /* ------------------------------------------------------------ page */
 
 export const UserDetail = () => {
@@ -544,7 +699,13 @@ export const UserDetail = () => {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("Profile");
-  const [creditsOpen, setCreditsOpen] = useState(false);
+  // at most one action panel open under the header at a time
+  // ?suspend=1 comes from the Users list's suspend button
+  const [params] = useSearchParams();
+  const [panel, setPanel] = useState<null | "credits" | "message" | "suspend">(
+    params.get("suspend") ? "suspend" : null
+  );
+  const toggle = (p: NonNullable<typeof panel>) => setPanel((cur) => (cur === p ? null : p));
 
   const { data: user, isLoading, error } = useQuery({
     queryKey: ["user-detail", id],
@@ -552,18 +713,14 @@ export const UserDetail = () => {
   });
 
   const refresh = () => {
-    setCreditsOpen(false);
-    for (const key of ["user-detail", "user-credits", "users", "approval-queue", "dashboard-stats"]) {
+    setPanel(null);
+    for (const key of ["user-detail", "user-credits", "users", "approval-queue", "dashboard-stats", "audit-logs"]) {
       void qc.invalidateQueries({ queryKey: [key] });
     }
   };
 
   const approve = useMutation({
     mutationFn: () => api.post(`/admin-panel/users/${id}/approve/`, {}),
-    onSuccess: refresh,
-  });
-  const suspend = useMutation({
-    mutationFn: () => api.post(`/admin-panel/users/${id}/suspend/`, { reason: "Suspended by admin" }),
     onSuccess: refresh,
   });
   const reactivate = useMutation({
@@ -603,7 +760,7 @@ export const UserDetail = () => {
             </div>
           )}
           <div>
-            <h1 className="text-xl font-bold">{name}</h1>
+            <h1 className="text-[1.75rem] leading-tight">{name}</h1>
             <p className="text-sm text-muted-foreground">
               @{user.username} · {user.email}
             </p>
@@ -633,12 +790,16 @@ export const UserDetail = () => {
               Approve
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={() => setCreditsOpen((v) => !v)}>
+          <Button size="sm" variant="outline" onClick={() => toggle("message")}>
+            <MessageCircle className="h-3.5 w-3.5" />
+            Message
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => toggle("credits")}>
             <Coins className="h-3.5 w-3.5" />
             Adjust credits
           </Button>
           {user.is_active ? (
-            <Button size="sm" variant="outline" busy={suspend.isPending} onClick={() => suspend.mutate()}>
+            <Button size="sm" variant="outline" onClick={() => toggle("suspend")}>
               <ShieldOff className="h-3.5 w-3.5" />
               Suspend
             </Button>
@@ -651,7 +812,9 @@ export const UserDetail = () => {
         </div>
       </div>
 
-      {creditsOpen && <CreditPanel user={user} onDone={refresh} />}
+      {panel === "credits" && <CreditPanel user={user} onDone={refresh} />}
+      {panel === "message" && <MessagePanel user={user} onDone={refresh} />}
+      {panel === "suspend" && <SuspendPanel user={user} onDone={refresh} />}
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
@@ -669,7 +832,7 @@ export const UserDetail = () => {
       </div>
 
       <div className="mb-5 flex gap-1 overflow-x-auto border-b border-border" role="tablist">
-        {TABS.map((t) => (
+        {TABS.filter((t) => t !== "Unlocks" || user.role === "influencer").map((t) => (
           <button
             key={t}
             role="tab"
@@ -690,6 +853,7 @@ export const UserDetail = () => {
       {tab === "Profile" && <ProfileTab user={user} />}
       {tab === "Instagram" && <InstagramTab user={user} />}
       {tab === "Plan & credits" && <PlanTab user={user} />}
+      {tab === "Unlocks" && user.role === "influencer" && <UnlocksTab user={user} />}
       {tab === "Activity" && <ActivityTab user={user} />}
 
       <p className="mt-8 text-xs text-muted-foreground">

@@ -5,33 +5,32 @@ import { Card } from "./ui";
 
 /* ------------------------------------------------------------ palette
  *
- * Validated with the dataviz skill's validate_palette.js against the white
- * card surface these charts render on (--mode light --pairs all):
- *   lightness band PASS, chroma PASS, CVD dE 26.3 (target >= 8),
- *   normal-vision dE 29.4 (floor 15), contrast >= 3:1 -- no warnings.
- *
- * Slot 1 is NOT the brand aubergine itself. hsl(288 42% 20%) (#401d48)
- * fails the lightness band (L 0.30 vs 0.43-0.77) and the chroma floor
- * (0.085 vs 0.10): at that darkness it reads as near-black and cannot carry
- * a series' identity. #7d3c98 is the darkest step in the same family that
- * passes, so it stays as close to the brand as the checks allow.
+ * The brand pair itself: violet (--primary, #7e25e4) and magenta
+ * (--accent, #f00f78). Validated with the dataviz skill's
+ * validate_palette.js against the white card surface (--mode light):
+ *   lightness band PASS, chroma PASS, CVD dE 18.5 protan / 29.4 tritan
+ *   (target >= 8), normal-vision dE 29.0 (floor 15), contrast >= 3:1.
  *
  * Fixed order, never cycled. No chart here has more than two series; a
  * third would need re-validating, not a generated hue. */
-export const SERIES = ["#7d3c98", "#eb6834"] as const;
+export const SERIES = ["#7e25e4", "#f00f78"] as const;
 
 /* Solid hairlines one shade off the surface. Dashed grids read as a
    projection or threshold rather than as a grid. */
-export const GRID = "hsl(38 22% 89%)";
-export const AXIS_INK = "hsl(30 7% 40%)";
+export const GRID = "hsl(268 22% 90%)"; // --border
+export const AXIS_INK = "hsl(266 10% 38%)"; // --muted-foreground
+/** hover band behind a bar: --muted */
+export const CURSOR_FILL = "hsl(270 25% 96%)";
+/** value labels: --foreground */
+export const LABEL_INK = "hsl(268 35% 8%)";
 
 export const axisTick = { fontSize: 11, fill: AXIS_INK };
 
 export const tooltipStyle = {
   borderRadius: 10,
-  border: "1px solid hsl(38 22% 89%)",
+  border: `1px solid ${GRID}`,
   fontSize: 12,
-  boxShadow: "0 8px 18px -12px hsl(288 42% 20% / 0.22)",
+  boxShadow: "0 10px 22px -12px hsl(268 78% 40% / 0.28)",
 };
 
 /* ------------------------------------------------------------ labels */

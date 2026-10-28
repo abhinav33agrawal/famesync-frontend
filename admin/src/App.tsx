@@ -6,6 +6,7 @@ import { InsightsPage } from "@/pages/Insights";
 import { Approvals } from "@/pages/Approvals";
 import { AuditLogs } from "@/pages/AuditLogs";
 import { Campaigns } from "@/pages/Campaigns";
+import { CampaignDetail } from "@/pages/CampaignDetail";
 import { Dashboard } from "@/pages/Dashboard";
 import { Financial } from "@/pages/Financial";
 import { Login } from "@/pages/Login";
@@ -34,6 +35,7 @@ export const App = () => (
       <Route path="users" element={<Users />} />
       <Route path="users/:id" element={<UserDetail />} />
       <Route path="campaigns" element={<Campaigns />} />
+      <Route path="campaigns/:id" element={<CampaignDetail />} />
       <Route path="financial" element={<Financial />} />
       <Route path="insights" element={<InsightsPage />} />
       {/* Renamed from Analytics; keep old bookmarks working. */}

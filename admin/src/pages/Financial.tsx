@@ -26,10 +26,10 @@ interface FinancialMetrics {
 }
 
 const Tile = ({ label, value, note }: { label: string; value: string; note?: string }) => (
-  <Card className="p-5">
+  <Card className="p-4 sm:p-5">
     <p className="text-xs font-medium text-muted-foreground">{label}</p>
     {/* Proportional figures: tabular-nums spaces a standalone number loosely. */}
-    <p className="mt-1.5 text-2xl font-bold">{value}</p>
+    <p className="nums mt-1.5 font-display text-2xl font-extrabold tracking-[-0.02em]">{value}</p>
     {note && <p className="mt-1 text-xs text-muted-foreground">{note}</p>}
   </Card>
 );
@@ -76,14 +76,18 @@ export const Financial = () => {
     <>
       <PageHead title="Financial" sub="Who is paying, and what it adds up to." />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <Tile label="Monthly recurring revenue" value={inr(m.mrr)} note="Active Pro subscriptions at their plan price" />
         <Tile label="Pro subscribers" value={num(m.plan_distribution.pro)} note={`${num(m.plan_distribution.free)} on the free plan`} />
         <Tile label="Pro share" value={`${share}%`} note="Of accounts with a subscription record" />
         <Tile
           label="Credits"
           value={num(m.credits.total_consumed)}
-          note={`used, of ${num(m.credits.total_issued)} issued`}
+          note={
+            m.credits.total_issued > 0
+              ? `used · ${num(m.credits.total_issued)} granted by admins`
+              : "used across the platform so far"
+          }
         />
       </div>
 
