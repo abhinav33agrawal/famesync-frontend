@@ -70,7 +70,7 @@ export const Card = ({
 }) => (
   <div
     className={cn(
-      "rounded-lg border border-border bg-card shadow-e1",
+      "rounded-xl border border-border bg-card shadow-e1",
       className
     )}
   >
@@ -89,7 +89,7 @@ export const CardHead = ({
 }) => (
   <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
     <div>
-      <h2 className="text-sm font-semibold">{title}</h2>
+      <h2 className="text-[0.9375rem] font-extrabold">{title}</h2>
       {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
     </div>
     {action}
@@ -117,7 +117,7 @@ export const Badge = ({
 }) => (
   <span
     className={cn(
-      "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium leading-5",
+      "inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium leading-5",
       TONES[tone]
     )}
   >

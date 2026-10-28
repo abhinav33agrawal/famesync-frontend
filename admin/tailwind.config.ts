@@ -21,8 +21,15 @@ export default {
         success: { DEFAULT: "hsl(var(--success))", foreground: "hsl(var(--success-foreground))" },
         warning: { DEFAULT: "hsl(var(--warning))", foreground: "hsl(var(--warning-foreground))" },
         destructive: { DEFAULT: "hsl(var(--destructive))", foreground: "hsl(var(--destructive-foreground))" },
+        ink: {
+          DEFAULT: "hsl(var(--ink))",
+          foreground: "hsl(var(--ink-foreground))",
+          muted: "hsl(var(--ink-muted))",
+          border: "hsl(var(--ink-border))",
+        },
       },
       borderRadius: {
+        xl: "calc(var(--radius) + 6px)",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
@@ -34,7 +41,7 @@ export default {
       },
       fontFamily: {
         sans: ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["Bricolage Grotesque", "Plus Jakarta Sans", "sans-serif"],
+        display: ["Montserrat", "Plus Jakarta Sans", "sans-serif"],
       },
     },
   },

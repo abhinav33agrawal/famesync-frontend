@@ -156,14 +156,6 @@ export const Users = () => {
     onSuccess: refresh,
   });
 
-  const suspend = useMutation({
-    mutationFn: (id: string) =>
-      api.post(`/admin-panel/users/${id}/suspend/`, {
-        reason: "Suspended by admin",
-      }),
-    onSuccess: refresh,
-  });
-
   /* There is no un-suspend endpoint. The detail view is a
      RetrieveUpdateDestroyAPIView and is_active is writable on
      UserDetailAdminSerializer, so a PATCH is the supported reversal. */
@@ -236,7 +228,7 @@ export const Users = () => {
                     <Th>Role</Th>
                     <Th>Status</Th>
                     <Th className="text-right">Credits</Th>
-                    <Th className="text-right">Campaigns</Th>
+                    <Th className="text-right">Activity</Th>
                     <Th>Joined</Th>
                     <Th className="text-right">Actions</Th>
                   </tr>
@@ -281,8 +273,11 @@ export const Users = () => {
                           </div>
                         </Td>
                         <Td className="nums text-right">{num(u.credits)}</Td>
-                        <Td className="nums text-right text-muted-foreground">
-                          {num(u.total_campaigns)}
+                        {/* brands post campaigns, creators apply: show the one that applies */}
+                        <Td className="nums whitespace-nowrap text-right text-muted-foreground">
+                          {u.role === "brand"
+                            ? `${num(u.total_campaigns)} campaign${u.total_campaigns === 1 ? "" : "s"}`
+                            : `${num(u.total_applications)} application${u.total_applications === 1 ? "" : "s"}`}
                         </Td>
                         <Td className="nums whitespace-nowrap text-muted-foreground">
                           {date(u.created_at)}
@@ -317,9 +312,10 @@ export const Users = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                busy={suspend.isPending}
-                                onClick={() => suspend.mutate(u.id)}
-                                title="Suspend this account"
+                                /* suspending needs a reason, so it happens on the
+                                   profile, never as a one-click from the list */
+                                onClick={() => navigate(`/users/${u.id}?suspend=1`)}
+                                title="Suspend this account (asks for a reason)"
                               >
                                 <ShieldOff className="h-3.5 w-3.5" />
                               </Button>

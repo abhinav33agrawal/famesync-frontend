@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { AXIS_INK, SERIES, tooltipStyle } from "@/components/charts";
 import { useQuery } from "@tanstack/react-query";
 import {
   Cell,
@@ -25,11 +26,11 @@ const Stat = ({
   icon: typeof Users;
   tone?: "brand" | "warn";
 }) => (
-  <Card className="p-5">
+  <Card className="p-4 sm:p-5">
     <div className="flex items-start justify-between">
       <div>
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className="nums mt-1.5 text-2xl font-bold">{value}</p>
+        <p className="nums mt-1.5 font-display text-2xl font-extrabold tracking-[-0.02em]">{value}</p>
       </div>
       <div
         className={
@@ -44,9 +45,8 @@ const Stat = ({
   </Card>
 );
 
-/* Aubergine and citrus, the two brand colours, so the chart belongs to the
-   same system as everything else. */
-const SLICE = ["hsl(288 42% 20%)", "hsl(72 88% 60%)"];
+/* The validated chart pair (charts.tsx): influencers violet, brands magenta. */
+const SLICE = SERIES;
 
 export const Dashboard = () => {
   const { data, isLoading, error } = useQuery({
@@ -97,7 +97,7 @@ export const Dashboard = () => {
         </Card>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <Stat label="Total users" value={num(data.users.total)} icon={Users} />
         <Stat
           label="Pending approval"
@@ -139,17 +139,13 @@ export const Dashboard = () => {
                   </Pie>
                   <Tooltip
                     formatter={(v: number, n: string) => [num(v), n]}
-                    contentStyle={{
-                      borderRadius: 10,
-                      border: "1px solid hsl(38 22% 89%)",
-                      fontSize: 12,
-                    }}
+                    contentStyle={tooltipStyle}
                   />
                   <Legend
                     verticalAlign="bottom"
                     height={28}
                     formatter={(v) => (
-                      <span style={{ fontSize: 12, color: "hsl(30 7% 40%)" }}>
+                      <span style={{ fontSize: 12, color: AXIS_INK }}>
                         {v}
                       </span>
                     )}
@@ -180,9 +176,9 @@ export const Dashboard = () => {
       </div>
 
       <p className="mt-6 text-xs text-muted-foreground">
-        MRR is derived by the API as active Pro subscriptions &times; &#8377;2,500 — a
-        placeholder in <code className="rounded bg-muted px-1">admin_api/views.py</code>,
-        not billed revenue.
+        MRR is each active Pro subscription at its plan price (from{" "}
+        <code className="rounded bg-muted px-1">subscriptions/constants.py</code>), not billed
+        revenue — settled payments live in Razorpay.
       </p>
     </>
   );

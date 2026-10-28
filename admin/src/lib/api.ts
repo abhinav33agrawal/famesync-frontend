@@ -282,7 +282,8 @@ export interface Insights {
     | "accepted"
     | "acceptance_rate"
     | "pro_checkouts"
-    | "credits_used",
+    | "credits_used"
+    | "unlocks",
     Metric
   >;
   series: Record<

@@ -20,8 +20,10 @@ import { num } from "@/lib/format";
 import { PageHead } from "@/components/Layout";
 import { Badge, Card, CardHead, Empty, ErrorNote, Spinner, Table, Td, Th } from "@/components/ui";
 import {
+  CURSOR_FILL,
   ChartCard,
   GRID,
+  LABEL_INK,
   Legend,
   SERIES,
   axisTick,
@@ -95,10 +97,10 @@ const Kpi = ({
   format?: (v: number) => string;
   points?: boolean;
 }) => (
-  <Card className="p-5">
+  <Card className="p-4 sm:p-5">
     <p className="text-xs font-medium text-muted-foreground">{label}</p>
     {/* Proportional figures: tabular-nums spaces a standalone number loosely. */}
-    <p className="mt-1.5 text-2xl font-bold">{metric.value === null ? "—" : format(metric.value)}</p>
+    <p className="nums mt-1.5 font-display text-2xl font-extrabold tracking-[-0.02em]">{metric.value === null ? "—" : format(metric.value)}</p>
     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
       <Delta metric={metric} points={points} />
       {metric.previous !== null && (
@@ -182,7 +184,7 @@ const TimeBars = ({
         />
         <YAxis allowDecimals={false} tick={axisTick} tickLine={false} axisLine={false} width={40} />
         <Tooltip
-          cursor={{ fill: "hsl(40 25% 93%)" }}
+          cursor={{ fill: CURSOR_FILL }}
           contentStyle={tooltipStyle}
           labelFormatter={(k) => bucketLabel(String(k), granularity, true)}
           formatter={(v: number) => [num(v), label]}
@@ -210,12 +212,12 @@ const Breakdown = ({ rows, label }: { rows: { name: string; count: number }[]; l
           width={110}
         />
         <Tooltip
-          cursor={{ fill: "hsl(40 25% 93%)" }}
+          cursor={{ fill: CURSOR_FILL }}
           contentStyle={tooltipStyle}
           formatter={(v: number) => [num(v), label]}
         />
         <Bar dataKey="count" fill={SERIES[0]} radius={[0, 4, 4, 0]} maxBarSize={22} isAnimationActive={false}>
-          <LabelList dataKey="count" position="right" style={{ fontSize: 11, fill: "hsl(30 9% 9%)" }} />
+          <LabelList dataKey="count" position="right" style={{ fontSize: 11, fill: LABEL_INK }} />
         </Bar>
       </BarChart>
     </ResponsiveContainer>
@@ -335,10 +337,13 @@ export const InsightsPage = () => {
         <ErrorNote error={error} />
       ) : !data || !t ? null : (
         <div className={cn("space-y-6 transition-opacity", isFetching && "opacity-60")}>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {/* the funnel in order: signups -> campaigns -> unlocks -> applications -> accepted */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
             <Kpi label="New signups" metric={t.signups} />
             <Kpi label="Campaigns created" metric={t.campaigns} />
+            <Kpi label="Briefs unlocked" metric={t.unlocks} />
             <Kpi label="Applications submitted" metric={t.applications} />
+            <Kpi label="Accepted" metric={t.accepted} />
             <Kpi label="Acceptance rate" metric={t.acceptance_rate} format={(v) => `${v}%`} points />
             <Kpi label="Pro checkouts" metric={t.pro_checkouts} />
             <Kpi label="Credits used" metric={t.credits_used} />

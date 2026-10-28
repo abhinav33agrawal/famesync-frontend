@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Ban } from "lucide-react";
 import api, {
   asCount,
@@ -30,7 +31,8 @@ interface Row extends AdminCampaign {
   company_name?: string;
   budget?: number | string | null;
   budget_type?: string;
-  applications_count?: number;
+  applications_count?: { total: number };
+  unlocks_count?: number;
   admin_closed?: boolean;
 }
 
@@ -44,7 +46,7 @@ const tone = (status: string) =>
         : "neutral";
 
 export const Campaigns = () => {
-  const qc = useQueryClient();
+  const navigate = useNavigate();
   const [status, setStatus] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -74,17 +76,6 @@ export const Campaigns = () => {
   const rows = asList(data);
   const total = asCount(data);
 
-  const close = useMutation({
-    mutationFn: (id: string) =>
-      api.post(`/admin-panel/campaigns/${id}/force-close/`, {
-        reason: "Closed by admin",
-      }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["campaigns"] });
-      void qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
-    },
-  });
-
   return (
     <>
       <PageHead
@@ -97,7 +88,7 @@ export const Campaigns = () => {
           <div className="min-w-[220px] flex-1">
             <Field label="Search">
               <Input
-                placeholder="Campaign title"
+                placeholder="Campaign title or brand username"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -106,10 +97,12 @@ export const Campaigns = () => {
           <Field label="Status">
             <Select value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="">All</option>
+              {/* the backend's statuses; there is no "closed" (it filtered to nothing) */}
               <option value="active">Active</option>
+              <option value="paused">Paused</option>
               <option value="draft">Draft</option>
               <option value="completed">Completed</option>
-              <option value="closed">Closed</option>
+              <option value="cancelled">Cancelled</option>
             </Select>
           </Field>
         </div>
@@ -131,6 +124,7 @@ export const Campaigns = () => {
                   <Th>Brand</Th>
                   <Th>Status</Th>
                   <Th className="text-right">Budget</Th>
+                  <Th className="text-right">Unlocks</Th>
                   <Th className="text-right">Applications</Th>
                   <Th>Created</Th>
                   <Th className="text-right">Action</Th>
@@ -138,7 +132,11 @@ export const Campaigns = () => {
               </thead>
               <tbody>
                 {rows.map((c) => (
-                  <tr key={c.id} className="hover:bg-muted/40">
+                  <tr
+                    key={c.id}
+                    className="cursor-pointer hover:bg-muted/40"
+                    onClick={() => navigate(`/campaigns/${c.id}`)}
+                  >
                     <Td>
                       <p className="font-medium">{c.title}</p>
                       {c.admin_closed && (
@@ -159,19 +157,25 @@ export const Campaigns = () => {
                         : "—"}
                     </Td>
                     <Td className="nums text-right text-muted-foreground">
-                      {num((c.applications_count as any)?.total ?? 0)}
+                      {num(c.unlocks_count ?? 0)}
+                    </Td>
+                    <Td className="nums text-right text-muted-foreground">
+                      {num(c.applications_count?.total ?? 0)}
                     </Td>
                     <Td className="nums whitespace-nowrap text-muted-foreground">
                       {date(c.created_at)}
                     </Td>
                     <Td className="text-right">
                       {c.status === "active" && (
+                        /* closing needs a reason, so it happens on the campaign page */
                         <Button
                           size="sm"
                           variant="outline"
-                          busy={close.isPending}
-                          onClick={() => close.mutate(c.id)}
-                          title="Force close this campaign"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/campaigns/${c.id}?close=1`);
+                          }}
+                          title="Close this campaign (asks for a reason)"
                         >
                           <Ban className="h-3.5 w-3.5" />
                           Close

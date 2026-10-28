@@ -3,46 +3,43 @@
 @tailwind utilities;
 
 /* Tokens copied from the main site (frontend/src/index.css) so the admin
-   panel is visibly the same product. Single light theme by design. */
+   panel is visibly the same product: violet, magenta, ink. Single light
+   theme by design. Keep the two files in step. */
 @layer base {
   :root {
-    --background: 40 33% 96%;
-    --foreground: 30 9% 9%;
-
+    --background: 270 33% 99%;
+    --foreground: 268 35% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 30 9% 9%;
-
-    /* aubergine - the only brand colour */
-    --primary: 288 42% 20%;
-    --primary-foreground: 40 33% 96%;
-
+    --card-foreground: 268 35% 8%;
+    /* electric violet - the brand colour */
+    --primary: 268 78% 52%;
+    --primary-foreground: 0 0% 100%;
     /* lilac tint - nav-active, tinted surfaces */
-    --secondary: 288 18% 93%;
-    --secondary-foreground: 288 42% 20%;
-
-    /* citrus - rationed to one accent per screen */
-    --accent: 72 88% 60%;
-    --accent-foreground: 288 45% 12%;
-
-    --muted: 40 25% 93%;
-    --muted-foreground: 30 7% 40%;
-
-    --success: 156 46% 33%;
-    --success-foreground: 40 33% 96%;
+    --secondary: 272 100% 95%;
+    --secondary-foreground: 268 70% 34%;
+    /* magenta - rationed to one accent per screen */
+    --accent: 332 88% 50%;
+    --accent-foreground: 0 0% 100%;
+    --muted: 270 25% 96%;
+    --muted-foreground: 266 10% 38%;
+    --success: 156 56% 32%;
+    --success-foreground: 0 0% 100%;
     --warning: 33 86% 38%;
-    --warning-foreground: 40 33% 96%;
-    --destructive: 7 61% 43%;
-    --destructive-foreground: 40 33% 96%;
-
-    --border: 38 22% 89%;
-    --input: 38 22% 89%;
-    --ring: 288 42% 20%;
-
+    --warning-foreground: 0 0% 100%;
+    --destructive: 356 70% 46%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 268 22% 90%;
+    --input: 268 22% 88%;
+    --ring: 268 78% 52%;
     --radius: 0.75rem;
-
-    --elevation-1: 0 1px 2px -1px hsl(30 9% 9% / 0.08);
-    --elevation-2: 0 8px 18px -12px hsl(288 42% 20% / 0.22), 0 1px 2px -1px hsl(30 9% 9% / 0.06);
-    --elevation-3: 0 24px 48px -28px hsl(288 42% 20% / 0.28), 0 2px 6px -2px hsl(30 9% 9% / 0.06);
+    /* ink - the sidebar and the login screen */
+    --ink: 266 52% 7%;
+    --ink-foreground: 270 40% 97%;
+    --ink-muted: 268 18% 68%;
+    --ink-border: 268 30% 18%;
+    --elevation-1: 0 1px 2px -1px hsl(268 35% 8% / 0.08);
+    --elevation-2: 0 10px 22px -12px hsl(268 78% 40% / 0.28), 0 1px 2px -1px hsl(268 35% 8% / 0.06);
+    --elevation-3: 0 30px 60px -28px hsl(268 78% 30% / 0.45), 0 2px 6px -2px hsl(268 35% 8% / 0.08);
   }
 
   * {
@@ -54,7 +51,8 @@
   }
 
   h1, h2, h3 {
-    @apply font-display tracking-tight;
+    @apply font-display font-extrabold;
+    letter-spacing: -0.03em;
   }
 }
 
