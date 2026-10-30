@@ -30,6 +30,7 @@ const CREATOR_LINKS = [
   { to: "/influencer/dashboard", label: "Home" },
   { to: "/influencer/campaigns", label: "Discover" },
   { to: "/influencer/applications", label: "Applications" },
+  { to: "/influencer/deliverables", label: "Deliverables" },
 ];
 
 const BRAND_LINKS = [

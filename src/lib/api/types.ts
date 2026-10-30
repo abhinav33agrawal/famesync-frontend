@@ -194,11 +194,12 @@ export interface ApplicationCreate {
 export interface Deliverable {
   id: string;
   application: Application;
-  deliverable_type: 'post' | 'story' | 'video' | 'reel' | 'other';
+  // mirrors deliverables.models.Deliverable.DELIVERABLE_TYPE / STATUS_CHOICES
+  deliverable_type: 'post' | 'story' | 'reel' | 'video' | 'youtube_video' | 'youtube_shorts' | 'mixed';
   link: string;
   description?: string;
   file?: string;
-  status: 'pending' | 'in_review' | 'approved' | 'rejected';
+  status: 'pending' | 'submitted' | 'in_review' | 'approved' | 'rejected';
   feedback?: string;
   submitted_at: string;
   reviewed_at?: string;
@@ -206,7 +207,7 @@ export interface Deliverable {
 
 export interface DeliverableCreate {
   application: string;
-  deliverable_type: 'post' | 'story' | 'video' | 'reel' | 'other';
+  deliverable_type: Deliverable['deliverable_type'];
   link: string;
   description?: string;
   file?: File;
@@ -274,6 +275,14 @@ export interface BrandDashboardStats {
     total_applications: number;
     pending_applications: number;
   };
+  /** Newest first, max 5. Names and status only -- no contact details. */
+  recent_applications?: {
+    id: string;
+    status: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+    applied_at: string;
+    influencer: { username: string; first_name: string; last_name: string };
+    campaign: { title: string; slug: string };
+  }[];
 }
 
 // API Error Type

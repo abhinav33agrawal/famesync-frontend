@@ -15,7 +15,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Avatar } from '@/components/Avatar';
 import { Rise } from '@/components/motion';
 import { useAuth } from '@/context/AuthContext';
@@ -37,30 +36,25 @@ const apiError = (error: unknown, fallback: string): string => {
    `bg-card/50 backdrop-blur-sm border-border/50` panels and the
    competing `max-w-4xl` wrapper. */
 
-const NOTIFICATION_ROWS = [
-  {
-    id: 'email-notifications',
-    label: 'Email Notifications',
-    description: 'Receive email updates about your account',
-  },
-  {
-    id: 'push-notifications',
-    label: 'Push Notifications',
-    description: 'Get push notifications on your device',
-  },
-  {
-    id: 'campaign-updates',
-    label: 'Campaign Updates',
-    description: "Receive updates about campaigns you're interested in",
-  },
-] as const;
+/* What the app actually sends (core/utils.py emails + the in-app bell).
+   This replaced three switches that looked like preferences but saved
+   nothing: they reset on every reload and changed no behaviour. */
+const NOTIFICATION_SUMMARY = {
+  influencer: [
+    'Every update appears under the bell in the top bar.',
+    "We email you when a brand accepts or declines your application, and when it sends onboarding details.",
+    'Account emails (verification, password resets) are always sent.',
+  ],
+  brand: [
+    'Every update appears under the bell in the top bar.',
+    'We email you when a creator applies to one of your campaigns.',
+    'Account emails (verification, password resets) are always sent.',
+  ],
+} as const;
 
 const Settings = () => {
   const { user, endSession } = useAuth();
   const navigate = useNavigate();
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(true);
-  const [campaignUpdates, setCampaignUpdates] = useState(true);
   const linkedEmail = `${user?.email || ''}`.trim();
   const displayEmail = linkedEmail || 'No linked email';
   const hasStableEmail = hasUsableAccountEmail(linkedEmail);
@@ -72,11 +66,6 @@ const Settings = () => {
   const canChangePassword = user?.has_usable_password !== false;
   const fullName = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.username || 'User';
 
-  const notificationState = {
-    'email-notifications': [emailNotifications, setEmailNotifications],
-    'push-notifications': [pushNotifications, setPushNotifications],
-    'campaign-updates': [campaignUpdates, setCampaignUpdates],
-  } as const;
 
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -336,27 +325,18 @@ const Settings = () => {
                   <Bell className="size-3.5" />
                   Notifications
                 </span>
-                <CardTitle className="pt-1">Notification Preferences</CardTitle>
-                <CardDescription>Choose how you want to receive notifications</CardDescription>
+                <CardTitle className="pt-1">How we notify you</CardTitle>
+                <CardDescription>Notification preferences aren't adjustable yet.</CardDescription>
               </CardHeader>
-              <CardContent className="divide-y divide-border">
-                {NOTIFICATION_ROWS.map((row) => {
-                  const [checked, setChecked] = notificationState[row.id];
-                  return (
-                    <div
-                      key={row.id}
-                      className="flex min-h-[3.25rem] items-center justify-between gap-5 py-4 first:pt-0 last:pb-0"
-                    >
-                      <div className="space-y-1">
-                        <Label htmlFor={row.id}>{row.label}</Label>
-                        <p className="text-sm leading-relaxed text-muted-foreground">
-                          {row.description}
-                        </p>
-                      </div>
-                      <Switch id={row.id} checked={checked} onCheckedChange={setChecked} />
-                    </div>
-                  );
-                })}
+              <CardContent>
+                <ul className="grid gap-3">
+                  {NOTIFICATION_SUMMARY[accountRole].map((line) => (
+                    <li key={line} className="flex items-start gap-3 text-sm leading-relaxed">
+                      <Bell className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                      {line}
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
           </Rise>

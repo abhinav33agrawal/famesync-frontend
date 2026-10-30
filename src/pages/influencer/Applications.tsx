@@ -13,6 +13,7 @@ import { formatINR } from '@/lib/format';
 import { formatDateDMY } from '@/lib/utils';
 import { useInfluencerApplications } from '@/hooks/useApplications';
 import { ProfileViewModal } from '@/components/ProfileViewModal';
+import { CreatorDeliverables } from '@/components/DeliverablesPanel';
 import MatchCelebrationModal from '@/components/MatchCelebrationModal';
 import type { Application } from '@/lib/api/types';
 
@@ -64,7 +65,9 @@ const ApplicationsSkeleton = () => (
 
 /** Kickoff actions shown once a brand accepts the application. */
 const NextStepsActionArea = ({ application }: { application: Application }) => {
-  const brandEmail = application.campaign.brand_profile?.user?.email || application.campaign.brand?.email || application.campaign.contact_email || '';
+  /* The contact the brand set on this campaign first; their account email
+     only as a fallback (it used to win, so creators wrote to the login inbox). */
+  const brandEmail = application.campaign.contact_email || application.campaign.brand_profile?.user?.email || application.campaign.brand?.email || '';
   const campaignTitle = application.campaign.title;
   const creativeBriefUrl = (application.campaign as any).creative_brief_url;
 
@@ -207,7 +210,14 @@ const Applications = () => {
                           </div>
                         </dl>
 
-                        {app.status === 'accepted' && <NextStepsActionArea application={app} />}
+                        {app.status === 'accepted' && (
+                          <>
+                            <NextStepsActionArea application={app} />
+                            <div className="mt-4">
+                              <CreatorDeliverables application={app} />
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -215,7 +225,8 @@ const Applications = () => {
                       <StatusBadge status={app.status} />
 
                       <div className="flex flex-wrap gap-2">
-                        <Link to={`/influencer/campaigns/${app.campaign.id}`}>
+                        {/* the detail route and API look campaigns up by slug */}
+                        <Link to={`/influencer/campaigns/${app.campaign.slug}`}>
                           <Button variant="outline" size="sm">
                             View campaign
                           </Button>
@@ -266,6 +277,7 @@ const Applications = () => {
         onClose={() => setSelectedBrand(null)}
         profileType="brand"
         brandProfile={selectedBrand}
+        matched /* "View brand" only appears on accepted applications */
       />
 
       {/* Match Celebration Modal */}
@@ -274,7 +286,7 @@ const Applications = () => {
           isOpen={celebrationModal.isOpen}
           onClose={handleCloseCelebration}
           brandName={celebrationModal.application.campaign.brand_profile?.company_name || celebrationModal.application.campaign.brand.username}
-          brandEmail={celebrationModal.application.campaign.brand_profile?.user?.email || celebrationModal.application.campaign.brand?.email || celebrationModal.application.campaign.contact_email || ''}
+          brandEmail={celebrationModal.application.campaign.contact_email || celebrationModal.application.campaign.brand_profile?.user?.email || celebrationModal.application.campaign.brand?.email || ''}
           campaignTitle={celebrationModal.application.campaign.title}
         />
       )}

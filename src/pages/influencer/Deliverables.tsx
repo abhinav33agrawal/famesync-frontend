@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ExternalLink, Search, Upload } from 'lucide-react';
-import { toast } from 'sonner';
+import { ExternalLink, Search } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/Stat';
@@ -44,10 +42,6 @@ const Deliverables = () => {
   if (isLoading) {
     return <DeliverablesSkeleton />;
   }
-
-  const handleUpload = (deliverableId: string) => {
-    toast.success('Deliverable upload initiated');
-  };
 
   return (
     <div className="container py-10 md:py-14">
@@ -126,16 +120,11 @@ const Deliverables = () => {
                     </div>
 
                     <div className="flex shrink-0 items-center gap-3 lg:flex-col lg:items-end">
+                      {/* the old "Upload now" button only showed a toast; submitting
+                          and resubmitting happen on the accepted application */}
                       <StatusBadge
-                        status={deliverable.status === 'pending' ? 'not_submitted' : deliverable.status}
+                        status={deliverable.status === 'rejected' ? 'changes_requested' : deliverable.status}
                       />
-
-                      {deliverable.status === 'pending' && (
-                        <Button variant="form" size="sm" onClick={() => handleUpload(deliverable.id)}>
-                          <Upload />
-                          Upload now
-                        </Button>
-                      )}
                     </div>
                   </div>
                 </Card>
@@ -153,7 +142,7 @@ const Deliverables = () => {
           <p className="mx-auto mt-2.5 max-w-[38ch] leading-relaxed text-muted-foreground">
             {searchTerm
               ? 'Try a different search term.'
-              : 'Once a brand accepts you, the content you owe shows up here.'}
+              : 'Once a brand accepts you, submit your post from Applications and track its approval here.'}
           </p>
         </Card>
       )}

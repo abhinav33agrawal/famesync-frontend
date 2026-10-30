@@ -67,6 +67,10 @@ interface ProfileViewModalProps {
   profileType: 'brand' | 'influencer';
   brandProfile?: BrandProfileData;
   influencerProfile?: InfluencerProfileData;
+  /** True only when the two sides are actually matched (an accepted
+   *  application). Until then the contact card and "You're matched" stay
+   *  hidden -- the brand-side views used to show both on every profile. */
+  matched?: boolean;
 }
 
 const MatchedNote = () => (
@@ -81,6 +85,7 @@ export function ProfileViewModal({
   profileType,
   brandProfile,
   influencerProfile,
+  matched = false,
 }: ProfileViewModalProps) {
   if (profileType === 'brand' && brandProfile) {
     return (
@@ -124,7 +129,7 @@ export function ProfileViewModal({
             <Card className="p-5">
               <p className="eyebrow mb-4">Contact</p>
               <div className="space-y-3">
-                {brandProfile.user.email && (
+                {matched && brandProfile.user.email && (
                   <div className="flex items-center gap-3">
                     <Mail className="size-4 shrink-0 text-muted-foreground" />
                     <a
@@ -155,7 +160,7 @@ export function ProfileViewModal({
               </div>
             </Card>
 
-            <MatchedNote />
+            {matched && <MatchedNote />}
           </div>
         </DialogContent>
       </Dialog>
@@ -248,7 +253,7 @@ export function ProfileViewModal({
             <Card className="p-5">
               <p className="eyebrow mb-4">Contact</p>
               <div className="space-y-3">
-                {influencerProfile.user.email && (
+                {matched && influencerProfile.user.email && (
                   <div className="flex items-center gap-3">
                     <Mail className="size-4 shrink-0 text-muted-foreground" />
                     <a
@@ -273,7 +278,7 @@ export function ProfileViewModal({
               </div>
             </Card>
 
-            <MatchedNote />
+            {matched && <MatchedNote />}
           </div>
         </DialogContent>
       </Dialog>

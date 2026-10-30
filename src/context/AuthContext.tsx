@@ -86,7 +86,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             const { refresh } = JSON.parse(tokensRaw);
             const response = await api.post('/auth/refresh/', { refresh });
-            const newTokens = { ...JSON.parse(tokensRaw), access: response.data.access };
+            // keep the rotated refresh token: the API revokes the old one
+            const newTokens = {
+              ...JSON.parse(tokensRaw),
+              access: response.data.access,
+              refresh: response.data.refresh ?? refresh,
+            };
             localStorage.setItem('famee_tokens', JSON.stringify(newTokens));
 
             const retryRes = await api.get('/auth/me/');

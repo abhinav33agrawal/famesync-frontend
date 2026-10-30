@@ -45,7 +45,7 @@ const STATUS = {
   open: { label: "Accepting", variant: "success" },
   pending: { label: "In review", variant: "warning" },
   in_review: { label: "In review", variant: "warning" },
-  submitted: { label: "In review", variant: "warning" },
+  submitted: { label: "Submitted", variant: "warning" },
   paused: { label: "Paused", variant: "warning" },
   rejected: { label: "Declined", variant: "destructive" },
   declined: { label: "Declined", variant: "destructive" },
@@ -55,6 +55,7 @@ const STATUS = {
   draft: { label: "Draft", variant: "neutral" },
   not_submitted: { label: "Not submitted", variant: "neutral" },
   locked: { label: "Locked", variant: "neutral" },
+  changes_requested: { label: "Changes requested", variant: "warning" },
 } as const;
 
 export type StatusKey = keyof typeof STATUS;

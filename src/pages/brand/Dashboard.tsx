@@ -32,10 +32,9 @@ const BrandDashboard = () => {
   const stats = dashboardData?.stats;
   const recentCampaigns = campaigns.slice(0, 3);
 
-  const allApplications = campaigns
-    .flatMap(c => c.applications || [])
-    .sort((a, b) => new Date(b.applied_at).getTime() - new Date(a.applied_at).getTime())
-    .slice(0, 4);
+  /* From the dashboard endpoint: the campaign list never includes
+     applications, so reading them off it always showed "No applications yet". */
+  const allApplications = (dashboardData?.recent_applications ?? []).slice(0, 4);
 
   const liveRate = stats?.total_campaigns
     ? `${((stats.active_campaigns / stats.total_campaigns) * 100).toFixed(1)}%`

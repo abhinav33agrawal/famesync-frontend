@@ -30,6 +30,7 @@ import InfluencerDashboard from "./pages/influencer/Dashboard";
 import InfluencerCampaigns from "./pages/influencer/Campaigns";
 import InfluencerCampaignDetail from "./pages/influencer/CampaignDetail";
 import InfluencerApplications from "./pages/influencer/Applications";
+import InfluencerDeliverables from "./pages/influencer/Deliverables";
 import InfluencerProfile from "./pages/influencer/Profile";
 
 // Brand pages
@@ -75,10 +76,8 @@ const App = () => (
    sidebar and no second copy of the route table. The marketing footer is
    kept off the signed-in app surfaces.
 
-   Deliverables has a page and hooks but no route: the API doesn't serve
-   /api/deliverables/ (the app is commented out of INSTALLED_APPS and the
-   root urlconf), so every call 404s. Re-add the route and the navbar link
-   in the same change that enables the backend. */
+   Deliverables needs the API's deliverables app (enabled in
+   famesync-backend fix/user-test-findings); deploy that first. */
 const APP_PATHS = [
   "/dashboard",
   "/campaigns",
@@ -175,6 +174,14 @@ const AppContent = () => {
             element={
               <ProtectedRoute allowedRoles={['influencer']}>
                 <InfluencerApplications />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/influencer/deliverables"
+            element={
+              <ProtectedRoute allowedRoles={['influencer']}>
+                <InfluencerDeliverables />
               </ProtectedRoute>
             }
           />

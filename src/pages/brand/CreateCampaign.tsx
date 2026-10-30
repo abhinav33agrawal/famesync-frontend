@@ -55,6 +55,7 @@ import { Rise } from '@/components/motion';
 import { ApiError, Campaign, CampaignSuggestion } from '@/lib/api/types';
 import { campaignsApi } from '@/lib/api/campaigns';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useBrandCampaigns } from '@/hooks/useCampaigns';
 import { PremiumBadgeIndicator } from '@/components/LockedFeature';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
 import {
@@ -231,6 +232,12 @@ const getTodayDate = () => {
   return `${year}-${month}-${day}`;
 };
 
+/** "5 minutes" until a just-published campaign appears to creators. */
+const goLiveMinutes = (liveAt?: string | null) => {
+  const mins = liveAt ? Math.max(1, Math.ceil((new Date(liveAt).getTime() - Date.now()) / 60000)) : 5;
+  return `${mins} minute${mins === 1 ? '' : 's'}`;
+};
+
 const CreateCampaign = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -256,6 +263,16 @@ const CreateCampaign = () => {
   const [highlightEmptyFields, setHighlightEmptyFields] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const { data: subscription } = useSubscription();
+  const { data: myCampaigns = [] } = useBrandCampaigns();
+
+  /* Mirrors the API's limit (campaigns/views.py): active campaigns created
+     since the 1st count against SUBSCRIPTION_PLANS.brand.free
+     .campaigns_per_month. The chip used to be a hard-coded "0/2". */
+  const FREE_CAMPAIGNS_PER_MONTH = 3;
+  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const campaignsThisMonth = myCampaigns.filter(
+    (c) => c.status === 'active' && new Date(c.created_at) >= monthStart
+  ).length;
 
   const { categories: dynamicCategories, isLoading: categoriesLoading } = useCategories();
   const { cities: dynamicCities, isLoading: citiesLoading } = useCities();
@@ -636,6 +653,11 @@ const CreateCampaign = () => {
       };
 
       const createdCampaign = await campaignsApi.brand.create(payload);
+      // Publishing spends a credit; this page calls the API directly, so the
+      // navbar's balance (the ['user'] query) stayed stale until next sign-in.
+      for (const key of [['user'], ['subscription'], ['credit-usage'], ['campaigns', 'brand']]) {
+        void queryClient.invalidateQueries({ queryKey: key });
+      }
 
       // Only track usage for published campaigns
       if (status === 'active') {
@@ -650,9 +672,11 @@ const CreateCampaign = () => {
 
       toast({
         title: status === 'draft' ? "Draft Saved!" : "Campaign Published!",
+        /* Creators can't see a published campaign until live_at (publish + 5
+           minutes, the edit window), so "is now live" was wrong. */
         description: status === 'draft'
           ? `Your campaign "${createdCampaign.title}" has been saved as a draft.`
-          : `Your campaign "${createdCampaign.title}" is now live.`,
+          : `"${createdCampaign.title}" goes live for creators in ${goLiveMinutes(createdCampaign.live_at)}. You can still edit it until then.`,
       });
 
       clearFormDraft();
@@ -766,7 +790,10 @@ const CreateCampaign = () => {
                   <p className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm text-muted-foreground">
                     <Crown className="h-4 w-4 shrink-0 text-primary" />
                     <span>
-                      Campaigns this month <span className="num text-foreground">0/2</span>
+                      Campaigns this month{' '}
+                      <span className="num text-foreground">
+                        {campaignsThisMonth}/{FREE_CAMPAIGNS_PER_MONTH}
+                      </span>
                     </span>
                   </p>
                 )}

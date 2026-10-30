@@ -32,6 +32,7 @@ import {
 import { useBrandCampaign, useUpdateApplicationStatus, useUpdateCampaignStatus, useDeleteCampaign } from '@/hooks/useCampaigns';
 import { useToast } from '@/hooks/use-toast';
 import { ProfileViewModal } from '@/components/ProfileViewModal';
+import { BrandDeliverables } from '@/components/DeliverablesPanel';
 import { CampaignStatusDialog } from '@/components/CampaignStatusDialog';
 import { DeclineReasonDialog } from '@/components/DeclineReasonDialog';
 import { InfluencerQuickStats } from '@/components/InfluencerQuickStats';
@@ -190,6 +191,8 @@ const ManageCollaborationArea = ({
         <p className="mt-2.5 truncate text-xs text-muted-foreground">Contact: {influencerEmail}</p>
       )}
 
+      <BrandDeliverables application={application} campaignId={String(application.campaign?.id ?? '')} />
+
       {/* Onboarding Message Dialog */}
       <Dialog open={isOnboardingDialogOpen} onOpenChange={setIsOnboardingDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
@@ -247,6 +250,7 @@ const CampaignDetail = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedInfluencer, setSelectedInfluencer] = useState<InfluencerProfile | null>(null);
+  const [selectedMatched, setSelectedMatched] = useState(false);
   const [inProgressIds, setInProgressIds] = useState<Set<string>>(new Set());
   const [dialogState, setDialogState] = useState<{
     open: boolean;
@@ -305,6 +309,7 @@ const CampaignDetail = () => {
     };
 
     setSelectedInfluencer(profileWithUser);
+    setSelectedMatched(application.status === 'accepted');
   };
 
   const handleConfirmAction = () => {
@@ -655,6 +660,7 @@ const CampaignDetail = () => {
         onClose={() => setSelectedInfluencer(null)}
         profileType="influencer"
         influencerProfile={selectedInfluencer}
+        matched={selectedMatched}
       />
 
       {/* Status Change Dialog */}

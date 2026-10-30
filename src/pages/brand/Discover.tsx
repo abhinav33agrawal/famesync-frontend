@@ -49,7 +49,7 @@ export default function Discover() {
       if (location) params.append('location', location);
       if (verifiedOnly) params.append('verified', 'true');
 
-      const response = await api.get<DiscoverResponse>(`/profiles/brand/discover/?${params.toString()}`);
+      const response = await api.get<DiscoverResponse>(`/brand/discover/?${params.toString()}`);
       setInfluencers(response.data.results);
       setTotalCount(response.data.count);
       setNextPage(response.data.next);

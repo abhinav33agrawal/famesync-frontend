@@ -21,14 +21,15 @@ export const useSubmitDeliverable = () => {
       queryClient.invalidateQueries({ queryKey: ['deliverables', 'influencer'] });
       queryClient.invalidateQueries({ queryKey: ['applications'] });
       toast({
-        title: 'Deliverable Submitted',
-        description: 'Your deliverable has been submitted for review.',
+        title: 'Sent for approval',
+        description: "The brand has been notified. You'll hear back here.",
       });
     },
     onError: (error: any) => {
+      const data = error.response?.data;
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to submit deliverable. Please try again.',
+        title: "Couldn't submit",
+        description: data?.error || data?.link?.[0] || 'Please check the link and try again.',
         variant: 'destructive',
       });
     },
@@ -61,15 +62,15 @@ export const useReviewDeliverable = () => {
       queryClient.invalidateQueries({ queryKey: ['deliverables', 'brand'] });
       queryClient.invalidateQueries({ queryKey: ['campaign'] });
       toast({
+        // No payment runs through FameSync, so this used to promise one
+        // ("Payment will be processed automatically") that never happened.
         title:
           variables.status === 'approved'
-            ? 'Deliverable Approved'
+            ? 'Content approved'
             : variables.status === 'rejected'
-            ? 'Deliverable Rejected'
-            : 'Deliverable Under Review',
-        description:
-          variables.status === 'approved' ? 'Payment will be processed automatically.' : 'The influencer has been notified.',
-        variant: variables.status === 'rejected' ? 'destructive' : 'default',
+            ? 'Changes requested'
+            : 'Marked as in review',
+        description: 'The creator has been notified.',
       });
     },
     onError: () => {

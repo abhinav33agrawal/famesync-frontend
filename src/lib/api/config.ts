@@ -93,9 +93,13 @@ api.interceptors.response.use(
         const { refresh } = JSON.parse(tokens);
         try {
           const response = await refreshApi.post("/auth/refresh/", { refresh });
+          /* The API rotates refresh tokens and revokes the old one, so the
+             new refresh must be kept -- reusing the old one gets a 401 and
+             signs the user out. */
           const newTokens = {
             ...JSON.parse(tokens),
             access: response.data.access,
+            refresh: response.data.refresh ?? refresh,
           };
           localStorage.setItem("famee_tokens", JSON.stringify(newTokens));
 
